@@ -500,4 +500,66 @@ proving this.
                      (≤-reflexive partL))))
 
 _+_ : ℝ -> ℝ -> ℝ
-x + y = {!!}
+seq (x + y) n = seq x (2 ℕ.* n) ℚ.+ seq y (2 ℕ.* n)
+reg (x + y) (suc k₁) (suc k₂) = ≤-respˡ-≃ (∣-∣-cong (≃-sym part1)) part2
+  where
+    m : ℕ
+    m = suc k₁
+
+    n : ℕ
+    n = suc k₂
+
+    {-
+      (xm + ym) - (xn + yn) = (xm + ym) + (-xn - yn)
+                            = (xm + ym) + (-yn - xn)
+                            = xm + (ym + (-yn - xn))
+                            = xm + ((ym - yn) - xn)
+                            = xm + (-xn + (ym - yn))
+                            = (xm - xn) + (ym - yn)                            
+    -}
+    part1 : (seq x (2 ℕ.* m) ℚ.+ seq y (2 ℕ.* m)) ℚ.- (seq x (2 ℕ.* n) ℚ.+ seq y (2 ℕ.* n))
+            ℚ.≃ (seq x (2 ℕ.* m) ℚ.- seq x (2 ℕ.* n)) ℚ.+ (seq y (2 ℕ.* m) ℚ.- seq y (2 ℕ.* n))
+    part1 = ≃-trans (+-congʳ (seq x (2 ℕ.* m) ℚ.+ seq y (2 ℕ.* m)) (≃-reflexive (neg-distrib-+ (seq x (2 ℕ.* n)) (seq y (2 ℕ.* n)))))
+            (≃-trans (+-congʳ (seq x (2 ℕ.* m) ℚ.+ seq y (2 ℕ.* m)) (+-comm (ℚ.- seq x (2 ℕ.* n)) (ℚ.- seq y (2 ℕ.* n))))
+            (≃-trans (+-assoc (seq x (2 ℕ.* m)) (seq y (2 ℕ.* m)) ((ℚ.- seq y (2 ℕ.* n)) ℚ.- seq x (2 ℕ.* n)))
+            (≃-trans (+-congʳ (seq x (2 ℕ.* m)) (≃-sym (+-assoc (seq y (2 ℕ.* m)) (ℚ.- seq y (2 ℕ.* n)) (ℚ.- seq x (2 ℕ.* n)))))
+            (≃-trans (+-congʳ (seq x (2 ℕ.* m)) (+-comm (seq y (2 ℕ.* m) ℚ.- seq y (2 ℕ.* n)) (ℚ.- seq x (2 ℕ.* n))))
+            (≃-sym (+-assoc (seq x (2 ℕ.* m)) (ℚ.- seq x (2 ℕ.* n)) (seq y (2 ℕ.* m) ℚ.- seq y (2 ℕ.* n))))))))
+
+    {-
+      (1/2n + 1/2m) + (1/2n + 1/2m)
+      = (1/2n + 1/2m) + (1/2m + 1/2n)
+      = 1/2n + (1/2m + (1/2m + 1/2n))
+      = 1/2n + ((1/2m + 1/2m) + 1/2n)
+      = 1/2n + (1/m + 1/2n)
+      = (1/m + 1/2n) + 1/2n
+      = 1/m + (1/2n + 1/2n)
+      = 1/m + 1/n
+
+      (1/2m + 1/2n) + (1/2m + 1/2n)
+      = (1/2m + 1/2n) + (1/2n + 1/2m)
+      = 1/2m + (1/2n + (1/2n + 1/2m))
+      = 1/2m + ((1/2n + 1/2n) + 1/2m)
+      = 1/2m + (1/n + 1/2m)
+      = 1/2m + (1/2m + 1/n)
+      = (1/2m + 1/2m) + 1/n
+      = 2/2m + 1/n
+      = 1/m + 1/n
+    -}
+    part2 : ℚ.∣ (seq x (2 ℕ.* m) ℚ.- seq x (2 ℕ.* n)) ℚ.+ (seq y (2 ℕ.* m) ℚ.- seq y (2 ℕ.* n)) ∣ ℚ.≤
+            ((+ 1) / m) ℚ.+ ((+ 1) / n)
+    part2 = ≤-trans (∣p+q∣≤∣p∣+∣q∣ (seq x (2 ℕ.* m) ℚ.- seq x (2 ℕ.* n)) (seq y (2 ℕ.* m) ℚ.- seq y (2 ℕ.* n)))
+            (≤-trans (+-monoˡ-≤ ℚ.∣ seq y (2 ℕ.* m) ℚ.- seq y (2 ℕ.* n) ∣ (reg x (2 ℕ.* m) (2 ℕ.* n)))
+            (≤-trans (+-monoʳ-≤ (((+ 1) / (2 ℕ.* m)) ℚ.+ ((+ 1) / (2 ℕ.* n))) (reg y (2 ℕ.* m) (2 ℕ.* n)))
+            (≤-reflexive (≃-trans (+-congʳ (((+ 1) / (2 ℕ.* m)) ℚ.+ ((+ 1) / (2 ℕ.* n))) (+-comm ((+ 1) / (2 ℕ.* m)) ((+ 1) / (2 ℕ.* n))))
+            (≃-trans (+-assoc ((+ 1) / (2 ℕ.* m)) ((+ 1) / (2 ℕ.* n)) (((+ 1) / (2 ℕ.* n)) ℚ.+ ((+ 1) / (2 ℕ.* m))))
+            (≃-trans (+-congʳ ((+ 1) / (2 ℕ.* m)) (≃-sym (+-assoc ((+ 1) / (2 ℕ.* n)) ((+ 1) / (2 ℕ.* n)) ((+ 1) / (2 ℕ.* m)))))
+            (≃-trans (+-congʳ ((+ 1) / (2 ℕ.* m)) (+-congˡ ((+ 1) / (2 ℕ.* m)) (≃-trans (≃-trans (≃-sym (help (+ 1) (+ 1) (2 ℕ.* n)))
+                                                                               (≃-sym (≃-reflexive (/-cong (ℤP.*-identityʳ (+ 2)) _≡_.refl _ _))))
+                                                                               (ℚ-CollapseL 2 1 n))))
+            (≃-trans (+-congʳ ((+ 1) / (2 ℕ.* m)) (+-comm ((+ 1) / n) ((+ 1) / (2 ℕ.* m))))
+            (≃-trans (≃-sym (+-assoc ((+ 1) / (2 ℕ.* m)) ((+ 1) / (2 ℕ.* m)) ((+ 1) / n)))
+            (+-congˡ ((+ 1) / n) (≃-trans (≃-sym (help (+ 1) (+ 1) (2 ℕ.* m)))
+            (≃-trans (≃-sym (≃-reflexive (/-cong (ℤP.*-identityʳ (+ 2)) _≡_.refl _ _)))
+            (ℚ-CollapseL 2 1 m)))))))))))))
+
