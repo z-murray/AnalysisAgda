@@ -69,31 +69,19 @@ lemma1A x y x≃y (suc j) {j≢0} = 2 ℕ.* (suc j) ,
         λ { (suc n) N<n → ℚP.≤-trans (x≃y (suc n)) (*≤* (+≤+ (ℕP.<⇒≤ (subst (ℕ._<_ (2 ℕ.* (suc j))) (cong suc (sym (ℕP.+-identityʳ n))) N<n))))}
 
 abstract
-  help : ∀ (p q : ℤ) -> ∀ (r : ℕ) -> {r≢0 : r ≢0} -> ((p ℤ.+ q) / r) {r≢0} ℚ.≃ (p / r) {r≢0}  ℚ.+ (q / r) {r≢0}
-  help p q (suc r) = ℚ.*≡* (trans (sym (ℤP.*-assoc (p ℤ.+ q) (+ (suc r)) (+ (suc r)))) (cong (λ x → x ℤ.* + suc r) (ℤP.*-distribʳ-+ (+ (suc r)) p q)))
-
   no-0-divisors : ∀ (m n : ℕ) -> m ≢0 -> n ≢0 -> m ℕ.* n ≢0
   no-0-divisors (suc m) (suc n) m≢0 n≢0 with (suc m) ℕ.* (suc n) ℕ.≟ 0
   ...                                   | res = _
-
-  -- EXTREMELY slow when ℚ.*≡* is used to prove it. No idea why.
-  ℚ-CollapseR : ∀ (p : ℤ) -> ∀ (q r : ℕ) -> {q≢0 : q ≢0} -> {r≢0 : r ≢0} ->
-              ((p ℤ.* (+ q)) / (r ℕ.* q)) {no-0-divisors r q r≢0 q≢0} ℚ.≃ (p / r) {r≢0}
-  ℚ-CollapseR p (suc q) (suc r) = ℚ.*≡* (trans (ℤP.*-assoc p (+ (suc q)) (+ (suc r))) (cong (λ x -> p ℤ.* x) (ℤP.*-comm (+ (suc q)) (+ (suc r)))))
-
-  ℚ-CollapseL : ∀ (p q r : ℕ) -> {p≢0 : p ≢0} -> {q≢0 : q ≢0} -> {r≢0 : r ≢0} ->
-              (((+ p) ℤ.* (+ q)) / (p ℕ.* r)) {no-0-divisors p r p≢0 r≢0} ℚ.≃ ((+ q) / r) {r≢0} 
-  ℚ-CollapseL (suc p) (suc q) (suc r) = ℚ.*≡* (trans (cong (λ x -> x ℤ.* (+ (suc r))) (ℤP.*-comm (+ (suc p)) (+ (suc q)))) (ℤP.*-assoc (+ (suc q)) (+ (suc p)) (+ (suc r))))
 
   m≤∣m∣ : ∀ (m : ℤ) -> m ℤ.≤ + ℤ.∣ m ∣
   m≤∣m∣ (+_ n) = ℤP.≤-reflexive _≡_.refl
   m≤∣m∣ (-[1+_] n) = ℤ.-≤+
 
-pos⇒≢0 : ∀ p → ℚ.Positive p → ℤ.∣ ↥ p ∣ ≢0
-pos⇒≢0 p p>0 = fromWitnessFalse (contraposition ℤP.∣n∣≡0⇒n≡0 (≢-sym (ℤP.<⇒≢ (ℤP.positive⁻¹ p>0))))
+  pos⇒≢0 : ∀ p → ℚ.Positive p → ℤ.∣ ↥ p ∣ ≢0
+  pos⇒≢0 p p>0 = fromWitnessFalse (contraposition ℤP.∣n∣≡0⇒n≡0 (≢-sym (ℤP.<⇒≢ (ℤP.positive⁻¹ p>0))))
 
-0<⇒pos : ∀ p -> 0ℚᵘ ℚ.< p -> ℚ.Positive p
-0<⇒pos p p>0 = ℚ.positive p>0
+  0<⇒pos : ∀ p -> 0ℚᵘ ℚ.< p -> ℚ.Positive p
+  0<⇒pos p p>0 = ℚ.positive p>0
 
 archimedean-ℚ : ∀ (p r : ℚᵘ) -> ℚ.Positive p -> ∃ λ (N : ℕ) -> r ℚ.< ((+ N) ℤ.* (↥ p)) / (↧ₙ p)
 archimedean-ℚ (mkℚᵘ (+ p) q-1) (mkℚᵘ u v-1) p/q>0 = ℤ.∣ (+ 1) ℤ.+ t ∣ , ℚ.*<* (begin-strict
@@ -205,30 +193,31 @@ lemma1B x y hyp (suc k₁) = lemA lemB
     lemB : ∀ (j : ℕ) -> {j≢0 : j ≢0} -> ∣xn-yn∣ ℚ.≤ 2/n ℚ.+ ((+ 3) / j) {j≢0}
     lemB (suc k₂) with hyp (suc k₂)
     ...           | N , proof = begin
-      ∣xn-yn∣                                                                         ≈⟨ ℚP.∣-∣-cong (ℚsolve 4 (λ xn yn xm ym ->
-                                                                                                         xn ℚ:- yn ℚ:= (xn ℚ:- xm) ℚ:+ (xm ℚ:- ym) ℚ:+ (ym ℚ:- yn))
-                                                                                                         (ℚ.*≡* _≡_.refl) (seq x n) (seq y n) (seq x m) (seq y m)) ⟩
-      ℚ.∣ (seq x n ℚ.- seq x m) ℚ.+ (seq x m ℚ.- seq y m) ℚ.+ (seq y m ℚ.- seq y n) ∣ ≤⟨ ℚP.≤-trans (ℚP.∣p+q∣≤∣p∣+∣q∣
-                                                                                    ((seq x n ℚ.- seq x m) ℚ.+ (seq x m ℚ.- seq y m)) (seq y m ℚ.- seq y n))
-                                                                                    (ℚP.+-monoˡ-≤ ℚ.∣ seq y m ℚ.- seq y n ∣
-                                                                                    (ℚP.∣p+q∣≤∣p∣+∣q∣ (seq x n ℚ.- seq x m) (seq x m ℚ.- seq y m))) ⟩
-      ℚ.∣ seq x n ℚ.- seq x m ∣ ℚ.+ ℚ.∣ seq x m ℚ.- seq y m ∣ ℚ.+ ℚ.∣ seq y m ℚ.- seq y n ∣ ≤⟨ ℚP.+-monoʳ-≤ (ℚ.∣ seq x n ℚ.- seq x m ∣ ℚ.+ ℚ.∣ seq x m ℚ.- seq y m ∣) (reg y m n) ⟩
+      ∣xn-yn∣                                                                                ≈⟨ ℚP.∣-∣-cong (ℚsolve 4 (λ xn yn xm ym ->
+                                                                                                                  xn ℚ:- yn ℚ:= (xn ℚ:- xm) ℚ:+ (xm ℚ:- ym) ℚ:+ (ym ℚ:- yn))
+                                                                                                                  (ℚ.*≡* _≡_.refl) (seq x n) (seq y n) (seq x m) (seq y m)) ⟩
+      ℚ.∣ (seq x n ℚ.- seq x m) ℚ.+ (seq x m ℚ.- seq y m) ℚ.+ (seq y m ℚ.- seq y n) ∣        ≤⟨ ℚP.≤-trans (ℚP.∣p+q∣≤∣p∣+∣q∣
+                                                                                                ((seq x n ℚ.- seq x m) ℚ.+ (seq x m ℚ.- seq y m)) (seq y m ℚ.- seq y n))
+                                                                                                (ℚP.+-monoˡ-≤ ℚ.∣ seq y m ℚ.- seq y n ∣
+                                                                                                (ℚP.∣p+q∣≤∣p∣+∣q∣ (seq x n ℚ.- seq x m) (seq x m ℚ.- seq y m))) ⟩
+      ℚ.∣ seq x n ℚ.- seq x m ∣ ℚ.+ ℚ.∣ seq x m ℚ.- seq y m ∣ ℚ.+ ℚ.∣ seq y m ℚ.- seq y n ∣   ≤⟨ ℚP.+-monoʳ-≤ (ℚ.∣ seq x n ℚ.- seq x m ∣ ℚ.+ ℚ.∣ seq x m ℚ.- seq y m ∣)
+                                                                                                (reg y m n) ⟩
       ℚ.∣ seq x n ℚ.- seq x m ∣ ℚ.+ ℚ.∣ seq x m ℚ.- seq y m ∣ ℚ.+ (((+ 1) / m) ℚ.+ (+ 1) / n) ≤⟨ ℚP.+-monoˡ-≤ (((+ 1) / m) ℚ.+ (+ 1) / n)
                                                                                                 (ℚP.+-monoʳ-≤ ℚ.∣ seq x n ℚ.- seq x m ∣ (proof m (ℕP.m≤m⊔n (suc N) j))) ⟩
       ℚ.∣ seq x n ℚ.- seq x m ∣ ℚ.+ ((+ 1) / j) ℚ.+ (((+ 1) / m) ℚ.+ ((+ 1) / n))             ≤⟨ ℚP.+-monoˡ-≤ (((+ 1) / m) ℚ.+ (+ 1) / n)
                                                                                                  (ℚP.+-monoˡ-≤ ((+ 1) / j) (reg x n m)) ⟩
-      (((+ 1) / n) ℚ.+ (+ 1) / m) ℚ.+ ((+ 1) / j) ℚ.+ (((+ 1) / m) ℚ.+ ((+ 1) / n))    ≤⟨ ℚP.+-monoˡ-≤ ((((+ 1) / m) ℚ.+ ((+ 1) / n)))
-                                                                                          (ℚP.+-monoˡ-≤ ((+ 1) / j)
-                                                                                          (ℚP.+-monoʳ-≤ ((+ 1) / n) 1/m≤1/j)) ⟩
-      (((+ 1) / n) ℚ.+ (+ 1) / j) ℚ.+ ((+ 1) / j) ℚ.+ (((+ 1) / m) ℚ.+ ((+ 1) / n))    ≤⟨ ℚP.+-monoʳ-≤ ((((+ 1) / n) ℚ.+ (+ 1) / j) ℚ.+ ((+ 1) / j))
-                                                                                          (ℚP.+-monoˡ-≤ ((+ 1) / n) 1/m≤1/j) ⟩
-      (((+ 1) / n) ℚ.+ (+ 1) / j) ℚ.+ ((+ 1) / j) ℚ.+ (((+ 1) / j) ℚ.+ (+ 1) / n)      ≈⟨ ℚ.*≡* (solve 2 (λ n j ->
+      (((+ 1) / n) ℚ.+ (+ 1) / m) ℚ.+ ((+ 1) / j) ℚ.+ (((+ 1) / m) ℚ.+ ((+ 1) / n))           ≤⟨ ℚP.+-monoˡ-≤ ((((+ 1) / m) ℚ.+ ((+ 1) / n)))
+                                                                                                 (ℚP.+-monoˡ-≤ ((+ 1) / j)
+                                                                                                 (ℚP.+-monoʳ-≤ ((+ 1) / n) 1/m≤1/j)) ⟩
+      (((+ 1) / n) ℚ.+ (+ 1) / j) ℚ.+ ((+ 1) / j) ℚ.+ (((+ 1) / m) ℚ.+ ((+ 1) / n))           ≤⟨ ℚP.+-monoʳ-≤ ((((+ 1) / n) ℚ.+ (+ 1) / j) ℚ.+ ((+ 1) / j))
+                                                                                                 (ℚP.+-monoˡ-≤ ((+ 1) / n) 1/m≤1/j) ⟩
+      (((+ 1) / n) ℚ.+ (+ 1) / j) ℚ.+ ((+ 1) / j) ℚ.+ (((+ 1) / j) ℚ.+ (+ 1) / n)             ≈⟨ ℚ.*≡* (solve 2 (λ n j ->
 
       {- Function for the solver -}
       (((((con (+ 1) :* j :+ con (+ 1) :* n) :* j) :+ con (+ 1) :* (n :* j)) :* (j :* n)) :+ ((con (+ 1) :* n :+ con (+ 1) :* j) :* ((n :* j) :* j))) :* (n :* j) :=
       ((con (+ 2) :* j :+ con (+ 3) :* n) :* (((n :* j) :* j) :* (j :* n)))) _≡_.refl (+ n) (+ j)) ⟩
 
-      ((+ 2) / n) ℚ.+ ((+ 3) / j)                                                       ∎
+      ((+ 2) / n) ℚ.+ ((+ 3) / j)                                                              ∎
       where
         open ℚP.≤-Reasoning
         open import Data.Rational.Unnormalised.Solver as ℚ-Solver
@@ -253,17 +242,18 @@ lemma1B x y hyp (suc k₁) = lemA lemB
                       (ℤP.≤-reflexive (sym (ℤP.*-identityˡ (+ m))))))
 
 ≃-trans : Transitive _≃_
-≃-trans {x} {y} {z} x≃y y≃z = lemma1B x z {!lem!}
+≃-trans {x} {y} {z} x≃y y≃z = lemma1B x z lem
   where
     lem : ∀ (j : ℕ) -> {j≢0 : j ≢0} ->
           ∃ λ (N : ℕ) -> ∀ (n : ℕ) -> N ℕ.< n ->
           ℚ.∣ seq x n ℚ.- seq z n ∣ ℚ.≤ ((+ 1) / j) {j≢0}
     lem (suc k₁) with (lemma1A x y x≃y (2 ℕ.* (suc k₁))) | (lemma1A y z y≃z (2 ℕ.* (suc k₁)))
     lem (suc k₁) | N₁ , xy | N₂ , yz = N , λ {n N<n -> begin
-      ℚ.∣ seq x n ℚ.- seq z n ∣ ≈⟨ ℚP.∣-∣-cong (ℚsolve 3 (λ x y z ->
-                                                     x ℚ:- z ℚ:= (x ℚ:- y) ℚ:+ (y ℚ:- z)) (ℚ.*≡* _≡_.refl) (seq x n) (seq y n) (seq z n)) ⟩
-      ℚ.∣ (seq x n ℚ.- seq y n) ℚ.+ (seq y n ℚ.- seq z n) ∣ ≤⟨ ℚP.∣p+q∣≤∣p∣+∣q∣ (seq x n ℚ.- seq y n) (seq y n ℚ.- seq z n) ⟩
-      ℚ.∣ seq x n ℚ.- seq y n ∣ ℚ.+ ℚ.∣ seq y n ℚ.- seq z n ∣ ≤⟨ ℚP.≤-trans (ℚP.+-monoˡ-≤ ℚ.∣ seq y n ℚ.- seq z n ∣ (xy n (ℕP.m⊔n≤o⇒m≤o (suc N₁) (suc N₂) N<n))) {!!} ⟩
+      ℚ.∣ seq x n ℚ.- seq z n ∣                               ≈⟨ ℚP.∣-∣-cong (ℚsolve 3 (λ x y z ->
+                                                                                  x ℚ:- z ℚ:= (x ℚ:- y) ℚ:+ (y ℚ:- z)) (ℚ.*≡* _≡_.refl) (seq x n) (seq y n) (seq z n)) ⟩
+      ℚ.∣ (seq x n ℚ.- seq y n) ℚ.+ (seq y n ℚ.- seq z n) ∣   ≤⟨ ℚP.∣p+q∣≤∣p∣+∣q∣ (seq x n ℚ.- seq y n) (seq y n ℚ.- seq z n) ⟩
+      ℚ.∣ seq x n ℚ.- seq y n ∣ ℚ.+ ℚ.∣ seq y n ℚ.- seq z n ∣ ≤⟨ ℚP.≤-trans (ℚP.+-monoˡ-≤ ℚ.∣ seq y n ℚ.- seq z n ∣ (xy n (ℕP.m⊔n≤o⇒m≤o (suc N₁) (suc N₂) N<n)))
+                                                                (ℚP.+-monoʳ-≤ ((+ 1) / (2 ℕ.* j)) (yz n (ℕP.m⊔n≤o⇒n≤o (suc N₁) (suc N₂) N<n))) ⟩
       ((+ 1) / (2 ℕ.* j)) ℚ.+ ((+ 1) / (2 ℕ.* j))            ≈⟨ ℚ.*≡* (solve 1 (λ j ->
                                                                            (con (+ 1) :* (con (+ 2) :* j) :+ (con (+ 1) :* (con (+ 2) :* j))) :* j :=
                                                                            (con (+ 1) :* ((con (+ 2) :* j) :* (con (+ 2) :* j)))) _≡_.refl (+ j)) ⟩
