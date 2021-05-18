@@ -21,6 +21,7 @@ import Data.Rational.Unnormalised.Properties as ℚP
 open import Algebra.Bundles
 open import Algebra.Structures
 open import Data.Empty
+open import Data.Sum
 
 open ℚᵘ
 
@@ -320,6 +321,61 @@ K_ : ℝ -> ℤ
 K x with least (ℚ.∣ seq x 1 ∣ ℚ.+ ((+ 2) / 1))
 ... | N , res = N-}
 
+{-
+p/q = (r + tq)/q
+    = r/q + t
+    < 1 + t
+-}
+antidensity-ℤ : ¬(∃ λ (n : ℤ) -> + 0 ℤ.< n × n ℤ.< + 1)
+antidensity-ℤ (+[1+ n ] , +<+ m<n , +<+ (ℕ.s≤s ()))
+
+least : ∀ (p : ℚᵘ) -> ∃ λ (K : ℤ) ->
+        p ℚ.< (K / 1) × (∀ (n : ℤ) -> p ℚ.< (n / 1) -> K ℤ.≤ n)
+least (mkℚᵘ p q-1) = (+ 1) ℤ.+ t , {!!} ,′ {!!}
+  where
+    q : ℕ
+    q = suc q-1
+
+    r : ℕ
+    r = p modℕ q
+
+    t : ℤ
+    t = p divℕ q
+
+    least-property : ∀ (n : ℤ) -> p / q ℚ.< n / 1 -> + 1 ℤ.+ t ℤ.≤ n
+    least-property n p/q<n with + 1 ℤ.+ t ℤP.≤? n
+    ... | .Bool.true because ofʸ P = P
+    ... | .Bool.false because ofⁿ ¬P = ⊥-elim (antidensity-ℤ (n ℤ.- t , 0<n-t ,′ n-t<1))
+      where
+      0<n-t : + 0 ℤ.< n ℤ.- t
+      0<n-t = ℤP.*-cancelʳ-<-nonNeg q (ℤP.≤-<-trans (ℤP.≤-reflexive (ℤP.*-zeroˡ (+ q))) part3)
+        
+        where
+        open ℤP.≤-Reasoning
+        open import Data.Integer.Solver
+        open +-*-Solver
+        part1 : (+ r) ℤ.+ t ℤ.* (+ q) ℤ.< n ℤ.* (+ q)
+        part1 = begin-strict --ℤP.≤-<-trans (ℤP.≤-reflexive (sym (ℤP.*-identityʳ p))) (ℚP.drop-*<* p/q<n)
+          (+ r) ℤ.+ t ℤ.* (+ q) ≡⟨ trans (sym (a≡a%ℕn+[a/ℕn]*n p q)) (sym (ℤP.*-identityʳ p)) ⟩
+          p ℤ.* (+ 1)           <⟨ ℚP.drop-*<* p/q<n ⟩
+          n ℤ.* (+ q) ∎
+
+        part2 : (+ r) ℤ.< (n ℤ.- t) ℤ.* (+ q)
+        part2 = begin-strict
+          + r ≡⟨ solve 2 (λ r t -> r := r :+ t :- t) _≡_.refl (+ r) (t ℤ.* (+ q)) ⟩
+          (+ r) ℤ.+ t ℤ.* (+ q) ℤ.- t ℤ.* (+ q) <⟨ ℤP.+-monoˡ-< (ℤ.- (t ℤ.* + q)) part1 ⟩
+          n ℤ.* (+ q) ℤ.- t ℤ.* (+ q) ≡⟨ solve 3 (λ n q t -> n :* q :- t :* q := (n :- t) :* q) _≡_.refl n (+ q) t ⟩
+          (n ℤ.- t) ℤ.* (+ q) ∎
+
+        part3 : + 0 ℤ.< (n ℤ.- t) ℤ.* (+ q)
+        part3 = ℤP.≤-<-trans (+≤+ ℕ.z≤n) part2
+
+      n-t<1 : n ℤ.- t ℤ.< + 1
+      n-t<1 = begin-strict {!!}
+        where
+          open ℤP.≤-Reasoning
+
+
 infixl 6 _+_ _⊔_
 infix 8 -_
 
@@ -380,18 +436,90 @@ xₘ ⊔ yₘ = xₘ (xₘ ≥ yₘ)
                        ≤ xₘ - xₙ
                        ≤ ...
 
+∣ (xm ⊔ ym) - (xn ⊔ yn) ∣ = (xm ⊔ ym) - (xn ⊔ yn)
+                         ≤ (xm ⊔ ym) - xn
+(a ⊔ b) - (c ⊔ d) ≤ a - c
+                  = ∣a - c∣
+
                        
 -}
+
+p≃q⇒-p≃-q : ∀ (p q : ℚᵘ) -> p ℚ.≃ q -> ℚ.- p ℚ.≃ ℚ.- q
+p≃q⇒-p≃-q p q p≃q = ℚP.p-q≃0⇒p≃q (ℚ.- p) (ℚ.- q) (ℚP.≃-trans (ℚP.+-comm (ℚ.- p) (ℚ.- (ℚ.- q)))
+                                                 (ℚP.≃-trans (ℚP.+-congˡ (ℚ.- p) (ℚP.neg-involutive q))
+                                                 (ℚP.p≃q⇒p-q≃0 q p (ℚP.≃-sym p≃q))))
+
+p≤∣p∣ : ∀ (p : ℚᵘ) -> p ℚ.≤ ℚ.∣ p ∣
+p≤∣p∣ (mkℚᵘ (+_ n) q-1) = ℚP.≤-refl
+p≤∣p∣ (mkℚᵘ (-[1+_] n) q-1) = *≤* ℤ.-≤+
+
 _⊔_ : ℝ -> ℝ -> ℝ
 seq (x ⊔ y) n = (seq x n) ℚ.⊔ (seq y n)
-reg (x ⊔ y) (suc k₁) (suc k₂) = {!!}
+reg (x ⊔ y) (suc k₁) (suc k₂) = [ left , right ]′ (ℚP.≤-total (seq x m ℚ.⊔ seq y m) (seq x n ℚ.⊔ seq y n))
   where
+    open ℚP.≤-Reasoning
+    open import Data.Rational.Unnormalised.Solver
+    open +-*-Solver
     m : ℕ
     m = suc k₁
 
     n : ℕ
     n = suc k₂
 
+    lem : ∀ (a b c d : ℚᵘ) -> a ℚ.≤ b -> ∀ (r s : ℕ) -> {r≢0 : r ≢0} -> {s≢0 : s ≢0} ->
+                               ℚ.∣ b ℚ.- d ∣ ℚ.≤ ((+ 1) / r) {r≢0} ℚ.+ ((+ 1) / s) {s≢0} ->
+                               (a ℚ.⊔ b) ℚ.- (c ℚ.⊔ d) ℚ.≤ ((+ 1) / r) {r≢0} ℚ.+ ((+ 1) / s) {s≢0} 
+    lem a b c d a≤b r s hyp = begin
+      (a ℚ.⊔ b) ℚ.- (c ℚ.⊔ d)     ≤⟨ ℚP.+-monoʳ-≤ (a ℚ.⊔ b) (ℚP.neg-mono-≤ (ℚP.p≤q⊔p c d)) ⟩
+      (a ℚ.⊔ b) ℚ.- d             ≈⟨ ℚP.+-congˡ (ℚ.- d) (ℚP.p≤q⇒p⊔q≃q a≤b) ⟩
+      b ℚ.- d                     ≤⟨ p≤∣p∣ (b ℚ.- d) ⟩
+      ℚ.∣ b ℚ.- d ∣               ≤⟨ hyp ⟩
+      ((+ 1) / r) ℚ.+ ((+ 1) / s)  ∎
+
+    left : seq x m ℚ.⊔ seq y m ℚ.≤ seq x n ℚ.⊔ seq y n ->
+           ℚ.∣ (seq x m ℚ.⊔ seq y m) ℚ.- (seq x n ℚ.⊔ seq y n) ∣ ℚ.≤ ((+ 1) / m) ℚ.+ ((+ 1) / n)
+    left hyp1 = [ xn≤yn , yn≤xn ]′ (ℚP.≤-total (seq x n) (seq y n))
+      where
+        xn≤yn : seq x n ℚ.≤ seq y n -> ℚ.∣ (seq x m ℚ.⊔ seq y m) ℚ.- (seq x n ℚ.⊔ seq y n) ∣ ℚ.≤ ((+ 1) / m) ℚ.+ ((+ 1) / n)
+        xn≤yn hyp2 = begin
+          ℚ.∣ (seq x m ℚ.⊔ seq y m) ℚ.- (seq x n ℚ.⊔ seq y n) ∣ ≈⟨ ℚP.≃-trans (ℚP.≃-sym (ℚP.∣-p∣≃∣p∣ ((seq x m ℚ.⊔ seq y m) ℚ.- (seq x n ℚ.⊔ seq y n))))
+                                                                  (ℚP.∣-∣-cong (solve 2 (λ a b -> :- (a :- b) := b :- a)
+                                                                  (ℚ.*≡* _≡_.refl) (seq x m ℚ.⊔ seq y m) (seq x n ℚ.⊔ seq y n))) ⟩
+          ℚ.∣ (seq x n ℚ.⊔ seq y n) ℚ.- (seq x m ℚ.⊔ seq y m) ∣ ≈⟨ ℚP.0≤p⇒∣p∣≃p (ℚP.p≤q⇒0≤q-p hyp1) ⟩
+          (seq x n ℚ.⊔ seq y n) ℚ.- (seq x m ℚ.⊔ seq y m)       ≤⟨ lem (seq x n) (seq y n) (seq x m) (seq y m) hyp2 m n
+                                                                   (ℚP.≤-respʳ-≃ (ℚP.+-comm (+ 1 / n) (+ 1 / m)) (reg y n m)) ⟩
+          (+ 1 / m) ℚ.+ (+ 1 / n)                                ∎ 
+
+        yn≤xn : seq y n ℚ.≤ seq x n -> ℚ.∣ (seq x m ℚ.⊔ seq y m) ℚ.- (seq x n ℚ.⊔ seq y n) ∣ ℚ.≤ ((+ 1) / m) ℚ.+ ((+ 1) / n)
+        yn≤xn hyp2 = begin
+          ℚ.∣ (seq x m ℚ.⊔ seq y m) ℚ.- (seq x n ℚ.⊔ seq y n) ∣ ≈⟨ ℚP.≃-trans (ℚP.≃-sym (ℚP.∣-p∣≃∣p∣ ((seq x m ℚ.⊔ seq y m) ℚ.- (seq x n ℚ.⊔ seq y n))))
+                                                                  (ℚP.∣-∣-cong (solve 2 (λ a b -> :- (a :- b) := b :- a)
+                                                                  (ℚ.*≡* _≡_.refl) (seq x m ℚ.⊔ seq y m) (seq x n ℚ.⊔ seq y n))) ⟩
+          ℚ.∣ (seq x n ℚ.⊔ seq y n) ℚ.- (seq x m ℚ.⊔ seq y m) ∣ ≈⟨ ℚP.0≤p⇒∣p∣≃p (ℚP.p≤q⇒0≤q-p hyp1) ⟩
+          (seq x n ℚ.⊔ seq y n) ℚ.- (seq x m ℚ.⊔ seq y m)       ≈⟨ ℚP.≃-trans (ℚP.+-congʳ (seq x n ℚ.⊔ seq y n)
+                                                                   (p≃q⇒-p≃-q (seq x m ℚ.⊔ seq y m) (seq y m ℚ.⊔ seq x m) (ℚP.⊔-comm (seq x m) (seq y m))))
+                                                                   (ℚP.+-congˡ (ℚ.- (seq y m ℚ.⊔ seq x m)) (ℚP.⊔-comm (seq x n) (seq y n))) ⟩
+          (seq y n ℚ.⊔ seq x n) ℚ.- (seq y m ℚ.⊔ seq x m) 
+                                                                ≤⟨ lem (seq y n) (seq x n) (seq y m) (seq x m) hyp2 m n
+                                                                   (ℚP.≤-respʳ-≃ (ℚP.+-comm (+ 1 / n) (+ 1 / m)) (reg x n m)) ⟩
+          (+ 1 / m) ℚ.+ (+ 1 / n)                                ∎
+
+    right : seq x n ℚ.⊔ seq y n ℚ.≤ seq x m ℚ.⊔ seq y m ->
+            ℚ.∣ (seq x m ℚ.⊔ seq y m) ℚ.- (seq x n ℚ.⊔ seq y n) ∣ ℚ.≤ ((+ 1) / m) ℚ.+ ((+ 1) / n)
+    right hyp1 = [ xm≤ym , ym≤xm ]′ (ℚP.≤-total (seq x m) (seq y m))
+      where
+        xm≤ym : seq x m ℚ.≤ seq y m -> ℚ.∣ (seq x m ℚ.⊔ seq y m) ℚ.- (seq x n ℚ.⊔ seq y n) ∣ ℚ.≤ ((+ 1) / m) ℚ.+ ((+ 1) / n)
+        xm≤ym hyp2 = ℚP.≤-respˡ-≃ (ℚP.≃-sym (ℚP.0≤p⇒∣p∣≃p (ℚP.p≤q⇒0≤q-p hyp1))) (lem (seq x m) (seq y m) (seq x n) (seq y n) hyp2 m n (reg y m n)) 
+
+        ym≤xm : seq y m ℚ.≤ seq x m -> ℚ.∣ (seq x m ℚ.⊔ seq y m) ℚ.- (seq x n ℚ.⊔ seq y n) ∣ ℚ.≤ ((+ 1) / m) ℚ.+ ((+ 1) / n)
+        ym≤xm hyp2 = begin
+           ℚ.∣ (seq x m ℚ.⊔ seq y m) ℚ.- (seq x n ℚ.⊔ seq y n) ∣ ≈⟨ ℚP.0≤p⇒∣p∣≃p (ℚP.p≤q⇒0≤q-p hyp1) ⟩
+           (seq x m ℚ.⊔ seq y m) ℚ.- (seq x n ℚ.⊔ seq y n)       ≈⟨ ℚP.≃-trans (ℚP.+-congˡ (ℚ.- (seq x n ℚ.⊔ seq y n)) (ℚP.⊔-comm (seq x m) (seq y m)))
+                                                                    (ℚP.+-congʳ (seq y m ℚ.⊔ seq x m)
+                                                                    (p≃q⇒-p≃-q (seq x n ℚ.⊔ seq y n) (seq y n ℚ.⊔ seq x n) (ℚP.⊔-comm (seq x n) (seq y n)))) ⟩
+           (seq y m ℚ.⊔ seq x m) ℚ.- (seq y n ℚ.⊔ seq x n)       ≤⟨ lem (seq y m) (seq x m) (seq y n) (seq x n) hyp2 m n (reg x m n) ⟩
+           (+ 1 / m) ℚ.+ (+ 1 / n)                                                      ∎
+    
 -_ : ℝ -> ℝ
 seq (- x) n = ℚ.- seq x n
 reg (- x) m n {m≢0} {n≢0} = begin
