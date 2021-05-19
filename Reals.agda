@@ -279,103 +279,11 @@ lemma1B x y hyp (suc k₁) = lemA lemB
         
         j : ℕ
         j = suc k₁
-
-{-
-p/q
-p = r + tq   0 ≤ r < q
-p/q = (r + tq) / q = r/q + t r < q so
-p/q = r/q + t < 1 + t
-p/q = r/q + t
-
-p/q < 1 + t
-p/q < m < 1 + t
--> p < qm < q + qt
--> r + qt < qm < q + qt
--> r < qm - qt < q
--> r/q < m-t < 1
--> 0 < m-t < 1
-
-p/q = (r + tq)/q = r/q + t < 1 + t
-p/q < 1 + t
-p/q < m < 1 + t
-p < qm < q + qt
-r + qt < qm < q + qt
-r < qm - qt < q
-r/q < m - t < 1
-0 < m - t < 1
--}
-{-least : ∀ (p : ℚᵘ) -> ∃ λ (K : ℤ) ->
-        p ℚ.< (K / 1) × (∀ (n : ℤ) -> p ℚ.< (n / 1) -> K ℤ.≤ n)
-least (mkℚᵘ p q-1) = (+ 1) ℤ.+ t , < (λ x -> {!!}) , {!!} > {!!}
-  where
-    q : ℕ
-    q = suc q-1
-
-    r : ℕ
-    r = p modℕ q
-
-    t : ℤ
-    t = p divℕ q
-
-K_ : ℝ -> ℤ
-K x with least (ℚ.∣ seq x 1 ∣ ℚ.+ ((+ 2) / 1))
-... | N , res = N-}
-
-{-
-p/q = (r + tq)/q
-    = r/q + t
-    < 1 + t
--}
+        
 antidensity-ℤ : ¬(∃ λ (n : ℤ) -> + 0 ℤ.< n × n ℤ.< + 1)
 antidensity-ℤ (+[1+ n ] , +<+ m<n , +<+ (ℕ.s≤s ()))
 
-least : ∀ (p : ℚᵘ) -> ∃ λ (K : ℤ) ->
-        p ℚ.< (K / 1) × (∀ (n : ℤ) -> p ℚ.< (n / 1) -> K ℤ.≤ n)
-least (mkℚᵘ p q-1) = (+ 1) ℤ.+ t , {!!} ,′ {!!}
-  where
-    q : ℕ
-    q = suc q-1
-
-    r : ℕ
-    r = p modℕ q
-
-    t : ℤ
-    t = p divℕ q
-
-    least-property : ∀ (n : ℤ) -> p / q ℚ.< n / 1 -> + 1 ℤ.+ t ℤ.≤ n
-    least-property n p/q<n with + 1 ℤ.+ t ℤP.≤? n
-    ... | .Bool.true because ofʸ P = P
-    ... | .Bool.false because ofⁿ ¬P = ⊥-elim (antidensity-ℤ (n ℤ.- t , 0<n-t ,′ n-t<1))
-      where
-      0<n-t : + 0 ℤ.< n ℤ.- t
-      0<n-t = ℤP.*-cancelʳ-<-nonNeg q (ℤP.≤-<-trans (ℤP.≤-reflexive (ℤP.*-zeroˡ (+ q))) part3)
-        
-        where
-        open ℤP.≤-Reasoning
-        open import Data.Integer.Solver
-        open +-*-Solver
-        part1 : (+ r) ℤ.+ t ℤ.* (+ q) ℤ.< n ℤ.* (+ q)
-        part1 = begin-strict --ℤP.≤-<-trans (ℤP.≤-reflexive (sym (ℤP.*-identityʳ p))) (ℚP.drop-*<* p/q<n)
-          (+ r) ℤ.+ t ℤ.* (+ q) ≡⟨ trans (sym (a≡a%ℕn+[a/ℕn]*n p q)) (sym (ℤP.*-identityʳ p)) ⟩
-          p ℤ.* (+ 1)           <⟨ ℚP.drop-*<* p/q<n ⟩
-          n ℤ.* (+ q) ∎
-
-        part2 : (+ r) ℤ.< (n ℤ.- t) ℤ.* (+ q)
-        part2 = begin-strict
-          + r ≡⟨ solve 2 (λ r t -> r := r :+ t :- t) _≡_.refl (+ r) (t ℤ.* (+ q)) ⟩
-          (+ r) ℤ.+ t ℤ.* (+ q) ℤ.- t ℤ.* (+ q) <⟨ ℤP.+-monoˡ-< (ℤ.- (t ℤ.* + q)) part1 ⟩
-          n ℤ.* (+ q) ℤ.- t ℤ.* (+ q) ≡⟨ solve 3 (λ n q t -> n :* q :- t :* q := (n :- t) :* q) _≡_.refl n (+ q) t ⟩
-          (n ℤ.- t) ℤ.* (+ q) ∎
-
-        part3 : + 0 ℤ.< (n ℤ.- t) ℤ.* (+ q)
-        part3 = ℤP.≤-<-trans (+≤+ ℕ.z≤n) part2
-
-      n-t<1 : n ℤ.- t ℤ.< + 1
-      n-t<1 = begin-strict {!!}
-        where
-          open ℤP.≤-Reasoning
-
-
+  
 infixl 6 _+_ _⊔_
 infix 8 -_
 
@@ -426,23 +334,305 @@ reg (x + y) (suc k₁) (suc k₂) = begin
     n : ℕ
     n = suc k₂
 
+2ℚᵘ : ℚᵘ
+2ℚᵘ = (+ 2) / 1
+
+least-ℤ>ℚ : ℚᵘ -> ℤ
+least-ℤ>ℚ p = + 1 ℤ.+ (↥ p divℕ ↧ₙ p)
+
+abstract
+  least-ℤ>ℚ-greater : ∀ (p : ℚᵘ) -> p ℚ.< least-ℤ>ℚ p / 1
+  least-ℤ>ℚ-greater (mkℚᵘ p q-1) = ℚ.*<* (begin-strict
+    p ℤ.* (+ 1)           ≡⟨ trans (ℤP.*-identityʳ p) (a≡a%ℕn+[a/ℕn]*n p q) ⟩
+    (+ r) ℤ.+ t ℤ.* (+ q) <⟨ ℤP.+-monoˡ-< (t ℤ.* (+ q)) (+<+ (n%ℕd<d p q)) ⟩
+    (+ q) ℤ.+ t ℤ.* (+ q) ≡⟨ solve 2 (λ q t -> q :+ t :* q := (con (+ 1) :+ t) :* q) _≡_.refl (+ q) t ⟩
+    (+ 1 ℤ.+ t) ℤ.* (+ q)  ∎)
+    where
+      open ℤP.≤-Reasoning
+      open import Data.Integer.Solver
+      open +-*-Solver
+      q : ℕ
+      q = suc q-1
+
+      t : ℤ
+      t = p divℕ q
+
+      r : ℕ
+      r = p modℕ q
+
+  least-ℤ>ℚ-least : ∀ (p : ℚᵘ) -> ∀ (n : ℤ) -> p ℚ.< n / 1 -> least-ℤ>ℚ p ℤ.≤ n
+  least-ℤ>ℚ-least (mkℚᵘ p q-1) n p/q<n with (least-ℤ>ℚ (mkℚᵘ p q-1)) ℤP.≤? n
+  ... | .Bool.true because ofʸ P = P
+  ... | .Bool.false because ofⁿ ¬P = ⊥-elim (antidensity-ℤ (n ℤ.- t , 0<n-t ,′ n-t<1))
+    where
+      open ℤP.≤-Reasoning
+      open import Data.Integer.Solver
+      open +-*-Solver
+      q : ℕ
+      q = suc q-1
+
+      t : ℤ
+      t = p divℕ q
+
+      r : ℕ
+      r = p modℕ q
+
+      n-t<1 : n ℤ.- t ℤ.< + 1
+      n-t<1 = ℤP.<-≤-trans (ℤP.+-monoˡ-< (ℤ.- t) (ℤP.≰⇒> ¬P))
+            (ℤP.≤-reflexive (solve 1 (λ t -> con (+ 1) :+ t :- t := con (+ 1)) _≡_.refl t))
+
+      part1 : (+ r) ℤ.+ t ℤ.* (+ q) ℤ.< n ℤ.* (+ q)
+      part1 = begin-strict
+        (+ r) ℤ.+ t ℤ.* (+ q) ≡⟨ trans (sym (a≡a%ℕn+[a/ℕn]*n p q)) (sym (ℤP.*-identityʳ p)) ⟩
+        p ℤ.* (+ 1)           <⟨ ℚP.drop-*<* p/q<n ⟩
+        n ℤ.* (+ q) ∎
+
+      part2 : (+ r) ℤ.< (n ℤ.- t) ℤ.* (+ q)
+      part2 = begin-strict
+        + r                                   ≡⟨ solve 2 (λ r t -> r := r :+ t :- t) _≡_.refl (+ r) (t ℤ.* (+ q)) ⟩
+        (+ r) ℤ.+ t ℤ.* (+ q) ℤ.- t ℤ.* (+ q) <⟨ ℤP.+-monoˡ-< (ℤ.- (t ℤ.* + q)) part1 ⟩
+        n ℤ.* (+ q) ℤ.- t ℤ.* (+ q)           ≡⟨ solve 3 (λ n q t -> n :* q :- t :* q := (n :- t) :* q) _≡_.refl n (+ q) t ⟩
+        (n ℤ.- t) ℤ.* (+ q)                    ∎
+
+      part3 : + 0 ℤ.< (n ℤ.- t) ℤ.* (+ q)
+      part3 = ℤP.≤-<-trans (+≤+ ℕ.z≤n) part2
+
+      0<n-t : + 0 ℤ.< n ℤ.- t
+      0<n-t = ℤP.*-cancelʳ-<-nonNeg q (ℤP.≤-<-trans (ℤP.≤-reflexive (ℤP.*-zeroˡ (+ q))) part3)
+
+least : ∀ (p : ℚᵘ) -> ∃ λ (K : ℤ) ->
+        p ℚ.< (K / 1) × (∀ (n : ℤ) -> p ℚ.< (n / 1) -> K ℤ.≤ n)
+least p = least-ℤ>ℚ p , least-ℤ>ℚ-greater p ,′ least-ℤ>ℚ-least p
+
+K : ℝ -> ℤ
+K x = least-ℤ>ℚ (ℚ.∣ seq x 1 ∣ ℚ.+ 2ℚᵘ)
+
+canonical-property : ∀ (x : ℝ) -> ℚ.∣ seq x 1 ∣ ℚ.+ 2ℚᵘ ℚ.< (K x) / 1 ×
+                     (∀ (n : ℤ) -> ℚ.∣ seq x 1 ∣ ℚ.+ 2ℚᵘ ℚ.< n / 1 -> K x ℤ.≤ n)
+canonical-property x = least-ℤ>ℚ-greater (ℚ.∣ seq x 1 ∣ ℚ.+ 2ℚᵘ) ,′
+                       least-ℤ>ℚ-least (ℚ.∣ seq x 1 ∣ ℚ.+ 2ℚᵘ)
+
+canonical-greater : ∀ (x : ℝ) -> ∀ (n : ℕ) -> {n ≢0} -> ℚ.∣ seq x n ∣ ℚ.< (K x) / 1
+canonical-greater x (suc k₁) = begin-strict
+  ℚ.∣ seq x n ∣                               ≈⟨ ℚP.∣-∣-cong (solve 2 (λ xn x1 ->
+                                                            xn := xn :- x1 :+ x1)
+                                                            (ℚ.*≡* _≡_.refl) (seq x n) (seq x 1)) ⟩
+  ℚ.∣ seq x n ℚ.- seq x 1 ℚ.+ seq x 1 ∣       ≤⟨ ℚP.∣p+q∣≤∣p∣+∣q∣ (seq x n ℚ.- seq x 1) (seq x 1) ⟩
+  ℚ.∣ seq x n ℚ.- seq x 1 ∣ ℚ.+ ℚ.∣ seq x 1 ∣ ≤⟨ ℚP.+-monoˡ-≤ ℚ.∣ seq x 1 ∣ (reg x n 1) ⟩
+  (+ 1 / n) ℚ.+ (+ 1 / 1) ℚ.+ ℚ.∣ seq x 1 ∣   ≤⟨ ℚP.+-monoˡ-≤ ℚ.∣ seq x 1 ∣
+                                                 (ℚP.≤-trans (ℚP.+-monoˡ-≤ (+ 1 / 1) 1/n≤1) ℚP.≤-refl) ⟩
+  2ℚᵘ ℚ.+ ℚ.∣ seq x 1 ∣                       <⟨ ℚP.<-respˡ-≃ (ℚP.+-comm ℚ.∣ seq x 1 ∣ 2ℚᵘ) (proj₁ (canonical-property x)) ⟩
+  (K x) / 1                                    ∎
+  where
+    open ℚP.≤-Reasoning
+    open import Data.Rational.Unnormalised.Solver
+    open +-*-Solver
+    n : ℕ
+    n = suc k₁
+  
+    1/n≤1 : + 1 / n ℚ.≤ + 1 / 1
+    1/n≤1 = *≤* (ℤP.≤-trans (ℤP.≤-reflexive (*-identityˡ (+ 1)))
+                (ℤP.≤-trans (+≤+ (ℕ.s≤s ℕ.z≤n)) (ℤP.≤-reflexive (sym (*-identityˡ (+ n))))))
+
+_*_ : ℝ -> ℝ -> ℝ
+seq (x * y) n = seq x (2 ℕ.* ℤ.∣ K x ℤ.⊔ K y ∣ ℕ.* n) ℚ.* seq y (2 ℕ.* ℤ.∣ K x ℤ.⊔ K y ∣ ℕ.* n)
+reg (x * y) (suc k₁) (suc k₂) = begin
+  ℚ.∣ x₂ₖₘ ℚ.* y₂ₖₘ ℚ.- x₂ₖₙ ℚ.* y₂ₖₙ ∣             ≈⟨ ℚP.∣-∣-cong (ℚsolve 4 (λ xm ym xn yn ->
+                                                       xm ℚ:* ym ℚ:- xn ℚ:* yn ℚ:=
+                                                       xm ℚ:* (ym ℚ:- yn) ℚ:+ yn ℚ:* (xm ℚ:- xn))
+                                                       (ℚ.*≡* _≡_.refl) x₂ₖₘ y₂ₖₘ x₂ₖₙ y₂ₖₙ) ⟩
+  ℚ.∣ x₂ₖₘ ℚ.* (y₂ₖₘ ℚ.- y₂ₖₙ) ℚ.+
+      y₂ₖₙ ℚ.* (x₂ₖₘ ℚ.- x₂ₖₙ) ∣                   ≤⟨ ℚP.∣p+q∣≤∣p∣+∣q∣ (x₂ₖₘ ℚ.* (y₂ₖₘ ℚ.- y₂ₖₙ))
+                                                      (y₂ₖₙ ℚ.* (x₂ₖₘ ℚ.- x₂ₖₙ)) ⟩
+  ℚ.∣ x₂ₖₘ ℚ.* (y₂ₖₘ ℚ.- y₂ₖₙ) ∣ ℚ.+
+  ℚ.∣ y₂ₖₙ ℚ.* (x₂ₖₘ ℚ.- x₂ₖₙ) ∣                   ≈⟨ ℚP.≃-trans (ℚP.+-congˡ ℚ.∣ y₂ₖₙ ℚ.* (x₂ₖₘ ℚ.- x₂ₖₙ) ∣
+                                                      (ℚP.∣p*q∣≃∣p∣*∣q∣ x₂ₖₘ (y₂ₖₘ ℚ.- y₂ₖₙ)))
+                                                      (ℚP.+-congʳ (ℚ.∣ x₂ₖₘ ∣ ℚ.* ℚ.∣ y₂ₖₘ ℚ.- y₂ₖₙ ∣)
+                                                      (ℚP.∣p*q∣≃∣p∣*∣q∣ y₂ₖₙ (x₂ₖₘ ℚ.- x₂ₖₙ))) ⟩
+  ℚ.∣ x₂ₖₘ ∣ ℚ.* ℚ.∣ y₂ₖₘ ℚ.- y₂ₖₙ ∣ ℚ.+
+  ℚ.∣ y₂ₖₙ ∣ ℚ.* ℚ.∣ x₂ₖₘ ℚ.- x₂ₖₙ ∣               ≤⟨ {!!} ⟩
+  (+ k / 1) ℚ.* ℚ.∣ y₂ₖₘ ℚ.- y₂ₖₙ ∣ ℚ.+
+  (+ k / 1) ℚ.* ℚ.∣ x₂ₖₘ ℚ.- x₂ₖₙ ∣                ≤⟨ {!!} ⟩
+  (+ k / 1) ℚ.* ((+ 1 / 2km) {{!!}} ℚ.+
+  (+ 1 / 2kn) {{!!}}) ℚ.+
+  (+ k / 1) ℚ.* ((+ 1 / 2km) {{!!}} ℚ.+
+  (+ 1 / 2kn){{!!}})                               ≈⟨ ℚP.≃-sym (ℚP.*-distribˡ-+ (+ k / 1) ((+ 1 / 2km) ℚ.+ (+ 1 / 2kn))
+                                                                                          (((+ 1 / 2km) ℚ.+ (+ 1 / 2kn)))) ⟩
+  (+ k / 1) ℚ.*
+  ((+ 1 / 2km) {{!!}} ℚ.+ (+ 1 / 2kn) {{!!}} ℚ.+
+  ((+ 1 / 2km) {{!!}} ℚ.+ (+ 1 / 2kn) {{!!}}))     ≈⟨ {!!} ⟩
+
+  (+ 1 / m) ℚ.+ (+ 1 / n)                                              ∎
+  where
+    open ℚP.≤-Reasoning
+    open import Data.Rational.Unnormalised.Solver as ℚ-Solver
+    open ℚ-Solver.+-*-Solver using ()
+      renaming
+        ( solve to ℚsolve
+        ; _:+_ to _ℚ:+_
+        ; _:-_ to _ℚ:-_
+        ; _:*_ to _ℚ:*_
+        ; _:=_ to _ℚ:=_
+        )
+    open import Data.Integer.Solver as ℤ-Solver
+    open ℤ-Solver.+-*-Solver
+
+    k : ℕ
+    k = ℤ.∣ K x ℤ.⊔ K y ∣ 
+    
+    m : ℕ
+    m = suc k₁
+
+    n : ℕ
+    n = suc k₂
+
+    2km : ℕ
+    2km = 2 ℕ.* k ℕ.* m
+
+    2kn : ℕ
+    2kn = 2 ℕ.* k ℕ.* n
+
+    +2km : ℤ
+    +2km = (+ 2) ℤ.* (+ k) ℤ.* (+ m)
+
+    +2kn : ℤ
+    +2kn = (+ 2) ℤ.* (+ k) ℤ.* (+ n)
+
+    2km=+2km : + 2km ≡ +2km
+    2km=+2km = trans (sym (ℤP.pos-distrib-* (2 ℕ.* k) m)) (cong (λ x -> x ℤ.* (+ m)) (sym (ℤP.pos-distrib-* 2 k)))
+
+    2kn=+2kn : + 2kn ≡ +2kn
+    2kn=+2kn = trans (sym (ℤP.pos-distrib-* (2 ℕ.* k) n)) (cong (λ x -> x ℤ.* (+ n)) (sym (ℤP.pos-distrib-* 2 k)))
+
+    test : numerator ((+ 1 / 2km) ℚ.+ (+ 1 / 2kn)) ≡ (+ 1) ℤ.* {!denominator (+ 1 / 2kn)!} ℤ.+ (+ 1) ℤ.* (+ 2km)
+    test = _≡_.refl
+
+    test2 : denominator (+ 1 / 2km) ≡ + 2km
+    test2 = {!_≡_.refl!}
+
+    part1 : (+ 1) ℤ.* (+ 2kn) ℤ.+ (+ 1) ℤ.* (+ 2km) ≡ +2kn ℤ.+ +2km
+    part1 = trans (cong (λ x -> x ℤ.+ (+ 1) ℤ.* (+ 2km)) (trans (*-identityˡ (+ 2kn)) 2kn=+2kn))
+            (cong (λ x -> +2kn ℤ.+ x) (trans (*-identityˡ (+ 2km)) 2km=+2km))
+
+    part2 : + (2km ℕ.* 2kn) ≡ +2km ℤ.* +2kn
+    part2 = trans (sym (ℤP.pos-distrib-* 2km 2kn))
+            (trans (cong (λ x -> x ℤ.* (+ 2kn)) 2km=+2km) (cong (λ x -> +2km ℤ.* x) 2kn=+2kn))
+
+    part3 : ((+ 1) ℤ.* (+ 2kn) ℤ.+ (+ 1) ℤ.* (+ 2km)) ℤ.* (+ (2km ℕ.* 2kn)) ≡
+            (+2kn ℤ.+ +2km) ℤ.* (+2km ℤ.* +2kn)
+    part3 = trans (cong (λ x -> x ℤ.* (+ (2km ℕ.* 2kn))) part1) (cong (λ x -> (+2kn ℤ.+ +2km) ℤ.* x) part2)
+
+    num : (+ k) ℤ.* (((+ 1) ℤ.* {!!} ℤ.+ (+ 1) ℤ.* + 2km) ℤ.* (+ (2km ℕ.* 2kn)) ℤ.+ {!!}) ≡ {!!}
+    num = {!!}
+    
 {-
-xₘ ≥ xₙ : 
-∣ (xₘ ⊔ yₘ) - (xₙ ⊔ yₙ) ∣
+    part2 : ((+ 1) ℤ.* (+ 2kn) ℤ.+ (+ 1) ℤ.* (+ 2km)) ℤ.* (+ (2km ℕ.* 2kn)) ≡
+            (+2kn ℤ.+ +2km) ℤ.* (+2km ℤ.* +2kn)
+    part2 = trans (cong (λ x -> x ℤ.* (+ (2km ℕ.* 2kn))) part1) (cong (λ x -> (+2kn ℤ.+ +2km) ℤ.* x)
+            (trans (sym (ℤP.pos-distrib-* 2km 2kn)) (trans (cong (λ x -> x ℤ.* (+ 2kn)) 2km=+2km)
+            (cong (λ x -> +2km ℤ.* x) 2kn=+2kn))))
 
-∣ (xₘ ⊔ yₘ) - (xₙ ⊔ yₙ) ∣ = (xₘ ⊔ yₘ) - (xₙ ⊔ yₙ)
-xₘ ⊔ yₘ = xₘ (xₘ ≥ yₘ)
-  (xₘ ⊔ yₘ) - (xₙ ⊔ yₙ) = xₘ - (xₙ ⊔ yₙ)
-                       ≤ xₘ - xₙ
-                       ≤ ...
+    part3 : (((+ 1) ℤ.* (+ 2kn) ℤ.+ (+ 1) ℤ.* (+ 2km)) ℤ.* (+ (2km ℕ.* 2kn))) ℤ.+
+            (((+ 1) ℤ.* (+ 2kn) ℤ.+ (+ 1) ℤ.* (+ 2km)) ℤ.* (+ (2km ℕ.* 2kn))) ≡
+            (+2kn ℤ.+ +2km) ℤ.* (+2km ℤ.* +2kn) ℤ.+ (+2kn ℤ.+ +2km) ℤ.* (+2km ℤ.* +2kn)
+    part3 = trans (cong (λ x -> x ℤ.+ (((+ 1) ℤ.* (+ 2kn) ℤ.+ (+ 1) ℤ.* (+ 2km)) ℤ.* (+ (2km ℕ.* 2kn)))) part2)
+                  (cong (λ x -> (+2kn ℤ.+ +2km) ℤ.* (+2km ℤ.* +2kn) ℤ.+ x) part2)
 
-∣ (xm ⊔ ym) - (xn ⊔ yn) ∣ = (xm ⊔ ym) - (xn ⊔ yn)
-                         ≤ (xm ⊔ ym) - xn
-(a ⊔ b) - (c ⊔ d) ≤ a - c
-                  = ∣a - c∣
+    part50 : (+ (2km ℕ.* 2kn)) ℤ.* (+ (2km ℕ.* 2kn)) ≡ (+2km ℤ.* +2kn) ℤ.* (+2km ℤ.* +2kn)
+    part50 = trans (cong (λ x -> x ℤ.* (+ (2km ℕ.* 2kn))) (trans (sym (ℤP.pos-distrib-* 2km 2kn))
+            (trans (cong (λ x -> x ℤ.* (+ 2kn)) 2km=+2km) (cong (λ x -> +2km ℤ.* x) 2kn=+2kn))))
+            (cong (λ x -> (+2km ℤ.* +2kn) ℤ.* x) (trans (sym (ℤP.pos-distrib-* 2km 2kn))
+            (trans (cong (λ x -> x ℤ.* (+ 2kn)) 2km=+2km) (cong (λ x -> +2km ℤ.* x) 2kn=+2kn))))-}
 
-                       
+
+    
+{-
+    num : (+ k) ℤ.* ((((+ 1) ℤ.* (+ 2kn) ℤ.+ (+ 1) ℤ.* (+ 2km)) ℤ.* (+ (2km ℕ.* 2kn))) ℤ.+
+          (((+ 1) ℤ.* (+ 2kn) ℤ.+ (+ 1) ℤ.* (+ 2km)) ℤ.* (+ (2km ℕ.* 2kn)))) ≡
+          (+ k) ℤ.* ((+2kn ℤ.+ +2km) ℤ.* (+2km ℤ.* +2kn) ℤ.+ (+2kn ℤ.+ +2km) ℤ.* (+2km ℤ.* +2kn))
+    num = cong (λ x -> (+ k) ℤ.* x) part3
+
+    den : (+ 1) ℤ.* ((+ (2km ℕ.* 2kn)) ℤ.* (+ (2km ℕ.* 2kn))) ≡ (+2km ℤ.* +2kn) ℤ.* (+2km ℤ.* +2kn)
+    den = trans (*-identityˡ ((+ (2km ℕ.* 2kn)) ℤ.* (+ (2km ℕ.* 2kn)))) part4-}
+            
+    x₂ₖₘ : ℚᵘ
+    x₂ₖₘ = seq x 2km
+
+    y₂ₖₘ : ℚᵘ
+    y₂ₖₘ = seq y 2km
+  
+    x₂ₖₙ : ℚᵘ
+    x₂ₖₙ = seq x 2kn
+
+    y₂ₖₙ : ℚᵘ
+    y₂ₖₙ = seq y 2kn
+
+{-
+
 -}
+
+{-
+1/n ≤ 1/1 <-> 1*1 ≤ 1*n
+
+1/n + 1/1 = (1*1 + 1*n)/(n*1)
+≤ 2/1
+<->
+(1*1 + 1*n) * 1 ≤ 2 * (n * 1)
+<->
+1 + n ≤ 2 * n 
+-}
+
+{-test : ∀ (n : ℕ) -> {n≢0 : n ≢0} -> ((+ 1) / n) {n≢0} ℚ.≤ + 1 / 1
+test (suc k₁) = {!!}
+  where
+    open import Data.Integer.-}
+
+
+{-
+Let x∈ℝ and let n∈ℕ. Consider Kₓ > ∣x₁∣ + 2.
+∣xₙ∣ ≤ Kₓ?
+∣xₙ∣ = ∣xₙ - x₁ + x₁∣ ≤ ∣xₙ - x₁∣ + ∣x₁∣
+                     ≤ (1/n + 1) + ∣x₁∣
+                     ≤ 2 + ∣x₁∣
+                     < Kₓ.
+Thus ∣xₙ∣ < Kₓ.                            □
+-}
+
+{-
+
+-}
+{-
+canonical-property : ∀ (x : ℝ) -> ∀ (n : ℕ) -> {n ≢0} -> ℚ.∣ seq x n ∣ ℚ.< (K x) / 1
+canonical-property x (suc k₁) = begin-strict
+  ℚ.∣ seq x n ∣                               ≈⟨ ℚP.∣-∣-cong (solve 2 (λ xn x1 ->
+                                                             xn := xn :- x1 :+ x1)
+                                                             (ℚ.*≡* _≡_.refl) (seq x n) (seq x 1)) ⟩
+  ℚ.∣ seq x n ℚ.- seq x 1 ℚ.+ seq x 1 ∣       ≤⟨ ℚP.∣p+q∣≤∣p∣+∣q∣ (seq x n ℚ.- seq x 1) (seq x 1) ⟩
+  ℚ.∣ seq x n ℚ.- seq x 1 ∣ ℚ.+ ℚ.∣ seq x 1 ∣ ≤⟨ ℚP.+-monoˡ-≤ ℚ.∣ seq x 1 ∣ (reg x n 1) ⟩
+  (+ 1 / n) ℚ.+ (+ 1 / 1) ℚ.+ ℚ.∣ seq x 1 ∣   ≤⟨ ℚP.+-monoˡ-≤ ℚ.∣ seq x 1 ∣ (*≤* {!!}) ⟩
+  2ℚᵘ ℚ.+ ℚ.∣ seq x 1 ∣                       <⟨ ℚP.<-respˡ-≃ (ℚP.+-comm ℚ.∣ seq x 1 ∣ 2ℚᵘ) (canonical-lesser x) ⟩
+  (K x) / 1 ∎
+  where
+    open ℚP.≤-Reasoning
+    open import Data.Rational.Unnormalised.Solver
+    open +-*-Solver
+    n : ℕ
+    n = suc k₁
+
+_*_ : ℝ -> ℝ -> ℝ
+seq (x * y) n with least (ℚ.∣ seq x 1 ∣ ℚ.+ 2ℚᵘ) | least (ℚ.∣ seq y 1 ∣ ℚ.+ 2ℚᵘ)
+... | Kx , leastx | Ky , leasty = seq x (2 ℕ.* k ℕ.* n) ℚ.* seq y (2 ℕ.* k ℕ.* n) 
+  where
+    k : ℕ
+    k = ℤ.∣ Kx ℤ.⊔ Ky ∣-}
+{-
+k ≥ Kx
+∣x₂ₖₘ∣ ≤ k?
+1 < 2km
+∣x₂ₖₘ∣ = ∣x₂ₖₘ - x₁ + x₁∣ ≤ ∣x₂ₖₘ - x₁∣ + ∣x₁∣
+≤ 1/2km + 1 + k
+-}
+--reg (x * y) = {!!}
 
 p≃q⇒-p≃-q : ∀ (p q : ℚᵘ) -> p ℚ.≃ q -> ℚ.- p ℚ.≃ ℚ.- q
 p≃q⇒-p≃-q p q p≃q = ℚP.p-q≃0⇒p≃q (ℚ.- p) (ℚ.- q) (ℚP.≃-trans (ℚP.+-comm (ℚ.- p) (ℚ.- (ℚ.- q)))
