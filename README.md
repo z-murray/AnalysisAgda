@@ -1,5 +1,5 @@
 # AnalysisAgda
-For my summer project, I am implementing as much of Errett Bishop's constructive analysis in Agda as possible. This is a solo project. Others are not allowed to edit this repository, even if it becomes public. It's listed here for version control and for anyone interested in seeing it.
+For my undergraduate summer project (under the supervision of Dr. Peter Selinger at Dalhousie University), I am implementing as much of Errett Bishop's constructive analysis in Agda as possible. This is a solo project. Others are not allowed to edit this repository, even if it becomes public. For the time being, it's listed here solely for version control and for anyone interested in seeing it.
 
 Possible Questions and Answers:
 
