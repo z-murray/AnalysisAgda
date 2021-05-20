@@ -456,42 +456,50 @@ canonical-greater x (suc k₁) = begin-strict
     1/n≤1 = *≤* (ℤP.≤-trans (ℤP.≤-reflexive (*-identityˡ (+ 1)))
                 (ℤP.≤-trans (+≤+ (ℕ.s≤s ℕ.z≤n)) (ℤP.≤-reflexive (sym (*-identityˡ (+ n))))))
 
-{-
 _*_ : ℝ -> ℝ -> ℝ
-seq (x * y) n = seq x (2 ℕ.* ℤ.∣ K x ℤ.⊔ K y ∣ ℕ.* n) ℚ.* seq y (2 ℕ.* ℤ.∣ K x ℤ.⊔ K y ∣ ℕ.* n)
+seq (x * y) n = seq x (2 ℕ.* (K x ℕ.⊔ K y) ℕ.* n) ℚ.* seq y (2 ℕ.* (K x ℕ.⊔ K y) ℕ.* n)
 reg (x * y) (suc k₁) (suc k₂) = begin
-  ℚ.∣ x₂ₖₘ ℚ.* y₂ₖₘ ℚ.- x₂ₖₙ ℚ.* y₂ₖₙ ∣             ≈⟨ ℚP.∣-∣-cong (ℚsolve 4 (λ xm ym xn yn ->
-                                                       xm ℚ:* ym ℚ:- xn ℚ:* yn ℚ:=
-                                                       xm ℚ:* (ym ℚ:- yn) ℚ:+ yn ℚ:* (xm ℚ:- xn))
-                                                       (ℚ.*≡* _≡_.refl) x₂ₖₘ y₂ₖₘ x₂ₖₙ y₂ₖₙ) ⟩
+  ℚ.∣ x₂ₖₘ ℚ.* y₂ₖₘ ℚ.- x₂ₖₙ ℚ.* y₂ₖₙ ∣        ≈⟨ ℚP.∣-∣-cong (ℚsolve 4 (λ xm ym xn yn ->
+                                                              xm ℚ:* ym ℚ:- xn ℚ:* yn ℚ:=
+                                                              xm ℚ:* (ym ℚ:- yn) ℚ:+ yn ℚ:* (xm ℚ:- xn))
+                                                              (ℚ.*≡* _≡_.refl) x₂ₖₘ y₂ₖₘ x₂ₖₙ y₂ₖₙ) ⟩
   ℚ.∣ x₂ₖₘ ℚ.* (y₂ₖₘ ℚ.- y₂ₖₙ) ℚ.+
-      y₂ₖₙ ℚ.* (x₂ₖₘ ℚ.- x₂ₖₙ) ∣                   ≤⟨ ℚP.∣p+q∣≤∣p∣+∣q∣ (x₂ₖₘ ℚ.* (y₂ₖₘ ℚ.- y₂ₖₙ))
-                                                      (y₂ₖₙ ℚ.* (x₂ₖₘ ℚ.- x₂ₖₙ)) ⟩
+      y₂ₖₙ ℚ.* (x₂ₖₘ ℚ.- x₂ₖₙ) ∣              ≤⟨ ℚP.∣p+q∣≤∣p∣+∣q∣ (x₂ₖₘ ℚ.* (y₂ₖₘ ℚ.- y₂ₖₙ))
+                                                                (y₂ₖₙ ℚ.* (x₂ₖₘ ℚ.- x₂ₖₙ)) ⟩
   ℚ.∣ x₂ₖₘ ℚ.* (y₂ₖₘ ℚ.- y₂ₖₙ) ∣ ℚ.+
-  ℚ.∣ y₂ₖₙ ℚ.* (x₂ₖₘ ℚ.- x₂ₖₙ) ∣                   ≈⟨ ℚP.≃-trans (ℚP.+-congˡ ℚ.∣ y₂ₖₙ ℚ.* (x₂ₖₘ ℚ.- x₂ₖₙ) ∣
-                                                      (ℚP.∣p*q∣≃∣p∣*∣q∣ x₂ₖₘ (y₂ₖₘ ℚ.- y₂ₖₙ)))
-                                                      (ℚP.+-congʳ (ℚ.∣ x₂ₖₘ ∣ ℚ.* ℚ.∣ y₂ₖₘ ℚ.- y₂ₖₙ ∣)
-                                                      (ℚP.∣p*q∣≃∣p∣*∣q∣ y₂ₖₙ (x₂ₖₘ ℚ.- x₂ₖₙ))) ⟩
+  ℚ.∣ y₂ₖₙ ℚ.* (x₂ₖₘ ℚ.- x₂ₖₙ) ∣              ≈⟨ ℚP.≃-trans (ℚP.+-congˡ ℚ.∣ y₂ₖₙ ℚ.* (x₂ₖₘ ℚ.- x₂ₖₙ) ∣
+                                                            (ℚP.∣p*q∣≃∣p∣*∣q∣ x₂ₖₘ (y₂ₖₘ ℚ.- y₂ₖₙ)))
+                                                            (ℚP.+-congʳ (ℚ.∣ x₂ₖₘ ∣ ℚ.* ℚ.∣ y₂ₖₘ ℚ.- y₂ₖₙ ∣)
+                                                            (ℚP.∣p*q∣≃∣p∣*∣q∣ y₂ₖₙ (x₂ₖₘ ℚ.- x₂ₖₙ))) ⟩
   ℚ.∣ x₂ₖₘ ∣ ℚ.* ℚ.∣ y₂ₖₘ ℚ.- y₂ₖₙ ∣ ℚ.+
-  ℚ.∣ y₂ₖₙ ∣ ℚ.* ℚ.∣ x₂ₖₘ ℚ.- x₂ₖₙ ∣               ≤⟨ {!!} ⟩
+  ℚ.∣ y₂ₖₙ ∣ ℚ.* ℚ.∣ x₂ₖₘ ℚ.- x₂ₖₙ ∣           ≤⟨ ℚP.≤-trans (ℚP.+-monoˡ-≤ (ℚ.∣ y₂ₖₙ ∣ ℚ.* ℚ.∣ x₂ₖₘ ℚ.- x₂ₖₙ ∣ )
+                                                            (ℚP.*-monoˡ-≤-nonNeg {ℚ.∣ y₂ₖₘ ℚ.- y₂ₖₙ ∣} _ ∣x₂ₖₘ∣≤k))
+                                                            (ℚP.+-monoʳ-≤ ((+ k / 1) ℚ.* ℚ.∣ y₂ₖₘ ℚ.- y₂ₖₙ ∣)
+                                                            (ℚP.*-monoˡ-≤-nonNeg {ℚ.∣ x₂ₖₘ ℚ.- x₂ₖₙ ∣} _ ∣y₂ₖₙ∣≤k)) ⟩
   (+ k / 1) ℚ.* ℚ.∣ y₂ₖₘ ℚ.- y₂ₖₙ ∣ ℚ.+
-  (+ k / 1) ℚ.* ℚ.∣ x₂ₖₘ ℚ.- x₂ₖₙ ∣                ≤⟨ {!!} ⟩
-  (+ k / 1) ℚ.* ((+ 1 / 2km) {{!!}} ℚ.+
-  (+ 1 / 2kn) {{!!}}) ℚ.+
-  (+ k / 1) ℚ.* ((+ 1 / 2km) {{!!}} ℚ.+
-  (+ 1 / 2kn){{!!}})                               ≈⟨ ℚP.≃-sym (ℚP.*-distribˡ-+ (+ k / 1) ((+ 1 / 2km) ℚ.+ (+ 1 / 2kn))
-                                                                                          (((+ 1 / 2km) ℚ.+ (+ 1 / 2kn)))) ⟩
-  (+ k / 1) ℚ.*
+  (+ k / 1) ℚ.* ℚ.∣ x₂ₖₘ ℚ.- x₂ₖₙ ∣           ≤⟨ ℚP.≤-trans (ℚP.+-monoˡ-≤ ((+ k / 1) ℚ.* ℚ.∣ x₂ₖₘ ℚ.- x₂ₖₙ ∣)
+                                                            (ℚP.*-monoʳ-≤-nonNeg {+ k / 1} _ (reg y 2km 2kn)))
+                                                            (ℚP.+-monoʳ-≤ ((+ k / 1) ℚ.* ((+ 1 / 2km) ℚ.+ (+ 1 / 2kn)))
+                                                            (ℚP.*-monoʳ-≤-nonNeg {+ k / 1} _ (reg x 2km 2kn))) ⟩
+  (+ k / 1) ℚ.* ((+ 1 / 2km) ℚ.+
+  (+ 1 / 2kn)) ℚ.+
+  (+ k / 1) ℚ.* ((+ 1 / 2km) ℚ.+
+  (+ 1 / 2kn))                               ≈⟨ ℚP.≃-sym (ℚP.*-distribˡ-+ (+ k / 1) ((+ 1 / 2km) ℚ.+ (+ 1 / 2kn)) ((+ 1 / 2km) ℚ.+ (+ 1 / 2kn))) ⟩
 
-  {-
-    The ℤ-Solver can't be used for this one naively since the denominator of 1/2kn is unknown by Agda.
-    The helper lemma in the ℚ properties file could be used, but it requires a bunch of extra cong calls.
-    See problem discussion below.
-  -}
-  ((+ 1 / 2km) {{!!}} ℚ.+ (+ 1 / 2kn) {{!!}} ℚ.+
-  ((+ 1 / 2km) {{!!}} ℚ.+ (+ 1 / 2kn) {{!!}}))     ≈⟨ {!!} ⟩
+  (+ k / 1) ℚ.* ((+ 1 / 2km) ℚ.+ (+ 1 / 2kn)
+  ℚ.+ ((+ 1 / 2km) ℚ.+ (+ 1 / 2kn)))         ≈⟨ ℚ.*≡* (solve 3 (λ k m n ->
 
-  (+ 1 / m) ℚ.+ (+ 1 / n)                                              ∎
+  {- Function for the solver -}
+  (k :* ((((con (+ 1) :* (con (+ 2) :* k :* n)) :+ (con (+ 1) :* (con (+ 2) :* k :* m))) :* ((con (+ 2) :* k :* m) :* (con (+ 2) :* k :* n))) :+
+  (((con (+ 1) :* (con (+ 2) :* k :* n)) :+ (con (+ 1) :* (con (+ 2) :* k :* m))) :* ((con (+ 2) :* k :* m) :* (con (+ 2) :* k :* n)))))
+  :* (m :* n) :=
+  (con (+ 1) :* n :+ con (+ 1) :* m) :*
+  (con (+ 1) :* (((con (+ 2) :* k :* m) :* (con (+ 2) :* k :* n)):* ((con (+ 2) :* k :* m) :* (con (+ 2) :* k :* n)))))
+  -- Other solver inputs
+  _≡_.refl (+ k) (+ m) (+ n)) ⟩
+  
+  (+ 1 / m) ℚ.+ (+ 1 / n)                                      ∎
+  
   where
     open ℚP.≤-Reasoning
     open import Data.Rational.Unnormalised.Solver as ℚ-Solver
@@ -505,38 +513,14 @@ reg (x * y) (suc k₁) (suc k₂) = begin
         )
     open import Data.Integer.Solver as ℤ-Solver
     open ℤ-Solver.+-*-Solver
-
-    {-
-      Problem: Agda cannot tell that k = suc r for some r∈ℕ.
-      Proposed Solution: Implement a special least-ℕ>+ℚ case
-      that returns the successor of a natural number instead
-      of an integer. It's annoying but it's generally easier
-      to convert a natural number to an integer than vice
-      versa. 
-      
-      If the current implementation is used, a lot of extra 
-      operations appear (e.g. having to use the lemma in ℚ's 
-      properties that gives denominator (1/2kn) = 2kn instead 
-      of just denominator (1/2kn). The current version results
-      in a lot of cong calls to reduce fractions. Having to
-      call the absolute value function here is an example of
-      this version's wastefulness.
-    -}
-    k : ℕ
-    k = ℤ.∣ K x ℤ.⊔ K y ∣
-
-    tests : K x ≢ + 0
-    tests Kx=0 = {!!}
-
-    {- Does not work. See problem above. -}
-    testing : + ℤ.∣ K x ℤ.⊔ K y ∣ ≡ K x ℤ.⊔ K y
-    testing = {!_≡_.refl!}
-    
     m : ℕ
     m = suc k₁
 
     n : ℕ
     n = suc k₂
+
+    k : ℕ
+    k = K x ℕ.⊔ K y
 
     2km : ℕ
     2km = 2 ℕ.* k ℕ.* m
@@ -544,56 +528,27 @@ reg (x * y) (suc k₁) (suc k₂) = begin
     2kn : ℕ
     2kn = 2 ℕ.* k ℕ.* n
 
-    +2km : ℤ
-    +2km = (+ 2) ℤ.* (+ k) ℤ.* (+ m)
-
-    +2kn : ℤ
-    +2kn = (+ 2) ℤ.* (+ k) ℤ.* (+ n)
-
-    2km=+2km : + 2km ≡ +2km
-    2km=+2km = trans (sym (ℤP.pos-distrib-* (2 ℕ.* k) m)) (cong (λ x -> x ℤ.* (+ m)) (sym (ℤP.pos-distrib-* 2 k)))
-
-    2kn=+2kn : + 2kn ≡ +2kn
-    2kn=+2kn = trans (sym (ℤP.pos-distrib-* (2 ℕ.* k) n)) (cong (λ x -> x ℤ.* (+ n)) (sym (ℤP.pos-distrib-* 2 k)))
-
-    {- Since Agda doesn't know if k = suc r for some r, it can't tell if 2*k*m is nonzero, even though 2 and m are
-       successors. -}
-    test : numerator ((+ 1 / 2km) ℚ.+ (+ 1 / 2kn)) ≡ (+ 1) ℤ.* {!denominator (+ 1 / 2kn)!} ℤ.+ (+ 1) ℤ.* (+ 2km)
-    test = _≡_.refl
-
-    {- Doesn't work, Agda doesn't know if 2km is nonzero.
-       Have to call helper lemma from ℚ properties (and prove
-       that 2*k*m is nonzero). -}
-    test2 : denominator (+ 1 / 2km) ≡ + 2km
-    test2 = {!_≡_.refl!}
-
-    part1 : (+ 1) ℤ.* (+ 2kn) ℤ.+ (+ 1) ℤ.* (+ 2km) ≡ +2kn ℤ.+ +2km
-    part1 = trans (cong (λ x -> x ℤ.+ (+ 1) ℤ.* (+ 2km)) (trans (*-identityˡ (+ 2kn)) 2kn=+2kn))
-            (cong (λ x -> +2kn ℤ.+ x) (trans (*-identityˡ (+ 2km)) 2km=+2km))
-
-    part2 : + (2km ℕ.* 2kn) ≡ +2km ℤ.* +2kn
-    part2 = trans (sym (ℤP.pos-distrib-* 2km 2kn))
-            (trans (cong (λ x -> x ℤ.* (+ 2kn)) 2km=+2km) (cong (λ x -> +2km ℤ.* x) 2kn=+2kn))
-
-    part3 : ((+ 1) ℤ.* (+ 2kn) ℤ.+ (+ 1) ℤ.* (+ 2km)) ℤ.* (+ (2km ℕ.* 2kn)) ≡
-            (+2kn ℤ.+ +2km) ℤ.* (+2km ℤ.* +2kn)
-    part3 = trans (cong (λ x -> x ℤ.* (+ (2km ℕ.* 2kn))) part1) (cong (λ x -> (+2kn ℤ.+ +2km) ℤ.* x) part2)
-
-    num : (+ k) ℤ.* (((+ 1) ℤ.* {!!} ℤ.+ (+ 1) ℤ.* + 2km) ℤ.* (+ (2km ℕ.* 2kn)) ℤ.+ {!!}) ≡ {!!}
-    num = {!!}
-            
     x₂ₖₘ : ℚᵘ
-    x₂ₖₘ = seq x 2km
+    x₂ₖₘ = seq x (2 ℕ.* k ℕ.* m)
+
+    x₂ₖₙ : ℚᵘ
+    x₂ₖₙ = seq x (2 ℕ.* k ℕ.* n)
 
     y₂ₖₘ : ℚᵘ
-    y₂ₖₘ = seq y 2km
-  
-    x₂ₖₙ : ℚᵘ
-    x₂ₖₙ = seq x 2kn
+    y₂ₖₘ = seq y (2 ℕ.* k ℕ.* m)
 
     y₂ₖₙ : ℚᵘ
-    y₂ₖₙ = seq y 2kn
--}
+    y₂ₖₙ = seq y (2 ℕ.* k ℕ.* n)
+
+    ∣x₂ₖₘ∣≤k : ℚ.∣ x₂ₖₘ ∣ ℚ.≤ (+ k) / 1
+    ∣x₂ₖₘ∣≤k = ℚP.≤-trans (ℚP.<⇒≤ (canonical-greater x 2km))
+               (*≤* (ℤP.≤-trans (ℤP.≤-reflexive (ℤP.*-identityʳ (+ K x)))
+               (ℤP.≤-trans (+≤+ (ℕP.m≤m⊔n (K x) (K y))) (ℤP.≤-reflexive (sym (ℤP.*-identityʳ (+ k)))))))
+
+    ∣y₂ₖₙ∣≤k : ℚ.∣ y₂ₖₙ ∣ ℚ.≤ (+ k) / 1
+    ∣y₂ₖₙ∣≤k = ℚP.≤-trans (ℚP.<⇒≤ (canonical-greater y 2kn))
+               (*≤* (ℤP.≤-trans (ℤP.≤-reflexive (ℤP.*-identityʳ (+ K y)))
+               (ℤP.≤-trans (+≤+ (ℕP.m≤n⊔m (K x) (K y))) (ℤP.≤-reflexive (sym (ℤP.*-identityʳ (+ k)))))))
 
 p≃q⇒-p≃-q : ∀ (p q : ℚᵘ) -> p ℚ.≃ q -> ℚ.- p ℚ.≃ ℚ.- q
 p≃q⇒-p≃-q p q p≃q = ℚP.p-q≃0⇒p≃q (ℚ.- p) (ℚ.- q) (ℚP.≃-trans (ℚP.+-comm (ℚ.- p) (ℚ.- (ℚ.- q)))
