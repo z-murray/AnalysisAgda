@@ -7,6 +7,7 @@ open import Data.Integer.Properties as ℤP using (*-identityˡ)
 open import Data.Integer.DivMod as ℤD
 open import Data.Nat as ℕ using (ℕ; zero; suc)
 open import Data.Nat.Properties as ℕP using (≤-step)
+import Data.Nat.DivMod as ℕD
 open import Level using (0ℓ)
 open import Data.Product
 open import Relation.Nullary
@@ -404,36 +405,58 @@ least : ∀ (p : ℚᵘ) -> ∃ λ (K : ℤ) ->
         p ℚ.< (K / 1) × (∀ (n : ℤ) -> p ℚ.< (n / 1) -> K ℤ.≤ n)
 least p = least-ℤ>ℚ p , least-ℤ>ℚ-greater p ,′ least-ℤ>ℚ-least p
 
-K : ℝ -> ℤ
-K x = least-ℤ>ℚ (ℚ.∣ seq x 1 ∣ ℚ.+ 2ℚᵘ)
+K : ℝ -> ℕ
+K x with ℚ.∣ seq x 1 ∣ ℚ.+ 2ℚᵘ
+... | mkℚᵘ p q-1 = suc ℤ.∣ p divℕ (suc q-1) ∣
 
-canonical-property : ∀ (x : ℝ) -> ℚ.∣ seq x 1 ∣ ℚ.+ 2ℚᵘ ℚ.< (K x) / 1 ×
-                     (∀ (n : ℤ) -> ℚ.∣ seq x 1 ∣ ℚ.+ 2ℚᵘ ℚ.< n / 1 -> K x ℤ.≤ n)
-canonical-property x = least-ℤ>ℚ-greater (ℚ.∣ seq x 1 ∣ ℚ.+ 2ℚᵘ) ,′
-                       least-ℤ>ℚ-least (ℚ.∣ seq x 1 ∣ ℚ.+ 2ℚᵘ)
+private
+  Kx=1+t : ∀ (x : ℝ) -> + K x ≡ (+ 1) ℤ.+ (↥ (ℚ.∣ seq x 1 ∣ ℚ.+ 2ℚᵘ) divℕ ↧ₙ (ℚ.∣ seq x 1 ∣ ℚ.+ 2ℚᵘ))
+  Kx=1+t x = sym (trans (cong (λ x -> (+ 1) ℤ.+ x) (sym ∣t∣=t)) _≡_.refl)
+    where
+       t : ℤ
+       t = ↥ (ℚ.∣ seq x 1 ∣ ℚ.+ 2ℚᵘ) divℕ ↧ₙ (ℚ.∣ seq x 1 ∣ ℚ.+ 2ℚᵘ)
 
-canonical-greater : ∀ (x : ℝ) -> ∀ (n : ℕ) -> {n ≢0} -> ℚ.∣ seq x n ∣ ℚ.< (K x) / 1
+       0≤∣x₁∣+2 : 0ℚᵘ ℚ.≤ ℚ.∣ seq x 1 ∣ ℚ.+ 2ℚᵘ
+       0≤∣x₁∣+2 = ℚP.≤-trans (ℚP.0≤∣p∣ (seq x 1)) (ℚP.p≤p+q {ℚ.∣ seq x 1 ∣} {2ℚᵘ} _)
+
+       ∣t∣=t : + ℤ.∣ t ∣ ≡ t
+       ∣t∣=t = ℤP.0≤n⇒+∣n∣≡n (0≤n⇒0≤n/ℕd (↥ (ℚ.∣ seq x 1 ∣ ℚ.+ 2ℚᵘ)) (↧ₙ (ℚ.∣ seq x 1 ∣ ℚ.+ 2ℚᵘ)) (ℚP.≥0⇒↥≥0 0≤∣x₁∣+2))
+      
+
+canonical-property : ∀ (x : ℝ) -> ℚ.∣ seq x 1 ∣ ℚ.+ 2ℚᵘ ℚ.< (+ K x) / 1 ×
+                 (∀ (n : ℤ) -> ℚ.∣ seq x 1 ∣ ℚ.+ 2ℚᵘ ℚ.< n / 1 -> + K x ℤ.≤ n)
+canonical-property x = left ,′ right
+  where
+    left : ℚ.∣ seq x 1 ∣ ℚ.+ 2ℚᵘ ℚ.< (+ K x) / 1
+    left = ℚP.<-respʳ-≃ (ℚP.≃-reflexive (ℚP./-cong (sym (Kx=1+t x)) _≡_.refl _ _))
+                   (least-ℤ>ℚ-greater (ℚ.∣ seq x 1 ∣ ℚ.+ 2ℚᵘ))
+
+    right : ∀ (n : ℤ) -> ℚ.∣ seq x 1 ∣ ℚ.+ 2ℚᵘ ℚ.< n / 1 -> + K x ℤ.≤ n
+    right n hyp = ℤP.≤-trans (ℤP.≤-reflexive (Kx=1+t x)) (least-ℤ>ℚ-least (ℚ.∣ seq x 1 ∣ ℚ.+ 2ℚᵘ) n hyp)
+
+canonical-greater : ∀ (x : ℝ) -> ∀ (n : ℕ) -> {n ≢0} -> ℚ.∣ seq x n ∣ ℚ.< (+ K x) / 1
 canonical-greater x (suc k₁) = begin-strict
   ℚ.∣ seq x n ∣                               ≈⟨ ℚP.∣-∣-cong (solve 2 (λ xn x1 ->
-                                                            xn := xn :- x1 :+ x1)
-                                                            (ℚ.*≡* _≡_.refl) (seq x n) (seq x 1)) ⟩
+                                                             xn := xn :- x1 :+ x1)
+                                                (ℚ.*≡* _≡_.refl) (seq x n) (seq x 1)) ⟩
   ℚ.∣ seq x n ℚ.- seq x 1 ℚ.+ seq x 1 ∣       ≤⟨ ℚP.∣p+q∣≤∣p∣+∣q∣ (seq x n ℚ.- seq x 1) (seq x 1) ⟩
   ℚ.∣ seq x n ℚ.- seq x 1 ∣ ℚ.+ ℚ.∣ seq x 1 ∣ ≤⟨ ℚP.+-monoˡ-≤ ℚ.∣ seq x 1 ∣ (reg x n 1) ⟩
   (+ 1 / n) ℚ.+ (+ 1 / 1) ℚ.+ ℚ.∣ seq x 1 ∣   ≤⟨ ℚP.+-monoˡ-≤ ℚ.∣ seq x 1 ∣
-                                                 (ℚP.≤-trans (ℚP.+-monoˡ-≤ (+ 1 / 1) 1/n≤1) ℚP.≤-refl) ⟩
+                                               (ℚP.≤-trans (ℚP.+-monoˡ-≤ (+ 1 / 1) 1/n≤1) ℚP.≤-refl) ⟩
   2ℚᵘ ℚ.+ ℚ.∣ seq x 1 ∣                       <⟨ ℚP.<-respˡ-≃ (ℚP.+-comm ℚ.∣ seq x 1 ∣ 2ℚᵘ) (proj₁ (canonical-property x)) ⟩
-  (K x) / 1                                    ∎
+  (+ K x) / 1                                  ∎
   where
     open ℚP.≤-Reasoning
     open import Data.Rational.Unnormalised.Solver
     open +-*-Solver
     n : ℕ
     n = suc k₁
-  
+
     1/n≤1 : + 1 / n ℚ.≤ + 1 / 1
     1/n≤1 = *≤* (ℤP.≤-trans (ℤP.≤-reflexive (*-identityˡ (+ 1)))
                 (ℤP.≤-trans (+≤+ (ℕ.s≤s ℕ.z≤n)) (ℤP.≤-reflexive (sym (*-identityˡ (+ n))))))
 
+{-
 _*_ : ℝ -> ℝ -> ℝ
 seq (x * y) n = seq x (2 ℕ.* ℤ.∣ K x ℤ.⊔ K y ∣ ℕ.* n) ℚ.* seq y (2 ℕ.* ℤ.∣ K x ℤ.⊔ K y ∣ ℕ.* n)
 reg (x * y) (suc k₁) (suc k₂) = begin
@@ -459,6 +482,12 @@ reg (x * y) (suc k₁) (suc k₂) = begin
   (+ 1 / 2kn){{!!}})                               ≈⟨ ℚP.≃-sym (ℚP.*-distribˡ-+ (+ k / 1) ((+ 1 / 2km) ℚ.+ (+ 1 / 2kn))
                                                                                           (((+ 1 / 2km) ℚ.+ (+ 1 / 2kn)))) ⟩
   (+ k / 1) ℚ.*
+
+  {-
+    The ℤ-Solver can't be used for this one naively since the denominator of 1/2kn is unknown by Agda.
+    The helper lemma in the ℚ properties file could be used, but it requires a bunch of extra cong calls.
+    See problem discussion below.
+  -}
   ((+ 1 / 2km) {{!!}} ℚ.+ (+ 1 / 2kn) {{!!}} ℚ.+
   ((+ 1 / 2km) {{!!}} ℚ.+ (+ 1 / 2kn) {{!!}}))     ≈⟨ {!!} ⟩
 
@@ -477,8 +506,31 @@ reg (x * y) (suc k₁) (suc k₂) = begin
     open import Data.Integer.Solver as ℤ-Solver
     open ℤ-Solver.+-*-Solver
 
+    {-
+      Problem: Agda cannot tell that k = suc r for some r∈ℕ.
+      Proposed Solution: Implement a special least-ℕ>+ℚ case
+      that returns the successor of a natural number instead
+      of an integer. It's annoying but it's generally easier
+      to convert a natural number to an integer than vice
+      versa. 
+      
+      If the current implementation is used, a lot of extra 
+      operations appear (e.g. having to use the lemma in ℚ's 
+      properties that gives denominator (1/2kn) = 2kn instead 
+      of just denominator (1/2kn). The current version results
+      in a lot of cong calls to reduce fractions. Having to
+      call the absolute value function here is an example of
+      this version's wastefulness.
+    -}
     k : ℕ
-    k = ℤ.∣ K x ℤ.⊔ K y ∣ 
+    k = ℤ.∣ K x ℤ.⊔ K y ∣
+
+    tests : K x ≢ + 0
+    tests Kx=0 = {!!}
+
+    {- Does not work. See problem above. -}
+    testing : + ℤ.∣ K x ℤ.⊔ K y ∣ ≡ K x ℤ.⊔ K y
+    testing = {!_≡_.refl!}
     
     m : ℕ
     m = suc k₁
@@ -504,9 +556,14 @@ reg (x * y) (suc k₁) (suc k₂) = begin
     2kn=+2kn : + 2kn ≡ +2kn
     2kn=+2kn = trans (sym (ℤP.pos-distrib-* (2 ℕ.* k) n)) (cong (λ x -> x ℤ.* (+ n)) (sym (ℤP.pos-distrib-* 2 k)))
 
+    {- Since Agda doesn't know if k = suc r for some r, it can't tell if 2*k*m is nonzero, even though 2 and m are
+       successors. -}
     test : numerator ((+ 1 / 2km) ℚ.+ (+ 1 / 2kn)) ≡ (+ 1) ℤ.* {!denominator (+ 1 / 2kn)!} ℤ.+ (+ 1) ℤ.* (+ 2km)
     test = _≡_.refl
 
+    {- Doesn't work, Agda doesn't know if 2km is nonzero.
+       Have to call helper lemma from ℚ properties (and prove
+       that 2*k*m is nonzero). -}
     test2 : denominator (+ 1 / 2km) ≡ + 2km
     test2 = {!_≡_.refl!}
 
@@ -524,36 +581,6 @@ reg (x * y) (suc k₁) (suc k₂) = begin
 
     num : (+ k) ℤ.* (((+ 1) ℤ.* {!!} ℤ.+ (+ 1) ℤ.* + 2km) ℤ.* (+ (2km ℕ.* 2kn)) ℤ.+ {!!}) ≡ {!!}
     num = {!!}
-    
-{-
-    part2 : ((+ 1) ℤ.* (+ 2kn) ℤ.+ (+ 1) ℤ.* (+ 2km)) ℤ.* (+ (2km ℕ.* 2kn)) ≡
-            (+2kn ℤ.+ +2km) ℤ.* (+2km ℤ.* +2kn)
-    part2 = trans (cong (λ x -> x ℤ.* (+ (2km ℕ.* 2kn))) part1) (cong (λ x -> (+2kn ℤ.+ +2km) ℤ.* x)
-            (trans (sym (ℤP.pos-distrib-* 2km 2kn)) (trans (cong (λ x -> x ℤ.* (+ 2kn)) 2km=+2km)
-            (cong (λ x -> +2km ℤ.* x) 2kn=+2kn))))
-
-    part3 : (((+ 1) ℤ.* (+ 2kn) ℤ.+ (+ 1) ℤ.* (+ 2km)) ℤ.* (+ (2km ℕ.* 2kn))) ℤ.+
-            (((+ 1) ℤ.* (+ 2kn) ℤ.+ (+ 1) ℤ.* (+ 2km)) ℤ.* (+ (2km ℕ.* 2kn))) ≡
-            (+2kn ℤ.+ +2km) ℤ.* (+2km ℤ.* +2kn) ℤ.+ (+2kn ℤ.+ +2km) ℤ.* (+2km ℤ.* +2kn)
-    part3 = trans (cong (λ x -> x ℤ.+ (((+ 1) ℤ.* (+ 2kn) ℤ.+ (+ 1) ℤ.* (+ 2km)) ℤ.* (+ (2km ℕ.* 2kn)))) part2)
-                  (cong (λ x -> (+2kn ℤ.+ +2km) ℤ.* (+2km ℤ.* +2kn) ℤ.+ x) part2)
-
-    part50 : (+ (2km ℕ.* 2kn)) ℤ.* (+ (2km ℕ.* 2kn)) ≡ (+2km ℤ.* +2kn) ℤ.* (+2km ℤ.* +2kn)
-    part50 = trans (cong (λ x -> x ℤ.* (+ (2km ℕ.* 2kn))) (trans (sym (ℤP.pos-distrib-* 2km 2kn))
-            (trans (cong (λ x -> x ℤ.* (+ 2kn)) 2km=+2km) (cong (λ x -> +2km ℤ.* x) 2kn=+2kn))))
-            (cong (λ x -> (+2km ℤ.* +2kn) ℤ.* x) (trans (sym (ℤP.pos-distrib-* 2km 2kn))
-            (trans (cong (λ x -> x ℤ.* (+ 2kn)) 2km=+2km) (cong (λ x -> +2km ℤ.* x) 2kn=+2kn))))-}
-
-
-    
-{-
-    num : (+ k) ℤ.* ((((+ 1) ℤ.* (+ 2kn) ℤ.+ (+ 1) ℤ.* (+ 2km)) ℤ.* (+ (2km ℕ.* 2kn))) ℤ.+
-          (((+ 1) ℤ.* (+ 2kn) ℤ.+ (+ 1) ℤ.* (+ 2km)) ℤ.* (+ (2km ℕ.* 2kn)))) ≡
-          (+ k) ℤ.* ((+2kn ℤ.+ +2km) ℤ.* (+2km ℤ.* +2kn) ℤ.+ (+2kn ℤ.+ +2km) ℤ.* (+2km ℤ.* +2kn))
-    num = cong (λ x -> (+ k) ℤ.* x) part3
-
-    den : (+ 1) ℤ.* ((+ (2km ℕ.* 2kn)) ℤ.* (+ (2km ℕ.* 2kn))) ≡ (+2km ℤ.* +2kn) ℤ.* (+2km ℤ.* +2kn)
-    den = trans (*-identityˡ ((+ (2km ℕ.* 2kn)) ℤ.* (+ (2km ℕ.* 2kn)))) part4-}
             
     x₂ₖₘ : ℚᵘ
     x₂ₖₘ = seq x 2km
@@ -566,73 +593,7 @@ reg (x * y) (suc k₁) (suc k₂) = begin
 
     y₂ₖₙ : ℚᵘ
     y₂ₖₙ = seq y 2kn
-
-{-
-
 -}
-
-{-
-1/n ≤ 1/1 <-> 1*1 ≤ 1*n
-
-1/n + 1/1 = (1*1 + 1*n)/(n*1)
-≤ 2/1
-<->
-(1*1 + 1*n) * 1 ≤ 2 * (n * 1)
-<->
-1 + n ≤ 2 * n 
--}
-
-{-test : ∀ (n : ℕ) -> {n≢0 : n ≢0} -> ((+ 1) / n) {n≢0} ℚ.≤ + 1 / 1
-test (suc k₁) = {!!}
-  where
-    open import Data.Integer.-}
-
-
-{-
-Let x∈ℝ and let n∈ℕ. Consider Kₓ > ∣x₁∣ + 2.
-∣xₙ∣ ≤ Kₓ?
-∣xₙ∣ = ∣xₙ - x₁ + x₁∣ ≤ ∣xₙ - x₁∣ + ∣x₁∣
-                     ≤ (1/n + 1) + ∣x₁∣
-                     ≤ 2 + ∣x₁∣
-                     < Kₓ.
-Thus ∣xₙ∣ < Kₓ.                            □
--}
-
-{-
-
--}
-{-
-canonical-property : ∀ (x : ℝ) -> ∀ (n : ℕ) -> {n ≢0} -> ℚ.∣ seq x n ∣ ℚ.< (K x) / 1
-canonical-property x (suc k₁) = begin-strict
-  ℚ.∣ seq x n ∣                               ≈⟨ ℚP.∣-∣-cong (solve 2 (λ xn x1 ->
-                                                             xn := xn :- x1 :+ x1)
-                                                             (ℚ.*≡* _≡_.refl) (seq x n) (seq x 1)) ⟩
-  ℚ.∣ seq x n ℚ.- seq x 1 ℚ.+ seq x 1 ∣       ≤⟨ ℚP.∣p+q∣≤∣p∣+∣q∣ (seq x n ℚ.- seq x 1) (seq x 1) ⟩
-  ℚ.∣ seq x n ℚ.- seq x 1 ∣ ℚ.+ ℚ.∣ seq x 1 ∣ ≤⟨ ℚP.+-monoˡ-≤ ℚ.∣ seq x 1 ∣ (reg x n 1) ⟩
-  (+ 1 / n) ℚ.+ (+ 1 / 1) ℚ.+ ℚ.∣ seq x 1 ∣   ≤⟨ ℚP.+-monoˡ-≤ ℚ.∣ seq x 1 ∣ (*≤* {!!}) ⟩
-  2ℚᵘ ℚ.+ ℚ.∣ seq x 1 ∣                       <⟨ ℚP.<-respˡ-≃ (ℚP.+-comm ℚ.∣ seq x 1 ∣ 2ℚᵘ) (canonical-lesser x) ⟩
-  (K x) / 1 ∎
-  where
-    open ℚP.≤-Reasoning
-    open import Data.Rational.Unnormalised.Solver
-    open +-*-Solver
-    n : ℕ
-    n = suc k₁
-
-_*_ : ℝ -> ℝ -> ℝ
-seq (x * y) n with least (ℚ.∣ seq x 1 ∣ ℚ.+ 2ℚᵘ) | least (ℚ.∣ seq y 1 ∣ ℚ.+ 2ℚᵘ)
-... | Kx , leastx | Ky , leasty = seq x (2 ℕ.* k ℕ.* n) ℚ.* seq y (2 ℕ.* k ℕ.* n) 
-  where
-    k : ℕ
-    k = ℤ.∣ Kx ℤ.⊔ Ky ∣-}
-{-
-k ≥ Kx
-∣x₂ₖₘ∣ ≤ k?
-1 < 2km
-∣x₂ₖₘ∣ = ∣x₂ₖₘ - x₁ + x₁∣ ≤ ∣x₂ₖₘ - x₁∣ + ∣x₁∣
-≤ 1/2km + 1 + k
--}
---reg (x * y) = {!!}
 
 p≃q⇒-p≃-q : ∀ (p q : ℚᵘ) -> p ℚ.≃ q -> ℚ.- p ℚ.≃ ℚ.- q
 p≃q⇒-p≃-q p q p≃q = ℚP.p-q≃0⇒p≃q (ℚ.- p) (ℚ.- q) (ℚP.≃-trans (ℚP.+-comm (ℚ.- p) (ℚ.- (ℚ.- q)))
@@ -643,6 +604,10 @@ p≤∣p∣ : ∀ (p : ℚᵘ) -> p ℚ.≤ ℚ.∣ p ∣
 p≤∣p∣ (mkℚᵘ (+_ n) q-1) = ℚP.≤-refl
 p≤∣p∣ (mkℚᵘ (-[1+_] n) q-1) = *≤* ℤ.-≤+
 
+{-
+  The book uses an extra assumption to simplify this proof. It seems, for a proper proof, a 4-way
+  case split is required, as done below.
+-}
 _⊔_ : ℝ -> ℝ -> ℝ
 seq (x ⊔ y) n = (seq x n) ℚ.⊔ (seq y n)
 reg (x ⊔ y) (suc k₁) (suc k₂) = [ left , right ]′ (ℚP.≤-total (seq x m ℚ.⊔ seq y m) (seq x n ℚ.⊔ seq y n))
@@ -722,6 +687,9 @@ reg (- x) m n {m≢0} {n≢0} = begin
 _-_ : ℝ -> ℝ -> ℝ
 x - y = x + (- y)
 
+-- Gets a real representation of a rational number.
+-- For a rational α, one real representation is the sequence
+-- α* = (α, α, α, α, α, ...).
 _* : ℚᵘ -> ℝ
 seq (p *) n = p
 reg (p *) (suc m) (suc n) = begin
@@ -731,6 +699,9 @@ reg (p *) (suc m) (suc n) = begin
   where
     open ℚP.≤-Reasoning
 
+{-
+  Some properties of reals.
+-}
 +-comm : ∀ (x y : ℝ) -> x + y ≃ y + x
 +-comm x y (suc k₁) = begin
   ℚ.∣ (seq x (2 ℕ.* n) ℚ.+ seq y (2 ℕ.* n)) ℚ.-
