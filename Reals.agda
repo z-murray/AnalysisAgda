@@ -486,40 +486,7 @@ canonical-greater x (suc k₁) = begin-strict
                                   (solve 2 (λ p q -> :- (q :- p) := p :- q) ℚP.≃-refl p q)) ⟩
       ℚ.∣ p ℚ.- q ∣  ∎
       
-
-{-
-Proposition:
-  If x ≃ y for x,y∈ℝ, then Kx = Ky (intensional equality).
-Proof:
-  Suppose x ≃ y. We have, by definition of equality,
-                   ∣x₁ - y₁∣ ≤ 2/1.
-By the reverse triangle inequality, we have
-               ∣∣x₁∣ - ∣y₁∣∣ ≤ ∣x₁ - y₁∣.
-Then
-                  ∣∣x₁∣ - ∣y₁∣∣ ≤ 2.
-Note that
-              ∣x₁∣ - ∣y₁∣ ≤ ∣∣x₁∣ - ∣y₁∣∣, and
-              ∣y₁∣ - ∣x₁∣ ≤ ∣∣x₁∣ - ∣y₁∣∣.
-Hence
-                 ∣x₁∣ - ∣y₁∣ ≤ 2, and
-(⋆)              ∣y₁∣ - ∣x₁∣ ≤ 2.
-Recall that, for r∈ℝ, Kr is the least integer greater than
-∣r₁∣ + 2. From (⋆), we then get
-                    ∣x₁∣ ≤ Ky, and
-                    ∣y₁∣ ≤ Kx,
-so Kx ≤ Ky and Ky ≤ Kx (integer inequality). Thus Kx = Ky 
-intensionally.                                          □                         □
--}
-{-canonical-unique : ∀ (x y : ℝ) -> x ≃ y -> K x ≡ K y
-canonical-unique x y x≃y = ℕP.≤-antisym (ℤP.drop‿+≤+ (lem x y x≃y)) (ℤP.drop‿+≤+ (lem y x (≃-symm {x} {y} x≃y)))
-  where
-    open ℚP.≤-Reasoning
-    lem : ∀ (x y : ℝ) -> x ≃ y -> + K x ℤ.≤ + K y
-    lem x y x≃y = proj₂ (canonical-property x) (+ K y) (begin-strict {!!}
-      ℚ.∣ seq x 1 ∣ 
-      )
--}
-{-
+    {-
 Reminder: Make the proof of reg (x * y) abstract to avoid performance issues. Maybe do the same
 with the other long proofs too.
 -}
@@ -722,14 +689,75 @@ reg (p *) (suc m) (suc n) = begin
     open ℚP.≤-Reasoning
 
 {-
+Proofs that the above operations are well-defined functions
+(for setoid equality).
+-}
+
+{-
+∣ x₂ₙ + y₂ₙ - z₂ₙ - w₂ₙ ∣
+≤ ∣ x₂ₙ - z₂ₙ ∣ + ∣ y₂ₙ - w₂ₙ ∣
+≤ 2/2n + 2/2n
+= 2/n
+-}
++-function : ∀ x y z w -> x ≃ z -> y ≃ w -> x + y ≃ z + w
++-function x y z w x≃z y≃w (suc k₁) = begin
+  ℚ.∣ seq x (2 ℕ.* n) ℚ.+ seq y (2 ℕ.* n) ℚ.-
+      (seq z (2 ℕ.* n) ℚ.+ seq w (2 ℕ.* n)) ∣   ≤⟨ ℚP.≤-respˡ-≃ (ℚP.∣-∣-cong (ℚsolve 4 (λ x y z w ->
+                                                   (x ℚ:- z) ℚ:+ (y ℚ:- w) ℚ:= x ℚ:+ y ℚ:- (z ℚ:+ w))
+                                                   ℚP.≃-refl (seq x (2 ℕ.* n)) (seq y (2 ℕ.* n)) (seq z (2 ℕ.* n)) (seq w (2 ℕ.* n))))
+                                                   (ℚP.∣p+q∣≤∣p∣+∣q∣ (seq x (2 ℕ.* n) ℚ.- seq z (2 ℕ.* n)) (seq y (2 ℕ.* n) ℚ.- seq w (2 ℕ.* n))) ⟩
+  ℚ.∣ seq x (2 ℕ.* n) ℚ.- seq z (2 ℕ.* n) ∣ ℚ.+
+  ℚ.∣ seq y (2 ℕ.* n) ℚ.- seq w (2 ℕ.* n) ∣     ≤⟨ ℚP.≤-trans (ℚP.+-monoˡ-≤ ℚ.∣ seq y (2 ℕ.* n) ℚ.- seq w (2 ℕ.* n) ∣ (x≃z (2 ℕ.* n)))
+                                                              (ℚP.+-monoʳ-≤ (+ 2 / (2 ℕ.* n)) (y≃w (2 ℕ.* n))) ⟩
+  {-
+    2/(2n) + 2/(2n)
+    2*2n + 2*2n / 2n*2n
+    = 2/n
+    <->
+    (2*2n + 2*2n) * n = 2 * (2n*2n)
+  -}
+  (+ 2 / (2 ℕ.* n)) ℚ.+ (+ 2 / (2 ℕ.* n))       ≈⟨ ℚ.*≡* (solve 1 (λ n ->
+                                                   (con (+ 2) :* (con (+ 2) :* n) :+ con (+ 2) :* (con (+ 2) :* n)) :* n :=
+                                                   (con (+ 2) :* ((con (+ 2) :* n) :* (con (+ 2) :* n)))) _≡_.refl (+ n)) ⟩
+  + 2 / n                                        ∎
+  where
+    open ℚP.≤-Reasoning
+    open import Data.Rational.Unnormalised.Solver as ℚ-Solver
+    open ℚ-Solver.+-*-Solver using ()
+      renaming
+        ( solve to ℚsolve
+        ; _:+_ to _ℚ:+_
+        ; _:-_ to _ℚ:-_
+        ; _:=_ to _ℚ:=_
+        )
+    open import Data.Integer.Solver as ℤ-Solver
+    open ℤ-Solver.+-*-Solver
+    n : ℕ
+    n = suc k₁
+
+{-
+∣x₂ₖₙy₂ₖₙ - z₂ᵣₙy₂ᵣₙ∣ = ∣x₂ₖₙy₂ₖₙ - x₂ₖₙy₂ᵣₙ + x₂ₖₙy₂ᵣₙ - z₂ᵣₙy₂ᵣₙ∣
+≤ ∣x₂ₖₙy₂ₖₙ - x₂ₖₙy₂ᵣₙ∣ + ∣x₂ₖₙy₂ᵣₙ - z₂ᵣₙy₂ᵣₙ∣
+= ∣x₂ₖₙ∣ * ∣y₂ₖₙ - y₂ᵣₙ∣ + ∣x₂ₖₙ - z₂ᵣₙ∣∣y₂ᵣₙ∣
+≤ ∣x₂ₖₙ∣ * (1/2kn + 1/2rn) + (2/n) * ∣y₂ᵣₙ∣ 
+
+∣x₂ₖₙy₂ₖₙ - z₂ᵣₙy₂ᵣₙ∣ ≤ ∣x₂ₖₙy₂ₖₙ - z₂ᵣₙy₂ᵣₙ∣
+-}
+*-functionA : ∀ x y z -> x ≃ z -> x * y ≃ z * y
+*-functionA x y z x≃z (suc k₁) = {!!}
+
+*-function : ∀ x y z w -> x ≃ z -> y ≃ w -> x * y ≃ z * w
+*-function x y z w x≃z y≃w (suc k₁) = {!!}
+
+{-
   Some properties of reals.
 -}
 +-comm : ∀ (x y : ℝ) -> x + y ≃ y + x
 +-comm x y (suc k₁) = begin
   ℚ.∣ (seq x (2 ℕ.* n) ℚ.+ seq y (2 ℕ.* n)) ℚ.-
       (seq y (2 ℕ.* n) ℚ.+ seq x (2 ℕ.* n)) ∣   ≈⟨ ℚP.∣-∣-cong (solve 2 (λ x y ->
-                                                                    (x :+ y) :- (y :+ x) := con (0ℚᵘ))
-                                                                    ℚP.≃-refl (seq x (2 ℕ.* n)) (seq y (2 ℕ.* n))) ⟩
+                                                   (x :+ y) :- (y :+ x) := con (0ℚᵘ))
+                                                   ℚP.≃-refl (seq x (2 ℕ.* n)) (seq y (2 ℕ.* n))) ⟩
   0ℚᵘ                                           ≤⟨ *≤* (+≤+ ℕ.z≤n) ⟩
   (+ 2) / n                                      ∎
   where
@@ -893,6 +921,8 @@ Proof:
       (xy)z = ({xₙ}*{yₙ})*{zₙ}
             = ({xₙ}*{yₙ})...
 
+Not sure how to go about this one yet.
+
 -}
 *-assoc : ∀ (x y z : ℝ) -> (x * y) * z ≃ x * (y * z)
 *-assoc x y z (suc k₁) = begin {!!}
@@ -902,3 +932,12 @@ Proof:
     open ℚP.≤-Reasoning
     n : ℕ
     n = suc k₁
+
+{-
+seq (y + z) n = seq y (2 ℕ.* n) + seq z (2 ℕ.* n)
+k = Kx ⊔ K(y+z)
+seq (x * (y + z)) = seq x (2 ℕ.* k ℕ.* n) * seq (y + z) (2 ℕ.* k ℕ.* n) 
+                  = seq x (2 ℕ.* k ℕ.* n) * (seq y (2 ℕ.* (2 ℕ.* k ℕ.* n))
+-}
+*-distribˡ-+ : ∀ (x y z : ℝ) -> x * (y + z) ≃ (x * y) + (x * z)
+*-distribˡ-+ x y z = {!!}
