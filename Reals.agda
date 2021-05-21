@@ -456,6 +456,73 @@ canonical-greater x (suc k₁) = begin-strict
     1/n≤1 = *≤* (ℤP.≤-trans (ℤP.≤-reflexive (*-identityˡ (+ 1)))
                 (ℤP.≤-trans (+≤+ (ℕ.s≤s ℕ.z≤n)) (ℤP.≤-reflexive (sym (*-identityˡ (+ n))))))
 
+{-
+||p|-|q|| = | |p-q+q| - |q| |
+          ≤ 
+-}
+∣∣p∣-∣q∣∣≤∣p-q∣ : ∀ p q -> ℚ.∣ ℚ.∣ p ∣ ℚ.- ℚ.∣ q ∣ ∣ ℚ.≤ ℚ.∣ p ℚ.- q ∣
+∣∣p∣-∣q∣∣≤∣p-q∣ p q = [ lemA p q , lemB p q ]′ (ℚP.≤-total ℚ.∣ q ∣ ℚ.∣ p ∣)
+  where
+    open ℚP.≤-Reasoning
+    open import Data.Rational.Unnormalised.Solver
+    open +-*-Solver
+
+    lemA : ∀ p q -> ℚ.∣ q ∣ ℚ.≤ ℚ.∣ p ∣ -> ℚ.∣ ℚ.∣ p ∣ ℚ.- ℚ.∣ q ∣ ∣ ℚ.≤ ℚ.∣ p ℚ.- q ∣
+    lemA p q hyp = begin
+      ℚ.∣ ℚ.∣ p ∣ ℚ.- ℚ.∣ q ∣ ∣             ≈⟨ ℚP.0≤p⇒∣p∣≃p (ℚP.p≤q⇒0≤q-p hyp) ⟩
+      ℚ.∣ p ∣ ℚ.- ℚ.∣ q ∣                   ≈⟨ ℚP.+-congˡ (ℚ.- ℚ.∣ q ∣) (ℚP.∣-∣-cong (solve 2 (λ p q ->
+                                               p := p :- q :+ q) ℚP.≃-refl p q)) ⟩
+      ℚ.∣ p ℚ.- q ℚ.+ q ∣ ℚ.- ℚ.∣ q ∣       ≤⟨ ℚP.+-monoˡ-≤ (ℚ.- ℚ.∣ q ∣) (ℚP.∣p+q∣≤∣p∣+∣q∣ (p ℚ.- q) q) ⟩
+      ℚ.∣ p ℚ.- q ∣ ℚ.+ ℚ.∣ q ∣ ℚ.- ℚ.∣ q ∣ ≈⟨ solve 2 (λ x y -> x :+ y :- y := x)
+                                              ℚP.≃-refl ℚ.∣ p ℚ.- q ∣ ℚ.∣ q ∣ ⟩
+      ℚ.∣ p ℚ.- q ∣ ∎
+
+    lemB : ∀ p q -> ℚ.∣ p ∣ ℚ.≤ ℚ.∣ q ∣ -> ℚ.∣ ℚ.∣ p ∣ ℚ.- ℚ.∣ q ∣ ∣ ℚ.≤ ℚ.∣ p ℚ.- q ∣
+    lemB p q hyp = begin
+      ℚ.∣ ℚ.∣ p ∣ ℚ.- ℚ.∣ q ∣ ∣ ≈⟨ ℚP.≃-trans (ℚP.≃-sym (ℚP.∣-p∣≃∣p∣ (ℚ.∣ p ∣ ℚ.- ℚ.∣ q ∣))) (ℚP.∣-∣-cong
+                                  (solve 2 (λ p q -> :- (p :- q) := q :- p) ℚP.≃-refl ℚ.∣ p ∣ ℚ.∣ q ∣)) ⟩
+      ℚ.∣ ℚ.∣ q ∣ ℚ.- ℚ.∣ p ∣ ∣ ≤⟨ lemA q p hyp ⟩
+      ℚ.∣ q ℚ.- p ∣            ≈⟨ ℚP.≃-trans (ℚP.≃-sym (ℚP.∣-p∣≃∣p∣ (q ℚ.- p))) (ℚP.∣-∣-cong
+                                  (solve 2 (λ p q -> :- (q :- p) := p :- q) ℚP.≃-refl p q)) ⟩
+      ℚ.∣ p ℚ.- q ∣  ∎
+      
+
+{-
+Proposition:
+  If x ≃ y for x,y∈ℝ, then Kx = Ky (intensional equality).
+Proof:
+  Suppose x ≃ y. We have, by definition of equality,
+                   ∣x₁ - y₁∣ ≤ 2/1.
+By the reverse triangle inequality, we have
+               ∣∣x₁∣ - ∣y₁∣∣ ≤ ∣x₁ - y₁∣.
+Then
+                  ∣∣x₁∣ - ∣y₁∣∣ ≤ 2.
+Note that
+              ∣x₁∣ - ∣y₁∣ ≤ ∣∣x₁∣ - ∣y₁∣∣, and
+              ∣y₁∣ - ∣x₁∣ ≤ ∣∣x₁∣ - ∣y₁∣∣.
+Hence
+                 ∣x₁∣ - ∣y₁∣ ≤ 2, and
+(⋆)              ∣y₁∣ - ∣x₁∣ ≤ 2.
+Recall that, for r∈ℝ, Kr is the least integer greater than
+∣r₁∣ + 2. From (⋆), we then get
+                    ∣x₁∣ ≤ Ky, and
+                    ∣y₁∣ ≤ Kx,
+so Kx ≤ Ky and Ky ≤ Kx (integer inequality). Thus Kx = Ky 
+intensionally.                                          □                         □
+-}
+{-canonical-unique : ∀ (x y : ℝ) -> x ≃ y -> K x ≡ K y
+canonical-unique x y x≃y = ℕP.≤-antisym (ℤP.drop‿+≤+ (lem x y x≃y)) (ℤP.drop‿+≤+ (lem y x (≃-symm {x} {y} x≃y)))
+  where
+    open ℚP.≤-Reasoning
+    lem : ∀ (x y : ℝ) -> x ≃ y -> + K x ℤ.≤ + K y
+    lem x y x≃y = proj₂ (canonical-property x) (+ K y) (begin-strict {!!}
+      ℚ.∣ seq x 1 ∣ 
+      )
+-}
+{-
+Reminder: Make the proof of reg (x * y) abstract to avoid performance issues. Maybe do the same
+with the other long proofs too.
+-}
 _*_ : ℝ -> ℝ -> ℝ
 seq (x * y) n = seq x (2 ℕ.* (K x ℕ.⊔ K y) ℕ.* n) ℚ.* seq y (2 ℕ.* (K x ℕ.⊔ K y) ℕ.* n)
 reg (x * y) (suc k₁) (suc k₂) = begin
@@ -498,7 +565,7 @@ reg (x * y) (suc k₁) (suc k₂) = begin
   -- Other solver inputs
   _≡_.refl (+ k) (+ m) (+ n)) ⟩
   
-  (+ 1 / m) ℚ.+ (+ 1 / n)                                      ∎
+  (+ 1 / m) ℚ.+ (+ 1 / n)                     ∎
   
   where
     open ℚP.≤-Reasoning
@@ -776,6 +843,61 @@ reg (p *) (suc m) (suc n) = begin
   ℚ.∣ ℚ.- p ℚ.- (ℚ.- p) ∣ ≈⟨ ℚP.∣-∣-cong (ℚP.+-inverseʳ (ℚ.- p)) ⟩
   0ℚᵘ                     ≤⟨ *≤* (ℤP.≤-trans (ℤP.≤-reflexive (ℤP.*-zeroˡ (+ n))) (+≤+ ℕ.z≤n)) ⟩
   (+ 2) / n                ∎
+  where
+    open ℚP.≤-Reasoning
+    n : ℕ
+    n = suc k₁
+
+*-comm : ∀ (x y : ℝ) -> x * y ≃ y * x
+*-comm x y (suc k₁) = begin
+  ℚ.∣ seq (x * y) n ℚ.- seq (y * x) n ∣     ≈⟨ ℚP.∣-∣-cong (ℚP.≃-trans (ℚP.+-congʳ (seq (x * y) n)
+                                                                       (p≃q⇒-p≃-q _ _ (ℚP.≃-sym xyℚ=yxℚ)))
+                                                           (ℚP.+-inverseʳ (seq (x * y) n))) ⟩
+  0ℚᵘ                                       ≤⟨ *≤* (+≤+ ℕ.z≤n) ⟩
+  + 2 / n                                    ∎
+  where
+    open ℚP.≤-Reasoning
+    n : ℕ
+    n = suc k₁
+    
+    xyℚ=yxℚ : seq (x * y) n ℚ.≃ seq (y * x) n
+    xyℚ=yxℚ = begin-equality
+      seq x (2 ℕ.* (K x ℕ.⊔ K y) ℕ.* n) ℚ.*
+      seq y (2 ℕ.* (K x ℕ.⊔ K y) ℕ.* n)     ≡⟨ cong (λ r ->
+                                               seq x (2 ℕ.* r ℕ.* n) ℚ.* seq y (2 ℕ.* r ℕ.* n))
+                                               (ℕP.⊔-comm (K x) (K y)) ⟩
+      seq x (2 ℕ.* (K y ℕ.⊔ K x) ℕ.* n) ℚ.*
+      seq y (2 ℕ.* (K y ℕ.⊔ K x) ℕ.* n)     ≈⟨ ℚP.*-comm (seq x (2 ℕ.* (K y ℕ.⊔ K x) ℕ.* n))
+                                                         (seq y (2 ℕ.* (K y ℕ.⊔ K x) ℕ.* n)) ⟩
+      seq y (2 ℕ.* (K y ℕ.⊔ K x) ℕ.* n) ℚ.*
+      seq x (2 ℕ.* (K y ℕ.⊔ K x) ℕ.* n)      ∎
+
+{-
+kxy = K x ⊔ K y
+kyz = K y ⊔ K z
+k = K x ⊔ K y
+l = K y ⊔ K z
+r = K (x * y) ⊔ K z
+t = K x ⊔ K (y * z)
+(x * y) * z = (x * y)₂ᵣₙ * z₂ᵣₙ
+            = (x₂ₖₙ * y₂ₖₙ)₂ᵣₙ * z₂ᵣₙ
+            = (x₂ₖ₍₂ᵣₙ₎ * y₂ₖ₍₂ᵣₙ₎) * z₂ᵣₙ
+x * (y * z) = x₂ₜₙ * (y₂ₗₙ * z₂ₗₙ)₂ₜₙ
+            = x₂ₜₙ * (y₂ₗ₍₂ₜₙ₎ * z₂ₗ₍₂ₜₙ₎)
+(K x ⊔ K (y * z)) = 2(K x ⊔ K y)(K (x * y) ⊔ K z)?
+
+Proposition: 
+  Multiplication on ℝ is associative.
+Proof:
+  Let x,y,z∈ℝ. Then
+      (xy)z = ({xₙ}*{yₙ})*{zₙ}
+            = ({xₙ}*{yₙ})...
+
+-}
+*-assoc : ∀ (x y z : ℝ) -> (x * y) * z ≃ x * (y * z)
+*-assoc x y z (suc k₁) = begin {!!}
+  {-ℚ.∣ seq x (2 ℕ.*
+  ? ∎-}
   where
     open ℚP.≤-Reasoning
     n : ℕ
