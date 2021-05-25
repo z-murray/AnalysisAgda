@@ -877,34 +877,35 @@ Proofs that the above operations are well-defined functions
     n : ℕ
     n = suc k₁
 
-regular⇒cauchy : ∀ (x : ℝ) -> ∀ (j : ℕ) -> {j≢0 : j ≢0} -> ∃ λ (N : ℕ) -> ∀ (m n : ℕ) ->
-                 N ℕ.≤ m -> N ℕ.≤ n -> ℚ.∣ seq x m ℚ.- seq x n ∣ ℚ.≤ (+ 1 / j) {j≢0}
-regular⇒cauchy x (suc k₁) = 2 ℕ.* j , right
-  where
-    open ℚP.≤-Reasoning
-    open import Data.Integer.Solver
-    open +-*-Solver
-    j : ℕ
-    j = suc k₁
+abstract
+  regular⇒cauchy : ∀ (x : ℝ) -> ∀ (j : ℕ) -> {j≢0 : j ≢0} -> ∃ λ (N : ℕ) -> ∀ (m n : ℕ) ->
+                   N ℕ.≤ m -> N ℕ.≤ n -> ℚ.∣ seq x m ℚ.- seq x n ∣ ℚ.≤ (+ 1 / j) {j≢0}
+  regular⇒cauchy x (suc k₁) = 2 ℕ.* j , right
+    where
+      open ℚP.≤-Reasoning
+      open import Data.Integer.Solver
+      open +-*-Solver
+      j : ℕ
+      j = suc k₁
 
-    N≤m⇒m≢0 : ∀ (m : ℕ) -> 2 ℕ.* j ℕ.≤ m -> m ≢0
-    N≤m⇒m≢0 (suc m) N≤m = _
+      N≤m⇒m≢0 : ∀ (m : ℕ) -> 2 ℕ.* j ℕ.≤ m -> m ≢0
+      N≤m⇒m≢0 (suc m) N≤m = _
 
-    N≤m⇒1/m≤1/N : ∀ (m : ℕ) -> (N≤m : 2 ℕ.* j ℕ.≤ m) -> (+ 1 / m) {N≤m⇒m≢0 m N≤m} ℚ.≤ (+ 1 / (2 ℕ.* j))
-    N≤m⇒1/m≤1/N (suc m) N≤m = *≤* (ℤP.≤-trans (ℤP.≤-reflexive (*-identityˡ (+ (2 ℕ.* j))))
+      N≤m⇒1/m≤1/N : ∀ (m : ℕ) -> (N≤m : 2 ℕ.* j ℕ.≤ m) -> (+ 1 / m) {N≤m⇒m≢0 m N≤m} ℚ.≤ (+ 1 / (2 ℕ.* j))
+      N≤m⇒1/m≤1/N (suc m) N≤m = *≤* (ℤP.≤-trans (ℤP.≤-reflexive (*-identityˡ (+ (2 ℕ.* j))))
                               (ℤP.≤-trans (ℤ.+≤+ N≤m) (ℤP.≤-reflexive (sym (*-identityˡ (+ (suc m)))))))
-
-    right : ∀ (m n : ℕ) -> 2 ℕ.* j ℕ.≤ m -> 2 ℕ.* j ℕ.≤ n ->
-            ℚ.∣  seq x m ℚ.- seq x n ∣ ℚ.≤ + 1 / j
-    right m n N≤m N≤n = begin 
-      ℚ.∣ seq x m ℚ.- seq x n ∣ ≤⟨ reg x m n {N≤m⇒m≢0 m N≤m} {N≤m⇒m≢0 n N≤n} ⟩
-      (+ 1 / m) {N≤m⇒m≢0 m N≤m} ℚ.+ (+ 1 / n) {N≤m⇒m≢0 n N≤n}   ≤⟨ ℚP.≤-trans
-                                                                   (ℚP.+-monoˡ-≤ ((+ 1 / n) {N≤m⇒m≢0 n N≤n}) (N≤m⇒1/m≤1/N m N≤m))
-                                                                   (ℚP.+-monoʳ-≤ (+ 1 / (2 ℕ.* j)) (N≤m⇒1/m≤1/N n N≤n)) ⟩
-      (+ 1 / (2 ℕ.* j)) ℚ.+ (+ 1 / (2 ℕ.* j)) ≈⟨ ℚ.*≡* (solve 1 (λ j ->
-                                                 (con (+ 1) :* (con (+ 2) :* j) :+ con (+ 1) :* (con (+ 2) :* j)) :* j :=
-                                                 (con (+ 1) :* ((con (+ 2) :* j) :* (con (+ 2) :* j)))) _≡_.refl (+ j)) ⟩
-      + 1 / j                    ∎
+  
+      right : ∀ (m n : ℕ) -> 2 ℕ.* j ℕ.≤ m -> 2 ℕ.* j ℕ.≤ n ->
+              ℚ.∣  seq x m ℚ.- seq x n ∣ ℚ.≤ + 1 / j
+      right m n N≤m N≤n = begin 
+        ℚ.∣ seq x m ℚ.- seq x n ∣ ≤⟨ reg x m n {N≤m⇒m≢0 m N≤m} {N≤m⇒m≢0 n N≤n} ⟩
+        (+ 1 / m) {N≤m⇒m≢0 m N≤m} ℚ.+ (+ 1 / n) {N≤m⇒m≢0 n N≤n}   ≤⟨ ℚP.≤-trans
+                                                                     (ℚP.+-monoˡ-≤ ((+ 1 / n) {N≤m⇒m≢0 n N≤n}) (N≤m⇒1/m≤1/N m N≤m))
+                                                                     (ℚP.+-monoʳ-≤ (+ 1 / (2 ℕ.* j)) (N≤m⇒1/m≤1/N n N≤n)) ⟩
+        (+ 1 / (2 ℕ.* j)) ℚ.+ (+ 1 / (2 ℕ.* j)) ≈⟨ ℚ.*≡* (solve 1 (λ j ->
+                                                   (con (+ 1) :* (con (+ 2) :* j) :+ con (+ 1) :* (con (+ 2) :* j)) :* j :=
+                                                   (con (+ 1) :* ((con (+ 2) :* j) :* (con (+ 2) :* j)))) _≡_.refl (+ j)) ⟩
+        + 1 / j                    ∎
 
 *-comm : ∀ (x y : ℝ) -> x * y ≃ y * x
 *-comm x y (suc k₁) = begin
@@ -931,43 +932,236 @@ regular⇒cauchy x (suc k₁) = 2 ℕ.* j , right
       seq x (2 ℕ.* (K y ℕ.⊔ K x) ℕ.* n)      ∎
 
 {-
-kxy = K x ⊔ K y
-kyz = K y ⊔ K z
-k = K x ⊔ K y
-l = K y ⊔ K z
-r = K (x * y) ⊔ K z
-t = K x ⊔ K (y * z)
-(x * y) * z = (x * y)₂ᵣₙ * z₂ᵣₙ
-            = (x₂ₖₙ * y₂ₖₙ)₂ᵣₙ * z₂ᵣₙ
-            = (x₂ₖ₍₂ᵣₙ₎ * y₂ₖ₍₂ᵣₙ₎) * z₂ᵣₙ
-x * (y * z) = x₂ₜₙ * (y₂ₗₙ * z₂ₗₙ)₂ₜₙ
-            = x₂ₜₙ * (y₂ₗ₍₂ₜₙ₎ * z₂ₗ₍₂ₜₙ₎)
-(K x ⊔ K (y * z)) = 2(K x ⊔ K y)(K (x * y) ⊔ K z)?
-
-Proposition: 
+Proposition:
   Multiplication on ℝ is associative.
 Proof:
-  Let x,y,z∈ℝ. Then
-      (xy)z = ({xₙ}*{yₙ})*{zₙ}
-            = ({xₙ}*{yₙ})...
+  Let x,y,z∈ℝ. We must show that (xy)z = x(yz). Define
+          r = max{Kx, Ky}     s = max{Kxy, Kz}
+          u = max{Kx, Kyz}    t = max{Ky, Kz},
+noting that Kxy is the canonical bound for x * y (similarly for Kyz).
+Let j∈ℤ⁺. Since (xₙ), (yₙ), and (zₙ) are Cauchy sequences, there is
+N₁,N₂,N₃∈ℤ⁺ such that:
+          ∣xₘ - xₙ∣  ≤ 1 / (Ky * Kz * 3j)     (m, n ≥ N₁),
+          ∣yₘ - yₙ∣ ≤ 1 / (Kx * Kz * 3j)     (m, n ≥ N₂), and
+          ∣zₘ - zₙ∣  ≤ 1 / (Kx * Ky * 3j)     (m, n ≥ N₃).
 
-Not sure how to go about this one yet.
-
+Define N = max{N₁, N₂, N₃}. If we show that
+       ∣x₄ᵣₛₙ * y₄ᵣₛₙ * z₂ₛₙ - x₂ᵤₙ * y₄ₜᵤₙ * z₄ₜᵤₙ∣ ≤ 1 / j
+for all n ≥ N, then (xy)z = x(yz) by Lemma 1.
+  Note that, for all a, b, c, d in ℚ, we have
+               ab - cd = b(a - c) + c(b - d).
+We will use this trick in our proof. We have:
+∣x₄ᵣₛₙ * y₄ᵣₛₙ * z₂ₛₙ - x₂ᵤₙ * y₄ₜᵤₙ * z₄ₜᵤₙ∣
+= ∣y₄ᵣₛₙ * z₂ₛₙ(x₄ᵣₛₙ - x₂ᵤₙ) + x₂ᵤₙ(y₄ᵣₛₙ * z₂ₛₙ - y₄ₜᵤₙ * z₄ₜᵤₙ)∣  
+= ∣y₄ᵣₛₙ * z₂ₛₙ(x₄ᵣₛₙ - x₂ᵤₙ) + x₂ᵤₙ(z₂ₛₙ(y₄ᵣₛₙ - y₄ₜᵤₙ) + y₄ₜᵤₙ(z₂ₛₙ - z₄ₜᵤₙ)∣                    
+≤ ∣y₄ᵣₛₙ∣*∣z₂ₛₙ∣*∣x₄ᵣₛₙ - x₂ᵤₙ∣ + ∣x₂ᵤₙ∣*∣z₂ₛₙ∣*∣y₄ᵣₛₙ - y₄ₜᵤₙ∣ + ∣x₂ᵤₙ∣*∣y₄ₜᵤₙ∣*∣z₂ₛₙ - z₄ₜᵤₙ∣
+≤ Ky * Kz * (1 / (Ky * Kz * 3j)) + Kx * Kz * (1 / (Kx * Kz * 3j)) + Kx * Ky * (1 / (Kx * Ky * 3j))
+= 1 / 3j + 1 / 3j + 1 / 3j
+= 1 / j.
+Thus ∣x₄ᵣₛₙ*y₄ᵣₛₙ*z₂ₛₙ - x₂ᵤₙ*y₄ₜᵤₙ*z₄ₜᵤₙ∣ ≤ 1/j, as desired.                                    □
 -}
+
 *-assoc : ∀ (x y z : ℝ) -> (x * y) * z ≃ x * (y * z)
-*-assoc x y z (suc k₁) = begin {!!}
-  {-ℚ.∣ seq x (2 ℕ.*
-  ? ∎-}
+*-assoc x y z = lemma1B ((x * y) * z) (x * (y * z)) lemA
   where
     open ℚP.≤-Reasoning
-    n : ℕ
-    n = suc k₁
 
-{-
-seq (y + z) n = seq y (2 ℕ.* n) + seq z (2 ℕ.* n)
-k = Kx ⊔ K(y+z)
-seq (x * (y + z)) = seq x (2 ℕ.* k ℕ.* n) * seq (y + z) (2 ℕ.* k ℕ.* n) 
-                  = seq x (2 ℕ.* k ℕ.* n) * (seq y (2 ℕ.* (2 ℕ.* k ℕ.* n))
--}
+    r : ℕ
+    r = K x ℕ.⊔ K y
+
+    s : ℕ
+    s = K (x * y) ℕ.⊔ K z
+
+    u : ℕ
+    u = K x ℕ.⊔ K (y * z)
+
+    t : ℕ
+    t = K y ℕ.⊔ K z
+
+    lemA : ∀ (j : ℕ) -> {j≢0 : j ≢0} -> ∃ λ (N : ℕ) -> ∀ (n : ℕ) -> N ℕ.< n ->
+          ℚ.∣ seq x (2 ℕ.* r ℕ.* (2 ℕ.* s ℕ.* n)) ℚ.* seq y (2 ℕ.* r ℕ.* (2 ℕ.* s ℕ.* n)) ℚ.* seq z (2 ℕ.* s ℕ.* n) ℚ.-
+              seq x (2 ℕ.* u ℕ.* n) ℚ.* (seq y (2 ℕ.* t ℕ.* (2 ℕ.* u ℕ.* n)) ℚ.* seq z (2 ℕ.* t ℕ.* (2 ℕ.* u ℕ.* n)))∣ ℚ.≤ (+ 1 / j) {j≢0}
+    lemA (suc k₁) = N , lemB
+      where
+        open ℚP.≤-Reasoning
+        open import Data.Integer.Solver as ℤ-Solver
+        open ℤ-Solver.+-*-Solver
+        open import Data.Rational.Unnormalised.Solver as ℚ-Solver
+        open ℚ-Solver.+-*-Solver using ()
+          renaming
+            ( solve to ℚsolve
+            ; _:+_ to _ℚ:+_
+            ; _:-_ to _ℚ:-_
+            ; _:*_ to _ℚ:*_
+            ; _:=_ to _ℚ:=_
+            )
+        j : ℕ
+        j = suc k₁
+
+        N₁ : ℕ
+        N₁ = proj₁ (regular⇒cauchy x ((K y ℕ.* K z) ℕ.* (3 ℕ.* j)))
+
+        N₂ : ℕ
+        N₂ = proj₁ (regular⇒cauchy y (K x ℕ.* K z ℕ.* (3 ℕ.* j)))
+
+        N₃ : ℕ
+        N₃ = proj₁ (regular⇒cauchy z (K x ℕ.* K y ℕ.* (3 ℕ.* j)))
+
+        N : ℕ
+        N = (N₁ ℕ.⊔ N₂) ℕ.⊔ N₃
+
+        lemB : ∀ (n : ℕ) -> N ℕ.< n ->
+              ℚ.∣ seq x (2 ℕ.* r ℕ.* (2 ℕ.* s ℕ.* n)) ℚ.* seq y (2 ℕ.* r ℕ.* (2 ℕ.* s ℕ.* n)) ℚ.* seq z (2 ℕ.* s ℕ.* n) ℚ.-
+              seq x (2 ℕ.* u ℕ.* n) ℚ.* (seq y (2 ℕ.* t ℕ.* (2 ℕ.* u ℕ.* n)) ℚ.* seq z (2 ℕ.* t ℕ.* (2 ℕ.* u ℕ.* n)))∣ ℚ.≤ (+ 1 / j)
+        lemB (suc k₂) N<n = begin
+          ℚ.∣ x₄ᵣₛₙ ℚ.* y₄ᵣₛₙ ℚ.* z₂ₛₙ ℚ.- x₂ᵤₙ ℚ.* (y₄ₜᵤₙ ℚ.* z₄ₜᵤₙ) ∣ ≈⟨ ℚP.∣-∣-cong (ℚsolve 6 (λ a b c d e f ->
+                                                                           a ℚ:* b ℚ:* c ℚ:- d ℚ:* (e ℚ:* f) ℚ:=
+                                                                           (b ℚ:* c) ℚ:* (a ℚ:- d) ℚ:+ d ℚ:* (c ℚ:* (b ℚ:- e) ℚ:+ e ℚ:* (c ℚ:- f)))
+                                                                           ℚP.≃-refl x₄ᵣₛₙ y₄ᵣₛₙ z₂ₛₙ x₂ᵤₙ y₄ₜᵤₙ z₄ₜᵤₙ) ⟩
+          ℚ.∣ (y₄ᵣₛₙ ℚ.* z₂ₛₙ) ℚ.* (x₄ᵣₛₙ ℚ.- x₂ᵤₙ) ℚ.+
+          x₂ᵤₙ ℚ.* (z₂ₛₙ ℚ.* (y₄ᵣₛₙ ℚ.- y₄ₜᵤₙ) ℚ.+
+          y₄ₜᵤₙ ℚ.* (z₂ₛₙ ℚ.- z₄ₜᵤₙ)) ∣                                 ≤⟨ ℚP.∣p+q∣≤∣p∣+∣q∣ ((y₄ᵣₛₙ ℚ.* z₂ₛₙ) ℚ.* (x₄ᵣₛₙ ℚ.- x₂ᵤₙ))
+                                                                           (x₂ᵤₙ ℚ.* (z₂ₛₙ ℚ.* (y₄ᵣₛₙ ℚ.- y₄ₜᵤₙ) ℚ.+ y₄ₜᵤₙ ℚ.* (z₂ₛₙ ℚ.- z₄ₜᵤₙ))) ⟩
+          ℚ.∣ (y₄ᵣₛₙ ℚ.* z₂ₛₙ) ℚ.* (x₄ᵣₛₙ ℚ.- x₂ᵤₙ) ∣ ℚ.+
+          ℚ.∣ x₂ᵤₙ ℚ.* (z₂ₛₙ ℚ.* (y₄ᵣₛₙ ℚ.- y₄ₜᵤₙ) ℚ.+
+          y₄ₜᵤₙ ℚ.* (z₂ₛₙ ℚ.- z₄ₜᵤₙ)) ∣                                 ≤⟨ ℚP.≤-respˡ-≃ (ℚP.≃-sym (ℚP.+-congʳ ℚ.∣ (y₄ᵣₛₙ ℚ.* z₂ₛₙ) ℚ.* (x₄ᵣₛₙ ℚ.- x₂ᵤₙ) ∣
+                                                                           (ℚP.∣p*q∣≃∣p∣*∣q∣ x₂ᵤₙ (z₂ₛₙ ℚ.* (y₄ᵣₛₙ ℚ.- y₄ₜᵤₙ) ℚ.+ y₄ₜᵤₙ ℚ.* (z₂ₛₙ ℚ.- z₄ₜᵤₙ)))))
+                                                                           (ℚP.+-monoʳ-≤ ℚ.∣ (y₄ᵣₛₙ ℚ.* z₂ₛₙ) ℚ.* (x₄ᵣₛₙ ℚ.- x₂ᵤₙ) ∣
+                                                                           (ℚP.*-monoʳ-≤-nonNeg {ℚ.∣ x₂ᵤₙ ∣} _ (ℚP.∣p+q∣≤∣p∣+∣q∣
+                                                                           (z₂ₛₙ ℚ.* (y₄ᵣₛₙ ℚ.- y₄ₜᵤₙ)) (y₄ₜᵤₙ ℚ.* (z₂ₛₙ ℚ.- z₄ₜᵤₙ))))) ⟩
+          ℚ.∣ (y₄ᵣₛₙ ℚ.* z₂ₛₙ) ℚ.* (x₄ᵣₛₙ ℚ.- x₂ᵤₙ) ∣ ℚ.+
+          ℚ.∣ x₂ᵤₙ ∣ ℚ.* (ℚ.∣ z₂ₛₙ ℚ.* (y₄ᵣₛₙ ℚ.- y₄ₜᵤₙ) ∣ ℚ.+
+          ℚ.∣ y₄ₜᵤₙ ℚ.* (z₂ₛₙ ℚ.- z₄ₜᵤₙ) ∣)                             ≈⟨ ℚP.+-congˡ
+                                                                          (ℚ.∣ x₂ᵤₙ ∣ ℚ.* (ℚ.∣ z₂ₛₙ ℚ.* (y₄ᵣₛₙ ℚ.- y₄ₜᵤₙ) ∣ ℚ.+  ℚ.∣ y₄ₜᵤₙ ℚ.* (z₂ₛₙ ℚ.- z₄ₜᵤₙ) ∣))
+                                                                          (ℚP.≃-trans (ℚP.∣p*q∣≃∣p∣*∣q∣ (y₄ᵣₛₙ ℚ.* z₂ₛₙ) (x₄ᵣₛₙ ℚ.- x₂ᵤₙ))
+                                                                          (ℚP.*-congʳ (ℚP.∣p*q∣≃∣p∣*∣q∣ y₄ᵣₛₙ z₂ₛₙ))) ⟩
+          ℚ.∣ y₄ᵣₛₙ ∣ ℚ.* ℚ.∣ z₂ₛₙ ∣ ℚ.* ℚ.∣ x₄ᵣₛₙ ℚ.- x₂ᵤₙ ∣ ℚ.+
+          ℚ.∣ x₂ᵤₙ ∣ ℚ.* (ℚ.∣ z₂ₛₙ ℚ.* (y₄ᵣₛₙ ℚ.- y₄ₜᵤₙ) ∣ ℚ.+
+          ℚ.∣ y₄ₜᵤₙ ℚ.* (z₂ₛₙ ℚ.- z₄ₜᵤₙ) ∣)                             ≈⟨ ℚP.+-congʳ (ℚ.∣ y₄ᵣₛₙ ∣ ℚ.* ℚ.∣ z₂ₛₙ ∣ ℚ.* ℚ.∣ x₄ᵣₛₙ ℚ.- x₂ᵤₙ ∣)
+                                                                           (ℚP.*-distribˡ-+ ℚ.∣ x₂ᵤₙ ∣ ℚ.∣ z₂ₛₙ ℚ.* (y₄ᵣₛₙ ℚ.- y₄ₜᵤₙ) ∣
+                                                                           ℚ.∣ y₄ₜᵤₙ ℚ.* (z₂ₛₙ ℚ.- z₄ₜᵤₙ) ∣) ⟩
+          ℚ.∣ y₄ᵣₛₙ ∣ ℚ.* ℚ.∣ z₂ₛₙ ∣ ℚ.* ℚ.∣ x₄ᵣₛₙ ℚ.- x₂ᵤₙ ∣ ℚ.+
+          (ℚ.∣ x₂ᵤₙ ∣ ℚ.* ℚ.∣ z₂ₛₙ ℚ.* (y₄ᵣₛₙ ℚ.- y₄ₜᵤₙ) ∣ ℚ.+
+          ℚ.∣ x₂ᵤₙ ∣ ℚ.* ℚ.∣ y₄ₜᵤₙ ℚ.* (z₂ₛₙ ℚ.- z₄ₜᵤₙ) ∣)              ≤⟨ ℚP.≤-trans (ℚP.+-monoʳ-≤ (ℚ.∣ y₄ᵣₛₙ ∣ ℚ.* ℚ.∣ z₂ₛₙ ∣ ℚ.* ℚ.∣ x₄ᵣₛₙ ℚ.- x₂ᵤₙ ∣)
+                                                                          (ℚP.≤-trans (ℚP.+-monoʳ-≤ (ℚ.∣ x₂ᵤₙ ∣ ℚ.* ℚ.∣ z₂ₛₙ ℚ.* (y₄ᵣₛₙ ℚ.- y₄ₜᵤₙ) ∣) part3)
+                                                                          (ℚP.+-monoˡ-≤ (+ 1 / (3 ℕ.* j)) part2)))
+                                                                          (ℚP.+-monoˡ-≤ (+ 1 / (3 ℕ.* j) ℚ.+ + 1 / (3 ℕ.* j)) part1) ⟩
+          (+ 1 / (3 ℕ.* j)) ℚ.+ ((+ 1 / (3 ℕ.* j)) ℚ.+ (+ 1 / (3 ℕ.* j))) ≈⟨ ℚ.*≡* (solve 1 (λ j ->
+
+          (con (+ 1) :* ((con (+ 3) :* j) :* (con (+ 3) :* j)) :+ ((con (+ 1) :* (con (+ 3) :* j)) :+ (con (+ 1) :* (con (+ 3) :* j))) :* (con (+ 3) :* j)) :* j :=
+          (con (+ 1) :* ((con (+ 3) :* j) :* ((con (+ 3) :* j) :* (con (+ 3) :* j)))))
+          
+          _≡_.refl (+ j)) ⟩
+          + 1 / j                                                        ∎
+          where
+            n : ℕ
+            n = suc k₂
+
+            x₄ᵣₛₙ : ℚᵘ
+            x₄ᵣₛₙ = seq x (2 ℕ.* r ℕ.* (2 ℕ.* s ℕ.* n))
+            
+            y₄ᵣₛₙ : ℚᵘ
+            y₄ᵣₛₙ = seq y (2 ℕ.* r ℕ.* (2 ℕ.* s ℕ.* n))
+
+            z₂ₛₙ : ℚᵘ
+            z₂ₛₙ = seq z (2 ℕ.* s ℕ.* n)
+
+            x₂ᵤₙ : ℚᵘ
+            x₂ᵤₙ = seq x (2 ℕ.* u ℕ.* n)
+
+            y₄ₜᵤₙ : ℚᵘ
+            y₄ₜᵤₙ = seq y (2 ℕ.* t ℕ.* (2 ℕ.* u ℕ.* n))
+
+            z₄ₜᵤₙ : ℚᵘ
+            z₄ₜᵤₙ = seq z (2 ℕ.* t ℕ.* (2 ℕ.* u ℕ.* n))
+
+            N≤4rsn : N ℕ.≤ 2 ℕ.* r ℕ.* (2 ℕ.* s ℕ.* n)
+            N≤4rsn = ℕP.≤-trans (ℕP.<⇒≤ N<n) (ℕP.≤-trans
+                     (ℕP.m≤n*m n {4 ℕ.* r ℕ.* s} ℕP.0<1+n) (ℤP.drop‿+≤+ (ℤP.≤-reflexive (solve 3 (λ r s n ->
+                     con (+ 4) :* r :* s :* n := con (+ 2) :* r :* (con (+ 2) :* s :* n))
+                     _≡_.refl (+ r) (+ s) (+ n)))))
+
+            N₁≤4rsn : N₁ ℕ.≤ 2 ℕ.* r ℕ.* (2 ℕ.* s ℕ.* n)
+            N₁≤4rsn = ℕP.≤-trans (ℕP.m≤m⊔n N₁ N₂) (ℕP.≤-trans (ℕP.m≤m⊔n (N₁ ℕ.⊔ N₂) N₃) N≤4rsn)
+
+            N₁≤2un : N₁ ℕ.≤ 2 ℕ.* u ℕ.* n
+            N₁≤2un = ℕP.≤-trans (ℕP.≤-trans (ℕP.m≤m⊔n N₁ N₂) (ℕP.m≤m⊔n (N₁ ℕ.⊔ N₂) N₃))
+                     (ℕP.≤-trans (ℕP.<⇒≤ N<n) (ℕP.m≤n*m n {2 ℕ.* u} ℕP.0<1+n))
+
+            part1 : ℚ.∣ y₄ᵣₛₙ ∣ ℚ.* ℚ.∣ z₂ₛₙ ∣ ℚ.* ℚ.∣ x₄ᵣₛₙ ℚ.- x₂ᵤₙ ∣ ℚ.≤ + 1 / (3 ℕ.* j)
+            part1 = begin
+              ℚ.∣ y₄ᵣₛₙ ∣ ℚ.* ℚ.∣ z₂ₛₙ ∣ ℚ.* ℚ.∣ x₄ᵣₛₙ ℚ.- x₂ᵤₙ ∣            ≤⟨ ℚP.*-monoˡ-≤-nonNeg {ℚ.∣ x₄ᵣₛₙ ℚ.- x₂ᵤₙ ∣} _ (ℚP.≤-trans
+                                                                               (ℚP.*-monoˡ-≤-nonNeg {ℚ.∣ z₂ₛₙ ∣} _ (ℚP.<⇒≤
+                                                                               (canonical-greater y (2 ℕ.* r ℕ.* (2 ℕ.* s ℕ.* n)))))
+                                                                               (ℚP.*-monoʳ-≤-nonNeg {(+ K y) / 1} _ (ℚP.<⇒≤
+                                                                               (canonical-greater z (2 ℕ.* s ℕ.* n))))) ⟩
+              (+ (K y ℕ.* K z) / 1) ℚ.* ℚ.∣ x₄ᵣₛₙ ℚ.- x₂ᵤₙ ∣                ≤⟨ ℚP.*-monoʳ-≤-nonNeg {+ (K y ℕ.* K z) / 1} _
+                                                                               (proj₂ (regular⇒cauchy x (K y ℕ.* K z ℕ.* (3 ℕ.* j)))
+                                                                               (2 ℕ.* r ℕ.* (2 ℕ.* s ℕ.* n)) (2 ℕ.* u ℕ.* n) N₁≤4rsn N₁≤2un) ⟩
+              (+ (K y ℕ.* K z) / 1) ℚ.* (+ 1 / (K y ℕ.* K z ℕ.* (3 ℕ.* j))) ≈⟨ ℚ.*≡* (solve 3 (λ Ky Kz j ->
+                                                                               ((Ky :* Kz) :* con (+ 1)) :* (con (+ 3) :* j) :=
+                                                                               (con (+ 1) :* (con (+ 1) :* (Ky :* Kz :* (con (+ 3) :* j)))))
+                                                                               _≡_.refl (+ K y) (+ K z) (+ j)) ⟩
+              + 1 / (3 ℕ.* j)                                                ∎
+
+            N₂≤4rsn : N₂ ℕ.≤ 2 ℕ.* r ℕ.* (2 ℕ.* s ℕ.* n)
+            N₂≤4rsn = ℕP.≤-trans (ℕP.m≤n⊔m N₁ N₂) (ℕP.≤-trans (ℕP.m≤m⊔n (N₁ ℕ.⊔ N₂) N₃) N≤4rsn)
+
+            N≤4tun : N ℕ.≤ 2 ℕ.* t ℕ.* (2 ℕ.* u ℕ.* n)
+            N≤4tun = ℕP.≤-trans (ℕP.<⇒≤ N<n) (ℕP.≤-trans (ℕP.m≤n*m n {4 ℕ.* t ℕ.* u} ℕP.0<1+n)
+                     (ℤP.drop‿+≤+ (ℤP.≤-reflexive (solve 3 (λ t u n ->
+                     con (+ 4) :* t :* u :* n := con (+ 2) :* t :* (con (+ 2) :* u :* n))
+                     _≡_.refl (+ t) (+ u) (+ n)))))
+
+            N₂≤4tun : N₂ ℕ.≤ 2 ℕ.* t ℕ.* (2 ℕ.* u ℕ.* n)
+            N₂≤4tun = ℕP.≤-trans (ℕP.m≤n⊔m N₁ N₂) (ℕP.≤-trans (ℕP.m≤m⊔n (N₁ ℕ.⊔ N₂) N₃) N≤4tun)
+
+            part2 : ℚ.∣ x₂ᵤₙ ∣ ℚ.* ℚ.∣ z₂ₛₙ ℚ.* (y₄ᵣₛₙ ℚ.- y₄ₜᵤₙ) ∣ ℚ.≤ + 1 / (3 ℕ.* j)
+            part2 = begin
+              ℚ.∣ x₂ᵤₙ ∣ ℚ.* ℚ.∣ z₂ₛₙ ℚ.* (y₄ᵣₛₙ ℚ.- y₄ₜᵤₙ) ∣     ≈⟨ ℚP.≃-trans (ℚP.*-congˡ {ℚ.∣ x₂ᵤₙ ∣} (ℚP.∣p*q∣≃∣p∣*∣q∣ z₂ₛₙ (y₄ᵣₛₙ ℚ.- y₄ₜᵤₙ)))
+                                                                    (ℚP.≃-sym (ℚP.*-assoc ℚ.∣ x₂ᵤₙ ∣ ℚ.∣ z₂ₛₙ ∣ ℚ.∣ y₄ᵣₛₙ ℚ.- y₄ₜᵤₙ ∣)) ⟩
+              ℚ.∣ x₂ᵤₙ ∣ ℚ.* ℚ.∣ z₂ₛₙ ∣ ℚ.* ℚ.∣ y₄ᵣₛₙ ℚ.- y₄ₜᵤₙ ∣ ≤⟨ ℚP.*-monoˡ-≤-nonNeg {ℚ.∣ y₄ᵣₛₙ ℚ.- y₄ₜᵤₙ ∣} _ (ℚP.≤-trans
+                                                                    (ℚP.*-monoˡ-≤-nonNeg {ℚ.∣ z₂ₛₙ ∣} _
+                                                                    (ℚP.<⇒≤ (canonical-greater x (2 ℕ.* u ℕ.* n))))
+                                                                    (ℚP.*-monoʳ-≤-nonNeg {+ K x / 1} _
+                                                                    (ℚP.<⇒≤ (canonical-greater z (2 ℕ.* s ℕ.* n))))) ⟩
+              (+ (K x ℕ.* K z) / 1) ℚ.* ℚ.∣ y₄ᵣₛₙ ℚ.- y₄ₜᵤₙ ∣    ≤⟨ ℚP.*-monoʳ-≤-nonNeg {+ (K x ℕ.* K z) / 1} _
+                                                                    (proj₂ (regular⇒cauchy y (K x ℕ.* K z ℕ.* (3 ℕ.* j)))
+                                                                    (2 ℕ.* r ℕ.* (2 ℕ.* s ℕ.* n)) (2 ℕ.* t ℕ.* (2 ℕ.* u ℕ.* n))
+                                                                    N₂≤4rsn N₂≤4tun) ⟩
+              (+ (K x ℕ.* K z) / 1) ℚ.*
+              (+ 1 / (K x ℕ.* K z ℕ.* (3 ℕ.* j)))                ≈⟨ ℚ.*≡* (solve 3 (λ Kx Kz j ->
+                                                                    (Kx :* Kz :* con (+ 1)) :* (con (+ 3) :* j) :=
+                                                                    (con (+ 1) :* (con (+ 1) :* (Kx :* Kz :* (con (+ 3) :* j)))))
+                                                                    _≡_.refl (+ K x) (+ K z) (+ j)) ⟩
+              + 1 / (3 ℕ.* j)                                     ∎
+
+            N₃≤2sn : N₃ ℕ.≤ 2 ℕ.* s ℕ.* n
+            N₃≤2sn = ℕP.≤-trans (ℕP.m≤n⊔m (N₁ ℕ.⊔ N₂) N₃)
+                     (ℕP.≤-trans (ℕP.<⇒≤ N<n) (ℕP.m≤n*m n {2 ℕ.* s} ℕP.0<1+n))
+
+            N₃≤4tun : N₃ ℕ.≤ 2 ℕ.* t ℕ.* (2 ℕ.* u ℕ.* n)
+            N₃≤4tun = ℕP.≤-trans (ℕP.m≤n⊔m (N₁ ℕ.⊔ N₂) N₃) N≤4tun
+
+            part3 : ℚ.∣ x₂ᵤₙ ∣ ℚ.* ℚ.∣ y₄ₜᵤₙ ℚ.* (z₂ₛₙ ℚ.- z₄ₜᵤₙ) ∣ ℚ.≤ + 1 / (3 ℕ.* j)
+            part3 = begin
+              ℚ.∣ x₂ᵤₙ ∣ ℚ.* ℚ.∣ y₄ₜᵤₙ ℚ.* (z₂ₛₙ ℚ.- z₄ₜᵤₙ) ∣     ≈⟨ ℚP.≃-trans (ℚP.*-congˡ {ℚ.∣ x₂ᵤₙ ∣} (ℚP.∣p*q∣≃∣p∣*∣q∣ y₄ₜᵤₙ (z₂ₛₙ ℚ.- z₄ₜᵤₙ)))
+                                                                    (ℚP.≃-sym (ℚP.*-assoc ℚ.∣ x₂ᵤₙ ∣ ℚ.∣ y₄ₜᵤₙ ∣ ℚ.∣ z₂ₛₙ ℚ.- z₄ₜᵤₙ ∣)) ⟩
+              ℚ.∣ x₂ᵤₙ ∣ ℚ.* ℚ.∣ y₄ₜᵤₙ ∣ ℚ.* ℚ.∣ z₂ₛₙ ℚ.- z₄ₜᵤₙ ∣ ≤⟨ ℚP.*-monoˡ-≤-nonNeg {ℚ.∣ z₂ₛₙ ℚ.- z₄ₜᵤₙ ∣} _ (ℚP.≤-trans
+                                                                    (ℚP.*-monoˡ-≤-nonNeg {ℚ.∣ y₄ₜᵤₙ ∣} _
+                                                                    (ℚP.<⇒≤ (canonical-greater x (2 ℕ.* u ℕ.* n))))
+                                                                    (ℚP.*-monoʳ-≤-nonNeg {+ K x / 1} _
+                                                                    (ℚP.<⇒≤ (canonical-greater y (2 ℕ.* t ℕ.* (2 ℕ.* u ℕ.* n)))))) ⟩
+              (+ (K x ℕ.* K y) / 1) ℚ.* ℚ.∣ z₂ₛₙ ℚ.- z₄ₜᵤₙ ∣      ≤⟨ ℚP.*-monoʳ-≤-nonNeg {+ (K x ℕ.* K y) / 1} _
+                                                                     (proj₂ (regular⇒cauchy z (K x ℕ.* K y ℕ.* (3 ℕ.* j)))
+                                                                     (2 ℕ.* s ℕ.* n) (2 ℕ.* t ℕ.* (2 ℕ.* u ℕ.* n))
+                                                                     N₃≤2sn N₃≤4tun) ⟩
+              (+ (K x ℕ.* K y) / 1) ℚ.*
+              (+ 1 / (K x ℕ.* K y ℕ.* (3 ℕ.* j)))                 ≈⟨ ℚ.*≡* (solve 3 (λ Kx Ky j ->
+                                                                     (((Kx :* Ky) :* con (+ 1)) :* (con (+ 3) :* j)) :=
+                                                                     (con (+ 1) :* (con (+ 1) :* (Kx :* Ky :* (con (+ 3) :* j)))))
+                                                                     _≡_.refl (+ K x) (+ K y) (+ j)) ⟩
+              + 1 / (3 ℕ.* j)                                      ∎
+
 *-distribˡ-+ : ∀ (x y z : ℝ) -> x * (y + z) ≃ (x * y) + (x * z)
 *-distribˡ-+ x y z = {!!}
