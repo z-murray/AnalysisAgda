@@ -743,6 +743,7 @@ Proofs that the above operations are well-defined functions
 
 ∣x₂ₖₙy₂ₖₙ - z₂ᵣₙy₂ᵣₙ∣ ≤ ∣x₂ₖₙy₂ₖₙ - z₂ᵣₙy₂ᵣₙ∣
 -}
+
 *-functionA : ∀ x y z -> x ≃ z -> x * y ≃ z * y
 *-functionA x y z x≃z (suc k₁) = {!!}
 
@@ -875,6 +876,35 @@ Proofs that the above operations are well-defined functions
     open ℚP.≤-Reasoning
     n : ℕ
     n = suc k₁
+
+regular⇒cauchy : ∀ (x : ℝ) -> ∀ (j : ℕ) -> {j≢0 : j ≢0} -> ∃ λ (N : ℕ) -> ∀ (m n : ℕ) ->
+                 N ℕ.≤ m -> N ℕ.≤ n -> ℚ.∣ seq x m ℚ.- seq x n ∣ ℚ.≤ (+ 1 / j) {j≢0}
+regular⇒cauchy x (suc k₁) = 2 ℕ.* j , right
+  where
+    open ℚP.≤-Reasoning
+    open import Data.Integer.Solver
+    open +-*-Solver
+    j : ℕ
+    j = suc k₁
+
+    N≤m⇒m≢0 : ∀ (m : ℕ) -> 2 ℕ.* j ℕ.≤ m -> m ≢0
+    N≤m⇒m≢0 (suc m) N≤m = _
+
+    N≤m⇒1/m≤1/N : ∀ (m : ℕ) -> (N≤m : 2 ℕ.* j ℕ.≤ m) -> (+ 1 / m) {N≤m⇒m≢0 m N≤m} ℚ.≤ (+ 1 / (2 ℕ.* j))
+    N≤m⇒1/m≤1/N (suc m) N≤m = *≤* (ℤP.≤-trans (ℤP.≤-reflexive (*-identityˡ (+ (2 ℕ.* j))))
+                              (ℤP.≤-trans (ℤ.+≤+ N≤m) (ℤP.≤-reflexive (sym (*-identityˡ (+ (suc m)))))))
+
+    right : ∀ (m n : ℕ) -> 2 ℕ.* j ℕ.≤ m -> 2 ℕ.* j ℕ.≤ n ->
+            ℚ.∣  seq x m ℚ.- seq x n ∣ ℚ.≤ + 1 / j
+    right m n N≤m N≤n = begin 
+      ℚ.∣ seq x m ℚ.- seq x n ∣ ≤⟨ reg x m n {N≤m⇒m≢0 m N≤m} {N≤m⇒m≢0 n N≤n} ⟩
+      (+ 1 / m) {N≤m⇒m≢0 m N≤m} ℚ.+ (+ 1 / n) {N≤m⇒m≢0 n N≤n}   ≤⟨ ℚP.≤-trans
+                                                                   (ℚP.+-monoˡ-≤ ((+ 1 / n) {N≤m⇒m≢0 n N≤n}) (N≤m⇒1/m≤1/N m N≤m))
+                                                                   (ℚP.+-monoʳ-≤ (+ 1 / (2 ℕ.* j)) (N≤m⇒1/m≤1/N n N≤n)) ⟩
+      (+ 1 / (2 ℕ.* j)) ℚ.+ (+ 1 / (2 ℕ.* j)) ≈⟨ ℚ.*≡* (solve 1 (λ j ->
+                                                 (con (+ 1) :* (con (+ 2) :* j) :+ con (+ 1) :* (con (+ 2) :* j)) :* j :=
+                                                 (con (+ 1) :* ((con (+ 2) :* j) :* (con (+ 2) :* j)))) _≡_.refl (+ j)) ⟩
+      + 1 / j                    ∎
 
 *-comm : ∀ (x y : ℝ) -> x * y ≃ y * x
 *-comm x y (suc k₁) = begin
