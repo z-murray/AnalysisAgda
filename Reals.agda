@@ -4,7 +4,7 @@ open import Algebra
 open import Data.Bool.Base using (Bool; if_then_else_)
 open import Data.Integer.Base as ℤ
   using (ℤ; +_; +0; +[1+_]; -[1+_]; +<+; +≤+)
-open import Data.Integer.Properties as ℤP using (*-identityˡ)
+import Data.Integer.Properties as ℤP
 open import Data.Integer.DivMod as ℤD
 open import Data.Nat as ℕ using (ℕ; zero; suc)
 open import Data.Nat.Properties as ℕP using (≤-step)
@@ -454,8 +454,8 @@ canonical-greater x (suc k₁) = begin-strict
     n = suc k₁
 
     1/n≤1 : + 1 / n ℚ.≤ + 1 / 1
-    1/n≤1 = *≤* (ℤP.≤-trans (ℤP.≤-reflexive (*-identityˡ (+ 1)))
-                (ℤP.≤-trans (+≤+ (ℕ.s≤s ℕ.z≤n)) (ℤP.≤-reflexive (sym (*-identityˡ (+ n))))))
+    1/n≤1 = *≤* (ℤP.≤-trans (ℤP.≤-reflexive (ℤP.*-identityˡ (+ 1)))
+                (ℤP.≤-trans (+≤+ (ℕ.s≤s ℕ.z≤n)) (ℤP.≤-reflexive (sym (ℤP.*-identityˡ (+ n))))))
 
 {-
 ||p|-|q|| = | |p-q+q| - |q| |
@@ -890,8 +890,8 @@ abstract
       N≤m⇒m≢0 (suc m) N≤m = _
 
       N≤m⇒1/m≤1/N : ∀ (m : ℕ) -> (N≤m : 2 ℕ.* j ℕ.≤ m) -> (+ 1 / m) {N≤m⇒m≢0 m N≤m} ℚ.≤ (+ 1 / (2 ℕ.* j))
-      N≤m⇒1/m≤1/N (suc m) N≤m = *≤* (ℤP.≤-trans (ℤP.≤-reflexive (*-identityˡ (+ (2 ℕ.* j))))
-                              (ℤP.≤-trans (ℤ.+≤+ N≤m) (ℤP.≤-reflexive (sym (*-identityˡ (+ (suc m)))))))
+      N≤m⇒1/m≤1/N (suc m) N≤m = *≤* (ℤP.≤-trans (ℤP.≤-reflexive (ℤP.*-identityˡ (+ (2 ℕ.* j))))
+                              (ℤP.≤-trans (ℤ.+≤+ N≤m) (ℤP.≤-reflexive (sym (ℤP.*-identityˡ (+ (suc m)))))))
   
       right : ∀ (m n : ℕ) -> 2 ℕ.* j ℕ.≤ m -> 2 ℕ.* j ℕ.≤ n ->
               ℚ.∣  seq x m ℚ.- seq x n ∣ ℚ.≤ + 1 / j
@@ -1507,3 +1507,40 @@ Thus ∣x₄ᵣₛₙ*y₄ᵣₛₙ*z₂ₛₙ - x₂ᵤₙ*y₄ₜᵤₙ*z₄�
 *-distribʳ-+ x y z = ≃-trans {(y + z) * x} {x * (y + z)} {y * x + z * x} (*-comm (y + z) x)
                     (≃-trans {x * (y + z)} {x * y + x * z} {y * x + z * x} (*-distribˡ-+ x y z)
                     (+-cong {x * y} {y * x} {x * z} {z * x} (*-comm x y) (*-comm x z)))
+
+*-identityˡ : LeftIdentity _≃_ 1ℝ _*_
+*-identityˡ x (suc k₁) = begin
+  ℚ.∣ ℚ.1ℚᵘ ℚ.* seq x (2 ℕ.* k ℕ.* n) ℚ.- seq x n ∣ ≈⟨ ℚP.∣-∣-cong (ℚP.+-congˡ (ℚ.- seq x n) (ℚP.*-identityˡ (seq x (2 ℕ.* k ℕ.* n)))) ⟩
+  ℚ.∣ seq x (2 ℕ.* k ℕ.* n) ℚ.- seq x n ∣         ≤⟨ reg x (2 ℕ.* k ℕ.* n) n ⟩
+  (+ 1 / (2 ℕ.* k ℕ.* n)) ℚ.+ (+ 1 / n)           ≤⟨ ℚP.+-monoˡ-≤ (+ 1 / n) lem ⟩
+  (+ 1 / n) ℚ.+ (+ 1 / n)                         ≈⟨ ℚ.*≡* (solve 1 (λ n ->
+                                                           (con (+ 1) :* n :+ con (+ 1) :* n) :* n := (con (+ 2) :* (n :* n)))
+                                                           _≡_.refl (+ n)) ⟩
+  + 2 / n                                               ∎
+  where
+    open ℚP.≤-Reasoning
+    open import Data.Integer.Solver
+    open +-*-Solver
+    k : ℕ
+    k = K 1ℝ ℕ.⊔ K x
+
+    n : ℕ
+    n = suc k₁
+
+    lem : (+ 1 / (2 ℕ.* k ℕ.* n)) ℚ.≤ + 1 / n
+    lem = *≤* (ℤP.*-monoˡ-≤-nonNeg 1 (+≤+ (ℕP.m≤n*m n {2 ℕ.* k} ℕP.0<1+n)))
+
+*-identityʳ : RightIdentity _≃_ 1ℝ _*_
+*-identityʳ x = ≃-trans {x * 1ℝ} {1ℝ * x} {x} (*-comm x 1ℝ) (*-identityˡ x)
+
+*-identity : Identity _≃_ 1ℝ _*_
+*-identity = *-identityˡ , *-identityʳ
+
+{-
+Next goals:
+-Prove congruence, commutativity, and associativity of ⊔
+-Define absolute value and prove congruence and ∣x*y∣=∣x∣*∣y∣
+-Maybe define a min function and prove its properties?
+(This stuff should be easy)
+After that, on to ordering!
+-}
