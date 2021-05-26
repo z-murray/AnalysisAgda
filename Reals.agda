@@ -744,11 +744,8 @@ Proofs that the above operations are well-defined functions
 ∣x₂ₖₙy₂ₖₙ - z₂ᵣₙy₂ᵣₙ∣ ≤ ∣x₂ₖₙy₂ₖₙ - z₂ᵣₙy₂ᵣₙ∣
 -}
 
-*-functionA : ∀ x y z -> x ≃ z -> x * y ≃ z * y
-*-functionA x y z x≃z (suc k₁) = {!!}
-
-*-function : ∀ x y z w -> x ≃ z -> y ≃ w -> x * y ≃ z * w
-*-function x y z w x≃z y≃w (suc k₁) = {!!}
+{-
+-}
 
 {-
   Some properties of reals.
@@ -906,6 +903,163 @@ abstract
                                                    (con (+ 1) :* (con (+ 2) :* j) :+ con (+ 1) :* (con (+ 2) :* j)) :* j :=
                                                    (con (+ 1) :* ((con (+ 2) :* j) :* (con (+ 2) :* j)))) _≡_.refl (+ j)) ⟩
         + 1 / j                    ∎
+
+  equals-to-cauchy : ∀ (x y : ℝ) -> x ≃ y -> ∀ (j : ℕ) -> {j≢0 : j ≢0} ->
+                     ∃ λ (N : ℕ) -> ∀ (m n : ℕ) -> N ℕ.< m -> N ℕ.< n ->
+                     ℚ.∣ seq x m ℚ.- seq y n ∣ ℚ.≤ (+ 1 / j) {j≢0}
+  equals-to-cauchy x y x≃y (suc k₁) = N , lemA
+    where
+      open ℚP.≤-Reasoning
+      open import Data.Integer.Solver as ℤ-Solver
+      open ℤ-Solver.+-*-Solver
+      open import Data.Rational.Unnormalised.Solver as ℚ-Solver
+      open ℚ-Solver.+-*-Solver using ()
+        renaming
+          ( solve to ℚsolve
+          ; _:+_ to _ℚ:+_
+          ; _:-_ to _ℚ:-_
+          ; _:*_ to _ℚ:*_
+          ; _:=_ to _ℚ:=_
+          )
+      j : ℕ
+      j = suc k₁
+
+      N₁ : ℕ
+      N₁ = proj₁ (lemma1A x y x≃y (2 ℕ.* j))
+
+      N₂ : ℕ
+      N₂ = proj₁ (regular⇒cauchy x (2 ℕ.* j))
+
+      N : ℕ
+      N = N₁ ℕ.⊔ N₂
+
+      lemA : ∀ (m n : ℕ) -> N ℕ.< m -> N ℕ.< n ->
+             ℚ.∣ seq x m ℚ.- seq y n ∣ ℚ.≤ + 1 / j
+      lemA (suc k₂) (suc k₃) N<m N<n = begin
+        ℚ.∣ seq x m ℚ.- seq y n ∣     ≈⟨ ℚP.∣-∣-cong (ℚsolve 3 (λ xm yn xn ->
+                                         xm ℚ:- yn ℚ:= (xm ℚ:- xn) ℚ:+ (xn ℚ:- yn))
+                                         ℚP.≃-refl (seq x m) (seq y n) (seq x n)) ⟩
+        ℚ.∣ (seq x m ℚ.- seq x n) ℚ.+
+            (seq x n ℚ.- seq y n) ∣   ≤⟨ ℚP.∣p+q∣≤∣p∣+∣q∣ (seq x m ℚ.- seq x n)
+                                                         (seq x n ℚ.- seq y n) ⟩
+        ℚ.∣ seq x m ℚ.- seq x n ∣ ℚ.+
+        ℚ.∣ seq x n ℚ.- seq y n ∣     ≤⟨ ℚP.+-mono-≤ (proj₂ (regular⇒cauchy x (2 ℕ.* j)) m n
+                                                            (ℕP.≤-trans (ℕP.m≤n⊔m N₁ N₂) (ℕP.<⇒≤ N<m))
+                                                            (ℕP.≤-trans (ℕP.m≤n⊔m N₁ N₂) (ℕP.<⇒≤ N<n)))
+                                                     (proj₂ (lemma1A x y x≃y (2 ℕ.* j)) n
+                                                            (ℕP.<-transʳ (ℕP.m≤m⊔n N₁ N₂) N<n)) ⟩
+        (+ 1 / (2 ℕ.* j)) ℚ.+
+        (+ 1 / (2 ℕ.* j))             ≈⟨ ℚ.*≡* (solve 1 (λ j ->
+                                         (con (+ 1) :* (con (+ 2) :* j) :+ (con (+ 1) :* (con (+ 2) :* j))) :* j :=
+                                         (con (+ 1) :* ((con (+ 2) :* j) :* (con (+ 2) :* j))))
+                                         _≡_.refl (+ j)) ⟩
+        + 1 / j                                  ∎
+        where
+          m : ℕ
+          m = suc k₂
+
+          n : ℕ
+          n = suc k₃
+            
+*-function : ∀ x y z w -> x ≃ z -> y ≃ w -> x * y ≃ z * w
+*-function x y z w x≃z y≃w = lemma1B (x * y) (z * w) lemA
+  where
+    open ℚP.≤-Reasoning
+    open import Data.Integer.Solver as ℤ-Solver
+    open ℤ-Solver.+-*-Solver
+    open import Data.Rational.Unnormalised.Solver as ℚ-Solver
+    open ℚ-Solver.+-*-Solver using ()
+      renaming
+        ( solve to ℚsolve
+        ; _:+_ to _ℚ:+_
+        ; _:-_ to _ℚ:-_
+        ; _:*_ to _ℚ:*_
+        ; _:=_ to _ℚ:=_
+        )
+    lemA : ∀ (j : ℕ) -> {j≢0 : j ≢0} -> ∃ λ (N : ℕ) -> ∀ (n : ℕ) -> N ℕ.< n ->
+           ℚ.∣ seq (x * y) n ℚ.- seq (z * w) n ∣ ℚ.≤ (+ 1 / j) {j≢0}
+    lemA (suc k₁) = N , lemB
+      where
+        j : ℕ
+        j = suc k₁
+
+        r : ℕ
+        r = K x ℕ.⊔ K y
+
+        t : ℕ
+        t = K z ℕ.⊔ K w
+
+        N₁ : ℕ
+        N₁ = proj₁ (equals-to-cauchy x z x≃z (K y ℕ.* (2 ℕ.* j)))
+
+        N₂ : ℕ
+        N₂ = proj₁ (equals-to-cauchy y w y≃w (K z ℕ.* (2 ℕ.* j)))
+
+        N : ℕ
+        N = N₁ ℕ.⊔ N₂
+
+        lemB : ∀ (n : ℕ) -> N ℕ.< n ->
+               ℚ.∣ seq (x * y) n ℚ.- seq (z * w) n ∣ ℚ.≤ (+ 1 / j)
+        lemB (suc k₂) N<n = begin
+          ℚ.∣ x₂ᵣₙ ℚ.* y₂ᵣₙ ℚ.- z₂ₜₙ ℚ.* w₂ₜₙ ∣             ≈⟨ ℚP.∣-∣-cong (ℚsolve 4 (λ x y z w ->
+                                                               x ℚ:* y ℚ:- z ℚ:* w ℚ:= y ℚ:* (x ℚ:- z) ℚ:+ z ℚ:* (y ℚ:- w))
+                                                               ℚP.≃-refl x₂ᵣₙ y₂ᵣₙ z₂ₜₙ w₂ₜₙ) ⟩
+          ℚ.∣ y₂ᵣₙ ℚ.* (x₂ᵣₙ ℚ.- z₂ₜₙ) ℚ.+
+              z₂ₜₙ ℚ.* (y₂ᵣₙ ℚ.- w₂ₜₙ) ∣                   ≤⟨ ℚP.∣p+q∣≤∣p∣+∣q∣ (y₂ᵣₙ ℚ.* (x₂ᵣₙ ℚ.- z₂ₜₙ))
+                                                                              (z₂ₜₙ ℚ.* (y₂ᵣₙ ℚ.- w₂ₜₙ)) ⟩
+          ℚ.∣ y₂ᵣₙ ℚ.* (x₂ᵣₙ ℚ.- z₂ₜₙ) ∣ ℚ.+
+          ℚ.∣ z₂ₜₙ ℚ.* (y₂ᵣₙ ℚ.- w₂ₜₙ) ∣                   ≈⟨ ℚP.+-cong (ℚP.∣p*q∣≃∣p∣*∣q∣ y₂ᵣₙ ((x₂ᵣₙ ℚ.- z₂ₜₙ)))
+                                                                        (ℚP.∣p*q∣≃∣p∣*∣q∣ z₂ₜₙ (y₂ᵣₙ ℚ.- w₂ₜₙ)) ⟩
+          ℚ.∣ y₂ᵣₙ ∣ ℚ.* ℚ.∣ x₂ᵣₙ ℚ.- z₂ₜₙ ∣ ℚ.+
+          ℚ.∣ z₂ₜₙ ∣ ℚ.* ℚ.∣ y₂ᵣₙ ℚ.- w₂ₜₙ ∣               ≤⟨ ℚP.+-mono-≤ (ℚP.≤-trans
+                                                                          (ℚP.*-monoˡ-≤-nonNeg {ℚ.∣ x₂ᵣₙ ℚ.- z₂ₜₙ ∣} _
+                                                                                               (ℚP.<⇒≤ (canonical-greater y (2 ℕ.* r ℕ.* n))))
+                                                                          (ℚP.*-monoʳ-≤-nonNeg {+ K y / 1} _
+                                                                                               (proj₂ (equals-to-cauchy x z x≃z (K y ℕ.* (2 ℕ.* j)))
+                                                                                                      (2 ℕ.* r ℕ.* n) (2 ℕ.* t ℕ.* n)
+                                                                                                      (N₁< (2 ℕ.* r ℕ.* n) (N<2kn r))
+                                                                                                      (N₁< (2 ℕ.* t ℕ.* n) (N<2kn t)))))
+                                                                          (ℚP.≤-trans
+                                                                          (ℚP.*-monoˡ-≤-nonNeg {ℚ.∣ y₂ᵣₙ ℚ.- w₂ₜₙ ∣} _
+                                                                                               (ℚP.<⇒≤ (canonical-greater z (2 ℕ.* t ℕ.* n))))
+                                                                          (ℚP.*-monoʳ-≤-nonNeg {+ K z / 1} _
+                                                                                               (proj₂ (equals-to-cauchy y w y≃w (K z ℕ.* (2 ℕ.* j)))
+                                                                                               (2 ℕ.* r ℕ.* n) (2 ℕ.* t ℕ.* n)
+                                                                                               (N₂< (2 ℕ.* r ℕ.* n) (N<2kn r))
+                                                                                               (N₂< (2 ℕ.* t ℕ.* n) (N<2kn t))))) ⟩
+          (+ K y / 1) ℚ.* (+ 1 / (K y ℕ.* (2 ℕ.* j))) ℚ.+
+          (+ K z / 1) ℚ.* (+ 1 / (K z ℕ.* (2 ℕ.* j)))     ≈⟨ ℚ.*≡* (solve 3 (λ Ky Kz j ->
+
+          -- Function for solver
+          ((Ky :* con (+ 1)) :* (con (+ 1) :* (Kz :* (con (+ 2) :* j))) :+ (Kz :* con (+ 1) :* (con (+ 1) :* (Ky :* (con (+ 2) :* j))))) :* j :=
+          con (+ 1) :* ((con (+ 1) :* (Ky :* (con (+ 2) :* j))) :* (con (+ 1) :* (Kz :* (con (+ 2) :* j)))))
+          _≡_.refl (+ K y) (+ K z) (+ j)) ⟩
+          
+          + 1 / j                                          ∎
+          where
+            n : ℕ
+            n = suc k₂
+
+            x₂ᵣₙ : ℚᵘ
+            x₂ᵣₙ = seq x (2 ℕ.* r ℕ.* n)
+
+            y₂ᵣₙ : ℚᵘ
+            y₂ᵣₙ = seq y (2 ℕ.* r ℕ.* n)
+
+            z₂ₜₙ : ℚᵘ
+            z₂ₜₙ = seq z (2 ℕ.* t ℕ.* n)
+
+            w₂ₜₙ : ℚᵘ
+            w₂ₜₙ = seq w (2 ℕ.* t ℕ.* n)
+
+            N<2kn : ∀ (k : ℕ) -> {k ≢0} -> N ℕ.< 2 ℕ.* k ℕ.* n
+            N<2kn (suc k) = ℕP.<-transˡ N<n (ℕP.m≤n*m n {2 ℕ.* (suc k)} ℕP.0<1+n)
+
+            N₁< : ∀ (k : ℕ) -> N ℕ.< k -> N₁ ℕ.< k
+            N₁< k N<k = ℕP.<-transʳ (ℕP.m≤m⊔n N₁ N₂) N<k
+
+            N₂< : ∀ (k : ℕ) -> N ℕ.< k -> N₂ ℕ.< k
+            N₂< k N<k = ℕP.<-transʳ (ℕP.m≤n⊔m N₁ N₂) N<k
 
 *-comm : ∀ (x y : ℝ) -> x * y ≃ y * x
 *-comm x y (suc k₁) = begin
