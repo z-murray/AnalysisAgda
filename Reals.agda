@@ -1,5 +1,6 @@
 {-# OPTIONS --without-K --safe #-}
 
+open import Algebra
 open import Data.Bool.Base using (Bool; if_then_else_)
 open import Data.Integer.Base as ℤ
   using (ℤ; +_; +0; +[1+_]; -[1+_]; +<+; +≤+)
@@ -699,8 +700,8 @@ Proofs that the above operations are well-defined functions
 ≤ 2/2n + 2/2n
 = 2/n
 -}
-+-function : ∀ x y z w -> x ≃ z -> y ≃ w -> x + y ≃ z + w
-+-function x y z w x≃z y≃w (suc k₁) = begin
++-cong : Congruent₂ _≃_ _+_
++-cong {x} {z} {y} {w} x≃z y≃w (suc k₁) = begin
   ℚ.∣ seq x (2 ℕ.* n) ℚ.+ seq y (2 ℕ.* n) ℚ.-
       (seq z (2 ℕ.* n) ℚ.+ seq w (2 ℕ.* n)) ∣   ≤⟨ ℚP.≤-respˡ-≃ (ℚP.∣-∣-cong (ℚsolve 4 (λ x y z w ->
                                                    (x ℚ:- z) ℚ:+ (y ℚ:- w) ℚ:= x ℚ:+ y ℚ:- (z ℚ:+ w))
@@ -735,22 +736,13 @@ Proofs that the above operations are well-defined functions
     n : ℕ
     n = suc k₁
 
-{-
-∣x₂ₖₙy₂ₖₙ - z₂ᵣₙy₂ᵣₙ∣ = ∣x₂ₖₙy₂ₖₙ - x₂ₖₙy₂ᵣₙ + x₂ₖₙy₂ᵣₙ - z₂ᵣₙy₂ᵣₙ∣
-≤ ∣x₂ₖₙy₂ₖₙ - x₂ₖₙy₂ᵣₙ∣ + ∣x₂ₖₙy₂ᵣₙ - z₂ᵣₙy₂ᵣₙ∣
-= ∣x₂ₖₙ∣ * ∣y₂ₖₙ - y₂ᵣₙ∣ + ∣x₂ₖₙ - z₂ᵣₙ∣∣y₂ᵣₙ∣
-≤ ∣x₂ₖₙ∣ * (1/2kn + 1/2rn) + (2/n) * ∣y₂ᵣₙ∣ 
++-congʳ : ∀ x {y z} -> y ≃ z -> x + y ≃ x + z
++-congʳ x {y} {z} y≃z = +-cong {x} {x} {y} {z} (≃-refl {x}) y≃z
 
-∣x₂ₖₙy₂ₖₙ - z₂ᵣₙy₂ᵣₙ∣ ≤ ∣x₂ₖₙy₂ₖₙ - z₂ᵣₙy₂ᵣₙ∣
--}
++-congˡ : ∀ x {y z} -> y ≃ z -> y + x ≃ z + x
++-congˡ x {y} {z} y≃z = +-cong {y} {z} {x} {x} y≃z (≃-refl {x})
 
-{-
--}
-
-{-
-  Some properties of reals.
--}
-+-comm : ∀ (x y : ℝ) -> x + y ≃ y + x
++-comm : Commutative _≃_ _+_
 +-comm x y (suc k₁) = begin
   ℚ.∣ (seq x (2 ℕ.* n) ℚ.+ seq y (2 ℕ.* n)) ℚ.-
       (seq y (2 ℕ.* n) ℚ.+ seq x (2 ℕ.* n)) ∣   ≈⟨ ℚP.∣-∣-cong (solve 2 (λ x y ->
@@ -765,7 +757,7 @@ Proofs that the above operations are well-defined functions
     n : ℕ
     n = suc k₁
 
-+-assoc : ∀ (x y z : ℝ) -> (x + y) + z ≃ x + (y + z)
++-assoc : Associative _≃_ _+_
 +-assoc x y z (suc k₁) = begin
   ℚ.∣ ((seq x 4n ℚ.+ seq y 4n) ℚ.+ seq z 2n) ℚ.-
       (seq x 2n ℚ.+ (seq y 4n ℚ.+ seq z 4n)) ∣                ≈⟨ ℚP.∣-∣-cong (ℚsolve 5 (λ x4 y4 z2 x2 z4 ->
@@ -812,7 +804,10 @@ Proofs that the above operations are well-defined functions
 0ℝ : ℝ
 0ℝ = 0ℚᵘ *
 
-+-identityˡ : ∀ (x : ℝ) -> 0ℝ + x ≃ x
+1ℝ : ℝ
+1ℝ = ℚ.1ℚᵘ *
+
++-identityˡ : LeftIdentity _≃_ 0ℝ _+_
 +-identityˡ x (suc k₁) = begin
   ℚ.∣ (0ℚᵘ ℚ.+ seq x (2 ℕ.* n)) ℚ.- seq x n ∣ ≈⟨ ℚP.∣-∣-cong (ℚP.+-congˡ (ℚ.- seq x n) (ℚP.+-identityˡ (seq x (2 ℕ.* n)))) ⟩
   ℚ.∣ seq x (2 ℕ.* n) ℚ.- seq x n ∣           ≤⟨ reg x (2 ℕ.* n) n ⟩
@@ -832,10 +827,13 @@ Proofs that the above operations are well-defined functions
     n : ℕ
     n = suc k₁
 
-+-identityʳ : ∀ (x : ℝ) -> x + 0ℝ ≃ x
++-identityʳ : RightIdentity _≃_ 0ℝ _+_
 +-identityʳ x = ≃-trans {x + 0ℝ} {0ℝ + x} {x} (+-comm x 0ℝ) (+-identityˡ x)
 
-+-inverseʳ : ∀ x -> x - x ≃ 0ℝ
++-identity : Identity _≃_ 0ℝ _+_
++-identity = +-identityˡ , +-identityʳ
+
++-inverseʳ : RightInverse _≃_ 0ℝ -_ _+_
 +-inverseʳ x (suc k₁) = begin
   ℚ.∣ (seq x (2 ℕ.* n) ℚ.- seq x (2 ℕ.* n)) ℚ.+ 0ℚᵘ ∣ ≈⟨ ℚP.∣-∣-cong (ℚP.+-congˡ 0ℚᵘ (ℚP.+-inverseʳ (seq x (2 ℕ.* n)))) ⟩
   0ℚᵘ                                                 ≤⟨ *≤* (ℤP.≤-trans (ℤP.≤-reflexive (ℤP.*-zeroˡ (+ n))) (+≤+ ℕ.z≤n)) ⟩
@@ -845,8 +843,11 @@ Proofs that the above operations are well-defined functions
     n : ℕ
     n = suc k₁
 
-+-inverseˡ : ∀ x -> (- x) + x ≃ 0ℝ
++-inverseˡ : LeftInverse _≃_ 0ℝ -_ _+_
 +-inverseˡ x = ≃-trans {(- x) + x} {x - x} {0ℝ} (+-comm (- x) x) (+-inverseʳ x)
+
++-inverse : Inverse _≃_ 0ℝ -_ _+_
++-inverse = +-inverseˡ , +-inverseʳ
 
 ℚ*-distrib-+ : ∀ (p r : ℚᵘ) -> (p ℚ.+ r) * ≃ p * + r *
 ℚ*-distrib-+ (mkℚᵘ p q-1) (mkℚᵘ u v-1) (suc k₁) = begin
@@ -961,8 +962,8 @@ abstract
           n : ℕ
           n = suc k₃
             
-*-function : ∀ x y z w -> x ≃ z -> y ≃ w -> x * y ≃ z * w
-*-function x y z w x≃z y≃w = lemma1B (x * y) (z * w) lemA
+*-cong : Congruent₂ _≃_ _*_
+*-cong {x} {z} {y} {w} x≃z y≃w = lemma1B (x * y) (z * w) lemA
   where
     open ℚP.≤-Reasoning
     open import Data.Integer.Solver as ℤ-Solver
@@ -1061,7 +1062,13 @@ abstract
             N₂< : ∀ (k : ℕ) -> N ℕ.< k -> N₂ ℕ.< k
             N₂< k N<k = ℕP.<-transʳ (ℕP.m≤n⊔m N₁ N₂) N<k
 
-*-comm : ∀ (x y : ℝ) -> x * y ≃ y * x
+*-congˡ : LeftCongruent _≃_ _*_
+*-congˡ {x} {y} {z} y≃z = *-cong {x} {x} {y} {z} (≃-refl {x}) y≃z
+
+*-congʳ : RightCongruent _≃_ _*_
+*-congʳ {x} {y} {z} y≃z = *-cong {y} {z} {x} {x} y≃z (≃-refl {x})
+
+*-comm : Commutative _≃_ _*_
 *-comm x y (suc k₁) = begin
   ℚ.∣ seq (x * y) n ℚ.- seq (y * x) n ∣     ≈⟨ ℚP.∣-∣-cong (ℚP.≃-trans (ℚP.+-congʳ (seq (x * y) n)
                                                                        (p≃q⇒-p≃-q _ _ (ℚP.≃-sym xyℚ=yxℚ)))
@@ -1115,7 +1122,7 @@ We will use this trick in our proof. We have:
 Thus ∣x₄ᵣₛₙ*y₄ᵣₛₙ*z₂ₛₙ - x₂ᵤₙ*y₄ₜᵤₙ*z₄ₜᵤₙ∣ ≤ 1/j, as desired.                                    □
 -}
 
-*-assoc : ∀ (x y z : ℝ) -> (x * y) * z ≃ x * (y * z)
+*-assoc : Associative _≃_ _*_
 *-assoc x y z = lemma1B ((x * y) * z) (x * (y * z)) lemA
   where
     open ℚP.≤-Reasoning
@@ -1317,7 +1324,7 @@ Thus ∣x₄ᵣₛₙ*y₄ᵣₛₙ*z₂ₛₙ - x₂ᵤₙ*y₄ₜᵤₙ*z₄�
                                                                      _≡_.refl (+ K x) (+ K y) (+ j)) ⟩
               + 1 / (3 ℕ.* j)                                      ∎
 
-*-distribˡ-+ : ∀ (x y z : ℝ) -> x * (y + z) ≃ (x * y) + (x * z)
+*-distribˡ-+ : _DistributesOverˡ_ _≃_ _*_ _+_ 
 *-distribˡ-+ x y z = lemma1B (x * (y + z)) ((x * y) + (x * z)) lemA
   where
     lemA : ∀ (j : ℕ) -> {j≢0 : j ≢0} -> ∃ λ (N : ℕ) -> ∀ (n : ℕ) -> N ℕ.< n ->
@@ -1495,8 +1502,8 @@ Thus ∣x₄ᵣₛₙ*y₄ᵣₛₙ*z₂ₛₙ - x₂ᵤₙ*y₄ₜᵤₙ*z₄�
 
             N₄≤_ : {m : ℕ} -> N ℕ.≤ m -> N₄ ℕ.≤ m
             N₄≤ N≤m = ℕP.≤-trans (ℕP.m≤n⊔m (N₁ ℕ.⊔ N₂ ℕ.⊔ N₃) N₄) N≤m
-            
 
-        
-        
-
+*-distribʳ-+ : _DistributesOverʳ_ _≃_ _*_ _+_
+*-distribʳ-+ x y z = ≃-trans {(y + z) * x} {x * (y + z)} {y * x + z * x} (*-comm (y + z) x)
+                    (≃-trans {x * (y + z)} {x * y + x * z} {y * x + z * x} (*-distribˡ-+ x y z)
+                    (+-cong {x * y} {y * x} {x * z} {z * x} (*-comm x y) (*-comm x z)))
