@@ -1089,15 +1089,6 @@ abstract
       seq x (2 ℕ.* (K y ℕ.⊔ K x) ℕ.* n)      ∎
 
 {-
-xy  - zw = y(x-z) + z(y-w)
-x * y = x₂ₖₙ * y₂ₖₙ k = Kx ⊔ Ky
-(xy)z = x(yz)
-x₂ᵣₙy₂ᵣₙ
-r = Kx ⊔ Ky
-s = K(x*y) ⊔ Kz
-|
--x -y x = y
-
 Proposition:
   Multiplication on ℝ is associative.
 Proof:
@@ -1688,3 +1679,121 @@ x ⊓ y = - ((- x) ⊔ (- y))
                 (≃-trans {((- x) ⊔ (- y)) ⊔ (- z)} {(- x) ⊔ ((- y) ⊔ (- z))} {(- x) ⊔ (- (- ((- y) ⊔ (- z))))}
                 (⊔-assoc (- x) (- y) (- z)) (⊔-congˡ { - x} { - y ⊔ - z} { - (- (- y ⊔ - z))}
                 (≃-symm { - (- (- y ⊔ - z))} { - y ⊔ - z} (neg-involutive ((- y) ⊔ (- z)))))))
+
+∣_∣ : ℝ -> ℝ
+∣ x ∣ = x ⊔ (- x)
+
+∣-∣-cong : Congruent₁ _≃_ ∣_∣
+∣-∣-cong {x} {y} x≃y = ⊔-cong {x} {y} {(- x)} {(- y)} x≃y (-‿cong {x} {y} x≃y)
+
+∣p∣≃p⊔-p : ∀ p -> ℚ.∣ p ∣ ℚ.≃ p ℚ.⊔ (ℚ.- p)
+∣p∣≃p⊔-p p = {!!}
+
+-- Alternate definition of absolute value defined pointwise in the real number's regular sequence
+∣_∣₂ : ℝ -> ℝ
+seq ∣ x ∣₂ n = ℚ.∣ seq x n ∣
+reg ∣ x ∣₂ m n {m≢0} {n≢0} = begin
+  ℚ.∣ ℚ.∣ seq x m ∣ ℚ.- ℚ.∣ seq x n ∣ ∣ ≤⟨ ∣∣p∣-∣q∣∣≤∣p-q∣ (seq x m) (seq x n) ⟩
+  ℚ.∣ seq x m ℚ.- seq x n ∣            ≤⟨ reg x m n {m≢0} {n≢0} ⟩
+  (+ 1 / m) ℚ.+ (+ 1 / n)               ∎
+  where
+    open ℚP.≤-Reasoning
+
+∣x∣≃∣x∣₂ : ∀ x -> ∣ x ∣ ≃ ∣ x ∣₂
+∣x∣≃∣x∣₂ x (suc k₁) = begin
+  ℚ.∣ (seq x n ℚ.⊔ (ℚ.- seq x n)) ℚ.- ℚ.∣ seq x n ∣ ∣ ≈⟨ ℚP.∣-∣-cong (ℚP.+-congˡ (ℚ.- ℚ.∣ seq x n ∣) (ℚP.≃-sym (∣p∣≃p⊔-p (seq x n)))) ⟩
+  ℚ.∣ ℚ.∣ seq x n ∣ ℚ.- ℚ.∣ seq x n ∣ ∣               ≈⟨ ℚP.∣-∣-cong (ℚP.+-inverseʳ ℚ.∣ seq x n ∣) ⟩
+  0ℚᵘ                                                ≤⟨ ℚP.nonNegative⁻¹ _ ⟩
+  + 2 / n                                             ∎
+  where
+    open ℚP.≤-Reasoning
+    n : ℕ
+    n = suc k₁
+
+{-
+∣ ∣x₂ᵣₙy₂ᵣₙ∣ - ∣x₂ₜₙ∣ * ∣y₂ₜₙ∣ ∣
+≤ ∣ x₂ᵣₙy₂ᵣₙ - x₂ₜₙy₂ₜₙ ∣
+≤ ∣ y₂ᵣₙ∣ ∣(x₂ᵣₙ - x₂ₜₙ)∣ + ∣x₂ₜₙ∣ ∣y₂ᵣₙ - y₂ₜₙ∣
+≤ Ky (1/Ky * 2j) + Kx (1/Kx * 2j)
+≤ 1/j  
+-}
+{-
+∣x*y∣ ≃ ∣x*y∣₂
+
+-}
+∣x*y∣≃∣x∣*∣y∣ : ∀ x y -> ∣ x * y ∣ ≃ ∣ x ∣ * ∣ y ∣
+∣x*y∣≃∣x∣*∣y∣ x y = ≃-trans {∣ x * y ∣} {∣ x * y ∣₂} {∣ x ∣ * ∣ y ∣}
+                   (∣x∣≃∣x∣₂ (x * y))
+                   (≃-trans {∣ x * y ∣₂} {∣ x ∣₂ * ∣ y ∣₂} {∣ x ∣ * ∣ y ∣}
+                   (lemma1B ∣ x * y ∣₂ (∣ x ∣₂ * ∣ y ∣₂) lemA)
+                   (*-cong {∣ x ∣₂} {∣ x ∣} {∣ y ∣₂} {∣ y ∣}
+                   (≃-symm {∣ x ∣} {∣ x ∣₂} (∣x∣≃∣x∣₂ x)) (≃-symm {∣ y ∣} {∣ y ∣₂} (∣x∣≃∣x∣₂ y))))
+  where
+    open ℚP.≤-Reasoning
+    lemA : ∀ (j : ℕ) -> {j≢0 : j ≢0} -> ∃ λ (N : ℕ) -> ∀ (n : ℕ) -> N ℕ.< n ->
+           ℚ.∣ seq (∣ x * y ∣₂) n ℚ.- seq (∣ x ∣₂ * ∣ y ∣₂) n ∣ ℚ.≤ (+ 1 / j) {j≢0}
+    lemA (suc k₁) = {!!}
+      where
+        j : ℕ
+        j = suc k₁
+
+        r : ℕ
+        r = K x ℕ.⊔ K y
+
+        t : ℕ
+        t = K ∣ x ∣₂ ℕ.⊔ K ∣ y ∣₂
+
+        N₁ : ℕ
+        N₁ = {!!}
+
+        N₂ : ℕ
+        N₂ = {!!}
+
+        N : ℕ
+        N = N₁ ℕ.⊔ N₂
+    {-lemA : ∀ (j : ℕ) -> {j≢0 : j ≢0} -> ∃ λ (N : ℕ) -> ∀ (n : ℕ) -> N ℕ.< n ->
+          ℚ.∣ seq (∣ x * y ∣) n ℚ.- seq (∣ x ∣ * ∣ y ∣) n ∣ ℚ.≤ (+ 1 / j) {j≢0}
+    lemA (suc k₁) = N , lemB
+      where
+        j : ℕ
+        j = suc k₁
+
+        r : ℕ
+        r = K x ℕ.⊔ K y
+
+        t : ℕ
+        t = K ∣ x ∣ ℕ.⊔ K ∣ y ∣ 
+        
+        N₁ : ℕ
+        N₁ = proj₁ (regular⇒cauchy x (K y ℕ.* (2 ℕ.* j)))
+
+        N₂ : ℕ
+        N₂ = proj₁ (regular⇒cauchy y (K x ℕ.* (2 ℕ.* j)))
+
+        N : ℕ
+        N = N₁ ℕ.⊔ N₂-}
+{-
+        lemB : ∀ (n : ℕ) -> N ℕ.< n ->
+               ℚ.∣ seq (∣ x * y ∣) n ℚ.- seq (∣ x ∣ * ∣ y ∣) n ∣ ℚ.≤ (+ 1 / j)
+        lemB (suc k₁) N<n = begin
+          ℚ.∣ (x₂ᵣₙ ℚ.* y₂ᵣₙ ℚ.⊔ (ℚ.- (x₂ᵣₙ ℚ.* y₂ᵣₙ))) ℚ.-
+              (x₂ₜₙ ℚ.⊔ (ℚ.- x₂ₜₙ)) ℚ.* (y₂ₜₙ ℚ.⊔ (ℚ.- y₂ₜₙ)) ∣ ≈⟨ ℚP.∣-∣-cong (ℚP.+-cong {!!} {!!}) ⟩
+          ℚ.∣ ℚ.∣ x₂ᵣₙ ℚ.* y₂ᵣₙ ∣ ℚ.- ℚ.∣ x₂ₜₙ ℚ.* y₂ₜₙ ∣ ∣      ≤⟨ {!!} ⟩
+          {!!} ∎
+          where
+            n : ℕ
+            n = suc k₁
+
+            x₂ᵣₙ : ℚᵘ
+            x₂ᵣₙ = seq x (2 ℕ.* r ℕ.* n)
+
+            x₂ₜₙ : ℚᵘ
+            x₂ₜₙ = seq x (2 ℕ.* t ℕ.* n)
+
+            y₂ᵣₙ : ℚᵘ
+            y₂ᵣₙ = seq y (2 ℕ.* r ℕ.* n)
+
+            y₂ₜₙ : ℚᵘ
+            y₂ₜₙ = seq y (2 ℕ.* t ℕ.* n)
+        -}
+    
