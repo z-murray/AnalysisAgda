@@ -457,10 +457,6 @@ canonical-greater x (suc k₁) = begin-strict
     1/n≤1 = *≤* (ℤP.≤-trans (ℤP.≤-reflexive (ℤP.*-identityˡ (+ 1)))
                 (ℤP.≤-trans (+≤+ (ℕ.s≤s ℕ.z≤n)) (ℤP.≤-reflexive (sym (ℤP.*-identityˡ (+ n))))))
 
-{-
-||p|-|q|| = | |p-q+q| - |q| |
-          ≤ 
--}
 ∣∣p∣-∣q∣∣≤∣p-q∣ : ∀ p q -> ℚ.∣ ℚ.∣ p ∣ ℚ.- ℚ.∣ q ∣ ∣ ℚ.≤ ℚ.∣ p ℚ.- q ∣
 ∣∣p∣-∣q∣∣≤∣p-q∣ p q = [ lemA p q , lemB p q ]′ (ℚP.≤-total ℚ.∣ q ∣ ℚ.∣ p ∣)
   where
@@ -1093,6 +1089,15 @@ abstract
       seq x (2 ℕ.* (K y ℕ.⊔ K x) ℕ.* n)      ∎
 
 {-
+xy  - zw = y(x-z) + z(y-w)
+x * y = x₂ₖₙ * y₂ₖₙ k = Kx ⊔ Ky
+(xy)z = x(yz)
+x₂ᵣₙy₂ᵣₙ
+r = Kx ⊔ Ky
+s = K(x*y) ⊔ Kz
+|
+-x -y x = y
+
 Proposition:
   Multiplication on ℝ is associative.
 Proof:
@@ -1105,13 +1110,22 @@ N₁,N₂,N₃∈ℤ⁺ such that:
           ∣xₘ - xₙ∣  ≤ 1 / (Ky * Kz * 3j)     (m, n ≥ N₁),
           ∣yₘ - yₙ∣ ≤ 1 / (Kx * Kz * 3j)     (m, n ≥ N₂), and
           ∣zₘ - zₙ∣  ≤ 1 / (Kx * Ky * 3j)     (m, n ≥ N₃).
+x = z and y = w
+then
+x * y = z * w
+∣xₘ - zₙ∣ ≤ ε
 
 Define N = max{N₁, N₂, N₃}. If we show that
        ∣x₄ᵣₛₙ * y₄ᵣₛₙ * z₂ₛₙ - x₂ᵤₙ * y₄ₜᵤₙ * z₄ₜᵤₙ∣ ≤ 1 / j
 for all n ≥ N, then (xy)z = x(yz) by Lemma 1.
   Note that, for all a, b, c, d in ℚ, we have
                ab - cd = b(a - c) + c(b - d).
-We will use this trick in our proof. We have:
+We will use this trick in our proof. We have: 
+∀ ε > 0 ∃ N ∈ ℕ ∀ m, n ≥ N -> ∣xₘ - xₙ∣ ≤ ε
+
+∀ j ∈ ℤ⁺ ∃ N ∈ ℕ ∀ m, n ≥ N ∣ xn - yn ∣ ≤ 1/j
+∀ n ∈ ℕ (∣ xn - yn ∣ ≤ 2/n)
+
 ∣x₄ᵣₛₙ * y₄ᵣₛₙ * z₂ₛₙ - x₂ᵤₙ * y₄ₜᵤₙ * z₄ₜᵤₙ∣
 = ∣y₄ᵣₛₙ * z₂ₛₙ(x₄ᵣₛₙ - x₂ᵤₙ) + x₂ᵤₙ(y₄ᵣₛₙ * z₂ₛₙ - y₄ₜᵤₙ * z₄ₜᵤₙ)∣  
 = ∣y₄ᵣₛₙ * z₂ₛₙ(x₄ᵣₛₙ - x₂ᵤₙ) + x₂ᵤₙ(z₂ₛₙ(y₄ᵣₛₙ - y₄ₜᵤₙ) + y₄ₜᵤₙ(z₂ₛₙ - z₄ₜᵤₙ)∣                    
@@ -1536,11 +1550,141 @@ Thus ∣x₄ᵣₛₙ*y₄ᵣₛₙ*z₂ₛₙ - x₂ᵤₙ*y₄ₜᵤₙ*z₄�
 *-identity : Identity _≃_ 1ℝ _*_
 *-identity = *-identityˡ , *-identityʳ
 
-{-
-Next goals:
--Prove congruence, commutativity, and associativity of ⊔
--Define absolute value and prove congruence and ∣x*y∣=∣x∣*∣y∣
--Maybe define a min function and prove its properties?
-(This stuff should be easy)
-After that, on to ordering!
--}
+-‿cong : Congruent₁ _≃_ (-_)
+-‿cong {x} {y} x≃y n {n≢0}  = begin
+  ℚ.∣ ℚ.- seq x n ℚ.- (ℚ.- seq y n) ∣ ≈⟨ ℚP.∣-∣-cong (solve 2 (λ x y -> :- x :- (:- y) := y :- x) ℚP.≃-refl (seq x n) (seq y n)) ⟩
+  ℚ.∣ seq y n ℚ.- seq x n ∣           ≤⟨ (≃-symm {x} {y} x≃y) n {n≢0} ⟩
+  + 2 / n                              ∎
+  where
+    open ℚP.≤-Reasoning
+    open import Data.Rational.Unnormalised.Solver
+    open +-*-Solver
+
+neg-involutive : Involutive _≃_ (-_)
+neg-involutive x (suc k₁) = begin
+  ℚ.∣ ℚ.- (ℚ.- seq x (suc k₁)) ℚ.- seq x (suc k₁) ∣ ≈⟨ ℚP.∣-∣-cong (ℚP.+-inverseˡ (ℚ.- seq x (suc k₁))) ⟩
+  0ℚᵘ                                               ≤⟨ ℚP.nonNegative⁻¹ _ ⟩
+  + 2 / (suc k₁)                                     ∎
+  where
+    open ℚP.≤-Reasoning
+    open import Data.Rational.Unnormalised.Solver
+    open +-*-Solver
+
+neg-distrib-+ : ∀ x y -> - (x + y) ≃ (- x) + (- y)
+neg-distrib-+ x y (suc k₁) = begin
+  ℚ.∣ ℚ.- (seq x (2 ℕ.* n) ℚ.+ seq y (2 ℕ.* n)) ℚ.-
+      (ℚ.- seq x (2 ℕ.* n) ℚ.- seq y (2 ℕ.* n)) ∣   ≈⟨ ℚP.∣-∣-cong (solve 2 (λ x y ->
+                                                       :- (x :+ y) :- (:- x :- y) := con (0ℚᵘ)) ℚP.≃-refl
+                                                       (seq x (2 ℕ.* n)) (seq y (2 ℕ.* n))) ⟩
+  0ℚᵘ                                               ≤⟨ ℚP.nonNegative⁻¹ _ ⟩
+  + 2 / n                                            ∎
+  where
+    open ℚP.≤-Reasoning
+    open import Data.Rational.Unnormalised.Solver
+    open +-*-Solver
+    n : ℕ
+    n = suc k₁
+
+⊔-cong : Congruent₂ _≃_ _⊔_
+⊔-cong {x} {z} {y} {w} x≃z y≃w (suc k₁) = [ left , right ]′ (ℚP.≤-total (seq x n ℚ.⊔ seq y n) (seq z n ℚ.⊔ seq w n))
+  where
+    open ℚP.≤-Reasoning
+    open import Data.Rational.Unnormalised.Solver
+    open +-*-Solver
+    n : ℕ
+    n = suc k₁
+
+    lem : ∀ a b c d -> a ℚ.≤ b -> ℚ.∣ b ℚ.- d ∣ ℚ.≤ + 2 / n ->
+          (a ℚ.⊔ b) ℚ.- (c ℚ.⊔ d) ℚ.≤ + 2 / n
+    lem a b c d a≤b hyp = begin
+      (a ℚ.⊔ b) ℚ.- (c ℚ.⊔ d) ≤⟨ ℚP.+-mono-≤ (ℚP.≤-reflexive (ℚP.p≤q⇒p⊔q≃q a≤b)) (ℚP.neg-mono-≤ (ℚP.p≤q⊔p c d)) ⟩
+      b ℚ.- d                 ≤⟨ p≤∣p∣ (b ℚ.- d) ⟩
+      ℚ.∣ b ℚ.- d ∣           ≤⟨ hyp ⟩
+      + 2 / n                  ∎
+
+    left : seq x n ℚ.⊔ seq y n ℚ.≤ seq z n ℚ.⊔ seq w n -> ℚ.∣ seq x n ℚ.⊔ seq y n ℚ.- (seq z n ℚ.⊔ seq w n) ∣ ℚ.≤ + 2 / n
+    left hyp1 = [ zn≤wn , wn≤zn ]′ (ℚP.≤-total (seq z n) (seq w n))
+      where
+        first : ℚ.∣ (seq x n ℚ.⊔ seq y n) ℚ.- (seq z n ℚ.⊔ seq w n) ∣ ℚ.≃ (seq z n ℚ.⊔ seq w n) ℚ.- (seq x n ℚ.⊔ seq y n)
+        first = begin-equality
+          ℚ.∣ (seq x n ℚ.⊔ seq y n) ℚ.- (seq z n ℚ.⊔ seq w n) ∣ ≈⟨ ℚP.≃-trans (ℚP.≃-sym (ℚP.∣-p∣≃∣p∣ ((seq x n ℚ.⊔ seq y n) ℚ.- (seq z n ℚ.⊔ seq w n))))
+                                                                              (ℚP.∣-∣-cong (solve 2 (λ a b -> :- (a :- b) := b :- a)
+                                                                              ℚP.≃-refl (seq x n ℚ.⊔ seq y n) (seq z n ℚ.⊔ seq w n))) ⟩
+          ℚ.∣ (seq z n ℚ.⊔ seq w n) ℚ.- (seq x n ℚ.⊔ seq y n) ∣ ≈⟨ ℚP.0≤p⇒∣p∣≃p (ℚP.p≤q⇒0≤q-p hyp1) ⟩
+          (seq z n ℚ.⊔ seq w n) ℚ.- (seq x n ℚ.⊔ seq y n)        ∎
+
+        zn≤wn : seq z n ℚ.≤ seq w n -> ℚ.∣ (seq x n ℚ.⊔ seq y n) ℚ.- (seq z n ℚ.⊔ seq w n) ∣ ℚ.≤ + 2 / n
+        zn≤wn hyp2 = begin
+          ℚ.∣ (seq x n ℚ.⊔ seq y n) ℚ.- (seq z n ℚ.⊔ seq w n) ∣ ≈⟨ first ⟩
+          (seq z n ℚ.⊔ seq w n) ℚ.- (seq x n ℚ.⊔ seq y n)       ≤⟨ lem (seq z n) (seq w n) (seq x n) (seq y n) hyp2 (≃-symm {y} {w} y≃w n) ⟩
+          + 2 / n                                            ∎
+
+        wn≤zn : seq w n ℚ.≤ seq z n -> ℚ.∣ (seq x n ℚ.⊔ seq y n) ℚ.- (seq z n ℚ.⊔ seq w n) ∣ ℚ.≤ + 2 / n
+        wn≤zn hyp2 = begin
+          ℚ.∣ (seq x n ℚ.⊔ seq y n) ℚ.- (seq z n ℚ.⊔ seq w n) ∣ ≈⟨ first ⟩
+          (seq z n ℚ.⊔ seq w n) ℚ.- (seq x n ℚ.⊔ seq y n)       ≈⟨ ℚP.+-cong (ℚP.⊔-comm (seq z n) (seq w n)) (ℚP.-‿cong (ℚP.⊔-comm (seq x n) (seq y n))) ⟩
+          (seq w n ℚ.⊔ seq z n) ℚ.- (seq y n ℚ.⊔ seq x n)       ≤⟨ lem (seq w n) (seq z n) (seq y n) (seq x n) hyp2 (≃-symm {x} {z} x≃z n) ⟩
+          + 2 / n                                                ∎
+
+    right : seq z n ℚ.⊔ seq w n ℚ.≤ seq x n ℚ.⊔ seq y n -> ℚ.∣ seq x n ℚ.⊔ seq y n ℚ.- (seq z n ℚ.⊔ seq w n) ∣ ℚ.≤ + 2 / n
+    right hyp1 = [ xn≤yn , yn≤xn ]′ (ℚP.≤-total (seq x n) (seq y n))
+      where
+        xn≤yn : seq x n ℚ.≤ seq y n -> ℚ.∣ seq x n ℚ.⊔ seq y n ℚ.- (seq z n ℚ.⊔ seq w n) ∣ ℚ.≤ + 2 / n
+        xn≤yn hyp2 = begin
+          ℚ.∣ seq x n ℚ.⊔ seq y n ℚ.- (seq z n ℚ.⊔ seq w n) ∣ ≈⟨ ℚP.0≤p⇒∣p∣≃p (ℚP.p≤q⇒0≤q-p hyp1) ⟩
+          seq x n ℚ.⊔ seq y n ℚ.- (seq z n ℚ.⊔ seq w n)       ≤⟨ lem (seq x n) (seq y n) (seq z n) (seq w n) hyp2 (y≃w n) ⟩
+          + 2 / n                                              ∎
+
+        yn≤xn : seq y n ℚ.≤ seq x n -> ℚ.∣ seq x n ℚ.⊔ seq y n ℚ.- (seq z n ℚ.⊔ seq w n) ∣ ℚ.≤ + 2 / n
+        yn≤xn hyp2 = begin
+          ℚ.∣ seq x n ℚ.⊔ seq y n ℚ.- (seq z n ℚ.⊔ seq w n) ∣ ≈⟨ ℚP.0≤p⇒∣p∣≃p (ℚP.p≤q⇒0≤q-p hyp1) ⟩
+          seq x n ℚ.⊔ seq y n ℚ.- (seq z n ℚ.⊔ seq w n)       ≈⟨ ℚP.+-cong (ℚP.⊔-comm (seq x n) (seq y n)) (ℚP.-‿cong (ℚP.⊔-comm (seq z n) (seq w n))) ⟩
+          seq y n ℚ.⊔ seq x n ℚ.- (seq w n ℚ.⊔ seq z n)       ≤⟨ lem (seq y n) (seq x n) (seq w n) (seq z n) hyp2 (x≃z n) ⟩
+          + 2 / n                                              ∎
+
+⊔-congˡ : LeftCongruent _≃_ _⊔_
+⊔-congˡ {x} {y} {z} y≃z = ⊔-cong {x} {x} {y} {z} (≃-refl {x}) y≃z
+
+⊔-congʳ : RightCongruent _≃_ _⊔_
+⊔-congʳ {x} {y} {z} y≃z = ⊔-cong {y} {z} {x} {x} y≃z (≃-refl {x})
+
+⊔-comm : Commutative _≃_ _⊔_
+⊔-comm x y n {n≢0} = begin
+  ℚ.∣ seq x n ℚ.⊔ seq y n ℚ.- (seq y n ℚ.⊔ seq x n) ∣ ≈⟨ ℚP.∣-∣-cong (ℚP.+-congʳ (seq x n ℚ.⊔ seq y n) (ℚP.-‿cong (ℚP.⊔-comm (seq y n) (seq x n)))) ⟩
+  ℚ.∣ seq x n ℚ.⊔ seq y n ℚ.- (seq x n ℚ.⊔ seq y n) ∣ ≤⟨ ≃-refl {x ⊔ y} n {n≢0} ⟩
+  + 2 / n                                              ∎
+  where
+    open ℚP.≤-Reasoning
+
+⊔-assoc : Associative _≃_ _⊔_
+⊔-assoc x y z n {n≢0} = begin
+  ℚ.∣ seq x n ℚ.⊔ seq y n ℚ.⊔ seq z n ℚ.- (seq x n ℚ.⊔ (seq y n ℚ.⊔ seq z n)) ∣ ≈⟨ ℚP.∣-∣-cong (ℚP.+-congʳ (seq x n ℚ.⊔ seq y n ℚ.⊔ seq z n)
+                                                                                              (ℚP.-‿cong (ℚP.≃-sym (ℚP.⊔-assoc (seq x n) (seq y n) (seq z n))))) ⟩
+  ℚ.∣ seq x n ℚ.⊔ seq y n ℚ.⊔ seq z n ℚ.- (seq x n ℚ.⊔ seq y n ℚ.⊔ seq z n) ∣   ≤⟨ ≃-refl {x ⊔ y ⊔ z} n {n≢0} ⟩
+  + 2 / n                                                                       ∎
+  where
+    open ℚP.≤-Reasoning
+
+_⊓_ : (x y : ℝ) -> ℝ
+x ⊓ y = - ((- x) ⊔ (- y))
+
+⊓-cong : Congruent₂ _≃_ _⊓_
+⊓-cong {x} {z} {y} {w} x≃z y≃w = -‿cong {(- x ⊔ - y)} {(- z ⊔ - w)} (⊔-cong {(- x)} {(- z)} {(- y)} {(- w)}
+                                        (-‿cong {x} {z} x≃z) (-‿cong {y} {w} y≃w))
+
+⊓-congˡ : LeftCongruent _≃_ _⊓_
+⊓-congˡ {x} {y} {z} y≃z = ⊓-cong {x} {x} {y} {z} (≃-refl {x}) y≃z
+
+⊓-congʳ : RightCongruent _≃_ _⊓_
+⊓-congʳ {x} {y} {z} y≃z = ⊓-cong {y} {z} {x} {x} y≃z (≃-refl {x})
+
+⊓-comm : Commutative _≃_ _⊓_
+⊓-comm x y = -‿cong { - x ⊔ - y} { - y ⊔ - x} (⊔-comm (- x) (- y))
+
+⊓-assoc : Associative _≃_ _⊓_
+⊓-assoc x y z = -‿cong {(- (- ((- x) ⊔ (- y)))) ⊔ (- z)} {(- x) ⊔ (- (- ((- y) ⊔ (- z))))}
+                (≃-trans {(- (- ((- x) ⊔ (- y))) ⊔ (- z))} {((- x) ⊔ (- y)) ⊔ (- z)} {(- x) ⊔ (- (- ((- y) ⊔ (- z))))}
+                (⊔-congʳ {(- z)} {(- (- ((- x) ⊔ (- y))))} {(- x) ⊔ (- y)} (neg-involutive ((- x) ⊔ (- y))))
+                (≃-trans {((- x) ⊔ (- y)) ⊔ (- z)} {(- x) ⊔ ((- y) ⊔ (- z))} {(- x) ⊔ (- (- ((- y) ⊔ (- z))))}
+                (⊔-assoc (- x) (- y) (- z)) (⊔-congˡ { - x} { - y ⊔ - z} { - (- (- y ⊔ - z))}
+                (≃-symm { - (- (- y ⊔ - z))} { - y ⊔ - z} (neg-involutive ((- y) ⊔ (- z)))))))
