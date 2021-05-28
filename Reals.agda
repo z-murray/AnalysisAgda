@@ -1513,6 +1513,9 @@ Thus ∣x₄ᵣₛₙ*y₄ᵣₛₙ*z₂ₛₙ - x₂ᵤₙ*y₄ₜᵤₙ*z₄�
                     (≃-trans {x * (y + z)} {x * y + x * z} {y * x + z * x} (*-distribˡ-+ x y z)
                     (+-cong {x * y} {y * x} {x * z} {z * x} (*-comm x y) (*-comm x z)))
 
+*-distrib-+ : _DistributesOver_ _≃_ _*_ _+_
+*-distrib-+ = *-distribˡ-+ , *-distribʳ-+
+
 *-identityˡ : LeftIdentity _≃_ 1ℝ _*_
 *-identityˡ x (suc k₁) = begin
   ℚ.∣ ℚ.1ℚᵘ ℚ.* seq x (2 ℕ.* k ℕ.* n) ℚ.- seq x n ∣ ≈⟨ ℚP.∣-∣-cong (ℚP.+-congˡ (ℚ.- seq x n) (ℚP.*-identityˡ (seq x (2 ℕ.* k ℕ.* n)))) ⟩
@@ -1540,6 +1543,25 @@ Thus ∣x₄ᵣₛₙ*y₄ᵣₛₙ*z₂ₛₙ - x₂ᵤₙ*y₄ₜᵤₙ*z₄�
 
 *-identity : Identity _≃_ 1ℝ _*_
 *-identity = *-identityˡ , *-identityʳ
+
+*-zeroˡ : LeftZero _≃_ 0ℝ _*_
+*-zeroˡ x (suc k₁) = begin
+  ℚ.∣ 0ℚᵘ ℚ.* seq x (2 ℕ.* k ℕ.* n) ℚ.- 0ℚᵘ ∣ ≈⟨ ℚP.∣-∣-cong (ℚP.+-congˡ (ℚ.- 0ℚᵘ) (ℚP.*-zeroˡ (seq x (2 ℕ.* k ℕ.* n)))) ⟩
+  0ℚᵘ                                         ≤⟨ *≤* (ℤP.≤-trans (ℤP.≤-reflexive (ℤP.*-zeroˡ (+ n))) (+≤+ ℕ.z≤n)) ⟩
+  + 2 / n                                      ∎
+  where
+    open ℚP.≤-Reasoning
+    n : ℕ
+    n = suc k₁
+
+    k : ℕ
+    k = K 0ℝ ℕ.⊔ K x
+
+*-zeroʳ : RightZero _≃_ 0ℝ _*_
+*-zeroʳ x = ≃-trans {x * 0ℝ} {0ℝ * x} {0ℝ} (*-comm x 0ℝ) (*-zeroˡ x)
+
+*-zero : Zero _≃_ 0ℝ _*_
+*-zero = *-zeroˡ , *-zeroʳ
 
 -‿cong : Congruent₁ _≃_ (-_)
 -‿cong {x} {y} x≃y n {n≢0}  = begin
@@ -1833,3 +1855,200 @@ reg ∣ x ∣₂ m n {m≢0} {n≢0} = begin
 
             N₂≤ : {m : ℕ} -> N ℕ.≤ m -> N₂ ℕ.≤ m
             N₂≤ N≤m = ℕP.≤-trans (ℕP.m≤n⊔m N₁ N₂) N≤m
+
+{-
+A bunch of algebraic bundles from the standard library. I've followed the conventions used
+in the standard library's properties file for unnormalised rationals.
+
+Sometimes we use copatterns so we can use implicit arguments (e.g. in ≃-isEquivalence's
+definition). 
+
+It's inconvenient, but some properties of ℝ might not work without implicit arguments.
+For instance, if we use ≃-trans without its implicit arguments in ≃-isEquivalence below (so
+just ≃-trans instead of ≃-trans {x} {y} {z}), Agda will give a constraint error.
+-}
+≃-isEquivalence : IsEquivalence _≃_
+IsEquivalence.refl ≃-isEquivalence {x} = ≃-refl {x}
+IsEquivalence.sym ≃-isEquivalence {x} {y} = ≃-symm {x} {y}
+IsEquivalence.trans ≃-isEquivalence {x} {y} {z} = ≃-trans {x} {y} {z}
+
+≃-setoid : Setoid 0ℓ 0ℓ
+≃-setoid = record
+  { isEquivalence = ≃-isEquivalence
+  }
+
++-rawMagma : RawMagma 0ℓ 0ℓ
++-rawMagma = record
+  { _≈_ = _≃_
+  ; _∙_ = _+_
+  }
+
++-rawMonoid : RawMonoid 0ℓ 0ℓ
++-rawMonoid = record
+  { _≈_ = _≃_
+  ; _∙_ = _+_
+  ; ε   = 0ℝ
+  }
+
++-0-rawGroup : RawGroup 0ℓ 0ℓ
++-0-rawGroup = record
+  { Carrier = ℝ
+  ; _≈_ = _≃_
+  ; _∙_ = _+_
+  ; ε = 0ℝ
+  ; _⁻¹ = -_
+  }
+
++-*-rawRing : RawRing 0ℓ 0ℓ
++-*-rawRing = record
+  { Carrier = ℝ
+  ; _≈_ = _≃_
+  ; _+_ = _+_
+  ; _*_ = _*_
+  ; -_ = -_
+  ; 0# = 0ℝ
+  ; 1# = 1ℝ
+  }
+
++-isMagma : IsMagma _≃_ _+_
+IsMagma.isEquivalence +-isMagma = ≃-isEquivalence
+IsMagma.∙-cong +-isMagma {x} {y} {z} {w} = +-cong {x} {y} {z} {w}
+
++-isSemigroup : IsSemigroup _≃_ _+_
++-isSemigroup = record
+  { isMagma = +-isMagma
+  ; assoc = +-assoc
+  }
+
++-0-isMonoid : IsMonoid _≃_ _+_ 0ℝ
++-0-isMonoid = record
+  { isSemigroup = +-isSemigroup
+  ; identity = +-identity
+  }
+
++-0-isCommutativeMonoid : IsCommutativeMonoid _≃_ _+_ 0ℝ
++-0-isCommutativeMonoid = record
+  { isMonoid = +-0-isMonoid
+  ; comm     = +-comm
+  }
+
++-0-isGroup : IsGroup _≃_ _+_ 0ℝ (-_)
+IsGroup.isMonoid +-0-isGroup = +-0-isMonoid
+IsGroup.inverse +-0-isGroup = +-inverse
+IsGroup.⁻¹-cong +-0-isGroup {x} {y} = -‿cong {x} {y}
+
++-0-isAbelianGroup : IsAbelianGroup _≃_ _+_ 0ℝ (-_)
++-0-isAbelianGroup = record
+  { isGroup = +-0-isGroup
+  ; comm    = +-comm
+  }
+
++-magma : Magma 0ℓ 0ℓ
++-magma = record
+  { isMagma = +-isMagma
+  }
+
++-semigroup : Semigroup 0ℓ 0ℓ
++-semigroup = record
+  { isSemigroup = +-isSemigroup
+  }
+
++-0-monoid : Monoid 0ℓ 0ℓ
++-0-monoid = record
+  { isMonoid = +-0-isMonoid
+  }
+
++-0-commutativeMonoid : CommutativeMonoid 0ℓ 0ℓ
++-0-commutativeMonoid = record
+  { isCommutativeMonoid = +-0-isCommutativeMonoid
+  }
+
++-0-group : Group 0ℓ 0ℓ
++-0-group = record
+  { isGroup = +-0-isGroup
+  }
+
++-0-abelianGroup : AbelianGroup 0ℓ 0ℓ
++-0-abelianGroup = record
+  { isAbelianGroup = +-0-isAbelianGroup
+  }
+
+*-rawMagma : RawMagma 0ℓ 0ℓ
+*-rawMagma = record
+  { _≈_ = _≃_
+  ; _∙_ = _*_
+  }
+
+*-rawMonoid : RawMonoid 0ℓ 0ℓ
+*-rawMonoid = record
+  { _≈_ = _≃_
+  ; _∙_ = _*_
+  ; ε   = 1ℝ
+  }
+
+*-isMagma : IsMagma _≃_ _*_
+IsMagma.isEquivalence *-isMagma = ≃-isEquivalence
+IsMagma.∙-cong *-isMagma {x} {y} {z} {w} = *-cong {x} {y} {z} {w}
+
+*-isSemigroup : IsSemigroup _≃_ _*_
+*-isSemigroup = record
+  { isMagma = *-isMagma
+  ; assoc   = *-assoc
+  }
+
+*-1-isMonoid : IsMonoid _≃_ _*_ 1ℝ
+*-1-isMonoid = record
+  { isSemigroup = *-isSemigroup
+  ; identity    = *-identity
+  }
+
+*-1-isCommutativeMonoid : IsCommutativeMonoid _≃_ _*_ 1ℝ
+*-1-isCommutativeMonoid = record
+  { isMonoid = *-1-isMonoid
+  ; comm     = *-comm
+  }
+
+
++-*-isRing : IsRing _≃_ _+_ _*_ -_ 0ℝ 1ℝ
++-*-isRing = record
+  { +-isAbelianGroup = +-0-isAbelianGroup
+  ; *-isMonoid       = *-1-isMonoid
+  ; distrib          = *-distrib-+
+  ; zero             = *-zero
+  }
+
++-*-isCommutativeRing : IsCommutativeRing _≃_ _+_ _*_ -_ 0ℝ 1ℝ
++-*-isCommutativeRing = record
+  { isRing = +-*-isRing
+  ; *-comm = *-comm
+  }
+
+*-magma : Magma 0ℓ 0ℓ
+*-magma = record
+  { isMagma = *-isMagma
+  }
+
+*-semigroup : Semigroup 0ℓ 0ℓ
+*-semigroup = record
+  { isSemigroup = *-isSemigroup
+  }
+
+*-1-monoid : Monoid 0ℓ 0ℓ
+*-1-monoid = record
+  { isMonoid = *-1-isMonoid
+  }
+
+*-1-commutativeMonoid : CommutativeMonoid 0ℓ 0ℓ
+*-1-commutativeMonoid = record
+  { isCommutativeMonoid = *-1-isCommutativeMonoid
+  }
+
++-*-ring : Ring 0ℓ 0ℓ
++-*-ring = record
+  { isRing = +-*-isRing
+  }
+
++-*-commutativeRing : CommutativeRing 0ℓ 0ℓ
++-*-commutativeRing = record
+  { isCommutativeRing = +-*-isCommutativeRing
+  }
