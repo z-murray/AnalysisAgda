@@ -1687,7 +1687,20 @@ x ⊓ y = - ((- x) ⊔ (- y))
 ∣-∣-cong {x} {y} x≃y = ⊔-cong {x} {y} {(- x)} {(- y)} x≃y (-‿cong {x} {y} x≃y)
 
 ∣p∣≃p⊔-p : ∀ p -> ℚ.∣ p ∣ ℚ.≃ p ℚ.⊔ (ℚ.- p)
-∣p∣≃p⊔-p p = {!!}
+∣p∣≃p⊔-p p = [ left , right ]′ (ℚP.∣p∣≡p∨∣p∣≡-p p)
+  where
+    open ℚP.≤-Reasoning
+    left : ℚ.∣ p ∣ ≡ p -> ℚ.∣ p ∣ ℚ.≃ p ℚ.⊔ (ℚ.- p)
+    left hyp = begin-equality
+      ℚ.∣ p ∣      ≈⟨ ℚP.≃-reflexive hyp ⟩
+      p            ≈⟨ ℚP.≃-sym (ℚP.p≥q⇒p⊔q≃p (ℚP.≤-trans (p≤∣p∣ (ℚ.- p)) (ℚP.≤-reflexive (ℚP.≃-trans (ℚP.∣-p∣≃∣p∣ p) (ℚP.≃-reflexive hyp))))) ⟩
+      p ℚ.⊔ (ℚ.- p) ∎
+
+    right : ℚ.∣ p ∣ ≡ ℚ.- p -> ℚ.∣ p ∣ ℚ.≃ p ℚ.⊔ (ℚ.- p)
+    right hyp = begin-equality
+      ℚ.∣ p ∣      ≈⟨ ℚP.≃-reflexive hyp ⟩
+      ℚ.- p        ≈⟨ ℚP.≃-sym (ℚP.p≤q⇒p⊔q≃q (ℚP.≤-trans (p≤∣p∣ p) (ℚP.≤-reflexive (ℚP.≃-reflexive hyp)))) ⟩
+      p ℚ.⊔ (ℚ.- p) ∎
 
 -- Alternate definition of absolute value defined pointwise in the real number's regular sequence
 ∣_∣₂ : ℝ -> ℝ
@@ -1710,17 +1723,6 @@ reg ∣ x ∣₂ m n {m≢0} {n≢0} = begin
     n : ℕ
     n = suc k₁
 
-{-
-∣ ∣x₂ᵣₙy₂ᵣₙ∣ - ∣x₂ₜₙ∣ * ∣y₂ₜₙ∣ ∣
-≤ ∣ x₂ᵣₙy₂ᵣₙ - x₂ₜₙy₂ₜₙ ∣
-≤ ∣ y₂ᵣₙ∣ ∣(x₂ᵣₙ - x₂ₜₙ)∣ + ∣x₂ₜₙ∣ ∣y₂ᵣₙ - y₂ₜₙ∣
-≤ Ky (1/Ky * 2j) + Kx (1/Kx * 2j)
-≤ 1/j  
--}
-{-
-∣x*y∣ ≃ ∣x*y∣₂
-
--}
 ∣x*y∣≃∣x∣*∣y∣ : ∀ x y -> ∣ x * y ∣ ≃ ∣ x ∣ * ∣ y ∣
 ∣x*y∣≃∣x∣*∣y∣ x y = ≃-trans {∣ x * y ∣} {∣ x * y ∣₂} {∣ x ∣ * ∣ y ∣}
                    (∣x∣≃∣x∣₂ (x * y))
@@ -1729,10 +1731,9 @@ reg ∣ x ∣₂ m n {m≢0} {n≢0} = begin
                    (*-cong {∣ x ∣₂} {∣ x ∣} {∣ y ∣₂} {∣ y ∣}
                    (≃-symm {∣ x ∣} {∣ x ∣₂} (∣x∣≃∣x∣₂ x)) (≃-symm {∣ y ∣} {∣ y ∣₂} (∣x∣≃∣x∣₂ y))))
   where
-    open ℚP.≤-Reasoning
     lemA : ∀ (j : ℕ) -> {j≢0 : j ≢0} -> ∃ λ (N : ℕ) -> ∀ (n : ℕ) -> N ℕ.< n ->
            ℚ.∣ seq (∣ x * y ∣₂) n ℚ.- seq (∣ x ∣₂ * ∣ y ∣₂) n ∣ ℚ.≤ (+ 1 / j) {j≢0}
-    lemA (suc k₁) = {!!}
+    lemA (suc k₁) = N , lemB                                                       
       where
         j : ℕ
         j = suc k₁
@@ -1744,43 +1745,71 @@ reg ∣ x ∣₂ m n {m≢0} {n≢0} = begin
         t = K ∣ x ∣₂ ℕ.⊔ K ∣ y ∣₂
 
         N₁ : ℕ
-        N₁ = {!!}
-
-        N₂ : ℕ
-        N₂ = {!!}
-
-        N : ℕ
-        N = N₁ ℕ.⊔ N₂
-    {-lemA : ∀ (j : ℕ) -> {j≢0 : j ≢0} -> ∃ λ (N : ℕ) -> ∀ (n : ℕ) -> N ℕ.< n ->
-          ℚ.∣ seq (∣ x * y ∣) n ℚ.- seq (∣ x ∣ * ∣ y ∣) n ∣ ℚ.≤ (+ 1 / j) {j≢0}
-    lemA (suc k₁) = N , lemB
-      where
-        j : ℕ
-        j = suc k₁
-
-        r : ℕ
-        r = K x ℕ.⊔ K y
-
-        t : ℕ
-        t = K ∣ x ∣ ℕ.⊔ K ∣ y ∣ 
-        
-        N₁ : ℕ
         N₁ = proj₁ (regular⇒cauchy x (K y ℕ.* (2 ℕ.* j)))
 
         N₂ : ℕ
         N₂ = proj₁ (regular⇒cauchy y (K x ℕ.* (2 ℕ.* j)))
 
         N : ℕ
-        N = N₁ ℕ.⊔ N₂-}
-{-
+        N = N₁ ℕ.⊔ N₂
+
         lemB : ∀ (n : ℕ) -> N ℕ.< n ->
-               ℚ.∣ seq (∣ x * y ∣) n ℚ.- seq (∣ x ∣ * ∣ y ∣) n ∣ ℚ.≤ (+ 1 / j)
+               ℚ.∣ seq (∣ x * y ∣₂) n ℚ.- seq (∣ x ∣₂ * ∣ y ∣₂) n ∣ ℚ.≤ (+ 1 / j)
         lemB (suc k₁) N<n = begin
-          ℚ.∣ (x₂ᵣₙ ℚ.* y₂ᵣₙ ℚ.⊔ (ℚ.- (x₂ᵣₙ ℚ.* y₂ᵣₙ))) ℚ.-
-              (x₂ₜₙ ℚ.⊔ (ℚ.- x₂ₜₙ)) ℚ.* (y₂ₜₙ ℚ.⊔ (ℚ.- y₂ₜₙ)) ∣ ≈⟨ ℚP.∣-∣-cong (ℚP.+-cong {!!} {!!}) ⟩
-          ℚ.∣ ℚ.∣ x₂ᵣₙ ℚ.* y₂ᵣₙ ∣ ℚ.- ℚ.∣ x₂ₜₙ ℚ.* y₂ₜₙ ∣ ∣      ≤⟨ {!!} ⟩
-          {!!} ∎
+          ℚ.∣ ℚ.∣ x₂ᵣₙ ℚ.* y₂ᵣₙ ∣ ℚ.- ℚ.∣ x₂ₜₙ ∣ ℚ.* ℚ.∣ y₂ₜₙ ∣ ∣ ≈⟨ ℚP.∣-∣-cong (ℚP.+-congʳ ℚ.∣ x₂ᵣₙ ℚ.* y₂ᵣₙ ∣
+                                                                    (ℚP.-‿cong (ℚP.≃-sym (ℚP.∣p*q∣≃∣p∣*∣q∣ x₂ₜₙ y₂ₜₙ)))) ⟩
+          ℚ.∣ ℚ.∣ x₂ᵣₙ ℚ.* y₂ᵣₙ ∣ ℚ.- ℚ.∣ x₂ₜₙ ℚ.* y₂ₜₙ ∣ ∣       ≤⟨ ∣∣p∣-∣q∣∣≤∣p-q∣ (x₂ᵣₙ ℚ.* y₂ᵣₙ) (x₂ₜₙ ℚ.* y₂ₜₙ) ⟩
+          ℚ.∣ x₂ᵣₙ ℚ.* y₂ᵣₙ ℚ.- x₂ₜₙ ℚ.* y₂ₜₙ ∣                   ≈⟨ ℚP.∣-∣-cong (ℚsolve 4 (λ x y z w ->
+                                                                     x ℚ:* y ℚ:- z ℚ:* w ℚ:=
+                                                                     (y ℚ:* (x ℚ:- z) ℚ:+ z ℚ:* (y ℚ:- w)))
+                                                                     ℚP.≃-refl x₂ᵣₙ y₂ᵣₙ x₂ₜₙ y₂ₜₙ) ⟩
+          ℚ.∣ y₂ᵣₙ ℚ.* (x₂ᵣₙ ℚ.- x₂ₜₙ) ℚ.+
+              x₂ₜₙ ℚ.* (y₂ᵣₙ ℚ.- y₂ₜₙ) ∣                          ≤⟨ ℚP.∣p+q∣≤∣p∣+∣q∣ (y₂ᵣₙ ℚ.* (x₂ᵣₙ ℚ.- x₂ₜₙ))
+                                                                                     (x₂ₜₙ ℚ.* (y₂ᵣₙ ℚ.- y₂ₜₙ)) ⟩
+          ℚ.∣ y₂ᵣₙ ℚ.* (x₂ᵣₙ ℚ.- x₂ₜₙ) ∣ ℚ.+
+          ℚ.∣ x₂ₜₙ ℚ.* (y₂ᵣₙ ℚ.- y₂ₜₙ) ∣                          ≈⟨ ℚP.+-cong
+                                                                     (ℚP.∣p*q∣≃∣p∣*∣q∣ y₂ᵣₙ (x₂ᵣₙ ℚ.- x₂ₜₙ))
+                                                                     (ℚP.∣p*q∣≃∣p∣*∣q∣ x₂ₜₙ (y₂ᵣₙ ℚ.- y₂ₜₙ)) ⟩
+          ℚ.∣ y₂ᵣₙ ∣ ℚ.* ℚ.∣ x₂ᵣₙ ℚ.- x₂ₜₙ ∣ ℚ.+
+          ℚ.∣ x₂ₜₙ ∣ ℚ.* ℚ.∣ y₂ᵣₙ ℚ.- y₂ₜₙ ∣                      ≤⟨ ℚP.+-mono-≤
+                                                                                (ℚP.≤-trans
+                                                                                (ℚP.*-monoˡ-≤-nonNeg {ℚ.∣ x₂ᵣₙ ℚ.- x₂ₜₙ ∣} _
+                                                                                                      (ℚP.<⇒≤ (canonical-greater y
+                                                                                                              (2 ℕ.* r ℕ.* n))))
+                                                                                (ℚP.*-monoʳ-≤-nonNeg {+ K y / 1} _
+                                                                                                     (proj₂ (regular⇒cauchy x (K y ℕ.* (2 ℕ.* j)))
+                                                                                                     (2 ℕ.* r ℕ.* n) (2 ℕ.* t ℕ.* n)
+                                                                                                     (N₁≤ (N≤2kn r)) (N₁≤ (N≤2kn t)))))
+                                                                                (ℚP.≤-trans
+                                                                                (ℚP.*-monoˡ-≤-nonNeg {ℚ.∣ y₂ᵣₙ ℚ.- y₂ₜₙ ∣} _
+                                                                                                     (ℚP.<⇒≤ (canonical-greater x
+                                                                                                              (2 ℕ.* t ℕ.* n))))
+                                                                                (ℚP.*-monoʳ-≤-nonNeg {+ K x / 1} _
+                                                                                                     (proj₂ (regular⇒cauchy y (K x ℕ.* (2 ℕ.* j)))
+                                                                                                     (2 ℕ.* r ℕ.* n) (2 ℕ.* t ℕ.* n)
+                                                                                                     (N₂≤ (N≤2kn r)) (N₂≤ (N≤2kn t))))) ⟩
+          (+ K y / 1) ℚ.* (+ 1 / (K y ℕ.* (2 ℕ.* j))) ℚ.+
+          (+ K x / 1) ℚ.* (+ 1 / (K x ℕ.* (2 ℕ.* j)))             ≈⟨ ℚ.*≡* (solve 3 (λ Kx Ky j ->
+
+          -- Function for solver
+          ((Ky :* con (+ 1)) :* (con (+ 1) :* (Kx :* (con (+ 2) :* j))) :+ ((Kx :* con (+ 1)) :* (con (+ 1) :* (Ky :* (con (+ 2) :* j))))) :* j :=
+          con (+ 1) :* ((con (+ 1) :* (Ky :* (con (+ 2) :* j))) :* (con (+ 1) :* (Kx :* (con (+ 2) :* j)))))
+          _≡_.refl (+ K x) (+ K y) (+ j)) ⟩
+          
+          + 1 / j                                                        ∎
           where
+            open ℚP.≤-Reasoning
+            open import Data.Integer.Solver as ℤ-Solver
+            open ℤ-Solver.+-*-Solver
+            open import Data.Rational.Unnormalised.Solver as ℚ-Solver
+            open ℚ-Solver.+-*-Solver using ()
+              renaming
+              ( solve to ℚsolve
+              ; _:+_ to _ℚ:+_
+              ; _:-_ to _ℚ:-_
+              ; _:*_ to _ℚ:*_
+              ; _:=_ to _ℚ:=_
+              )
             n : ℕ
             n = suc k₁
 
@@ -1795,5 +1824,12 @@ reg ∣ x ∣₂ m n {m≢0} {n≢0} = begin
 
             y₂ₜₙ : ℚᵘ
             y₂ₜₙ = seq y (2 ℕ.* t ℕ.* n)
-        -}
-    
+
+            N≤2kn : ∀ (k : ℕ) -> {k ≢0} -> N ℕ.≤ 2 ℕ.* k ℕ.* n
+            N≤2kn (suc k₂) = ℕP.≤-trans (ℕP.<⇒≤ N<n) (ℕP.m≤n*m n {2 ℕ.* (suc k₂)} ℕP.0<1+n)
+
+            N₁≤ : {m : ℕ} -> N ℕ.≤ m -> N₁ ℕ.≤ m
+            N₁≤ N≤m = ℕP.≤-trans (ℕP.m≤m⊔n N₁ N₂) N≤m
+
+            N₂≤ : {m : ℕ} -> N ℕ.≤ m -> N₂ ℕ.≤ m
+            N₂≤ N≤m = ℕP.≤-trans (ℕP.m≤n⊔m N₁ N₂) N≤m
