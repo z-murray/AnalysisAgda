@@ -2052,3 +2052,18 @@ IsMagma.∙-cong *-isMagma {x} {y} {z} {w} = *-cong {x} {y} {z} {w}
 +-*-commutativeRing = record
   { isCommutativeRing = +-*-isCommutativeRing
   }
+
+    
+{- Predicates about sign of real number and some properties -}
+Positive : Pred ℝ 0ℓ
+Positive x = ∃ λ (n : ℕ) -> seq x (suc n) ℚ.> + 1 / (suc n)
+
+NonNegative : Pred ℝ 0ℓ
+NonNegative x = (n : ℕ) -> {n≢0 : n ≢0} -> seq x n ℚ.≥ ℚ.- ((+ 1 / n) {n≢0})
+
+lemma2-8a : ∀ x -> Positive x -> ∃ λ (N : ℕ) -> ∀ (m : ℕ) -> m ℕ.≥ suc N ->
+            seq x m ℚ.≥ + 1 / (suc N) 
+lemma2-8a x (n-1 , xₙ>1/n) = {!!}
+  where
+    n : ℕ
+    n = suc n-1
