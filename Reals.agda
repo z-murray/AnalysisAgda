@@ -2159,3 +2159,11 @@ lemma2-8-1b x (N-1 , proof) = N , (begin-strict
     open ℚP.≤-Reasoning
     N : ℕ
     N = suc N-1
+
+lemma2-8-2a : ∀ (x : ℝ) -> NonNegative x -> ∀ (n : ℕ) -> {n≢0 : n ≢0} ->
+                           ∃ λ (Nₙ : ℕ) -> Nₙ ≢0 ×
+                           (∀ (m : ℕ) -> m ℕ.≥ Nₙ -> seq x m ℚ.≥ ℚ.- (+ 1 / n) {n≢0})
+lemma2-8-2a x x≥0 (suc k₁) = n , _ , λ {(suc m) m≥n → ℚP.≤-trans (ℚP.neg-mono-≤ (*≤* (ℤP.*-monoˡ-≤-nonNeg 1 (+≤+ m≥n)))) (x≥0 (suc m))}
+  where
+    n : ℕ
+    n = suc k₁
