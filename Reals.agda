@@ -2061,9 +2061,89 @@ Positive x = ∃ λ (n : ℕ) -> seq x (suc n) ℚ.> + 1 / (suc n)
 NonNegative : Pred ℝ 0ℓ
 NonNegative x = (n : ℕ) -> {n≢0 : n ≢0} -> seq x n ℚ.≥ ℚ.- ((+ 1 / n) {n≢0})
 
+p<q⇒0<q-p : ∀ {p q} -> p ℚ.< q -> 0ℚᵘ ℚ.< q ℚ.- p
+p<q⇒0<q-p {p} {q} p<q = begin-strict
+  0ℚᵘ     ≈⟨ ℚP.≃-sym (ℚP.+-inverseʳ p) ⟩
+  p ℚ.- p <⟨ ℚP.+-monoˡ-< (ℚ.- p) p<q ⟩
+  q ℚ.- p  ∎ 
+  where
+    open ℚP.≤-Reasoning
+
+archimedean-ℚ₂ : ∀ (p r : ℚᵘ) -> ℚ.Positive p -> ∃ λ (N : ℕ) ->
+                            r ℚ.< (+ N / 1) ℚ.* p
+archimedean-ℚ₂ p r p>0 = N , (begin-strict
+  r                          <⟨ proj₂ (archimedean-ℚ p r p>0) ⟩
+  ((+ N) ℤ.* (↥ p)) / (↧ₙ p) ≈⟨ ℚ.*≡* (cong (λ x -> (+ N) ℤ.* (↥ p) ℤ.* x) (ℤP.*-identityˡ (↧ p))) ⟩
+  (+ N / 1) ℚ.* p             ∎)
+  where
+    open ℚP.≤-Reasoning
+    open import Data.Integer.Solver
+    open +-*-Solver
+    N : ℕ
+    N = proj₁ (archimedean-ℚ p r p>0)
+
 lemma2-8a : ∀ x -> Positive x -> ∃ λ (N : ℕ) -> ∀ (m : ℕ) -> m ℕ.≥ suc N ->
             seq x m ℚ.≥ + 1 / (suc N) 
-lemma2-8a x (n-1 , xₙ>1/n) = {!!}
+lemma2-8a x (n-1 , xₙ>1/n) = N-1 , lem
   where
+    open ℚP.≤-Reasoning
+    open import Data.Integer.Solver as ℤ-Solver
+    open ℤ-Solver.+-*-Solver
+    open import Data.Rational.Unnormalised.Solver as ℚ-Solver
+    open ℚ-Solver.+-*-Solver using ()
+      renaming
+        ( solve to ℚsolve
+        ; _:+_ to _ℚ:+_
+        ; _:-_ to _ℚ:-_
+        ; _:*_ to _ℚ:*_
+        ; _:=_ to _ℚ:=_
+        )
     n : ℕ
     n = suc n-1
+
+    pos : ℚ.Positive (seq x n ℚ.- (+ 1 / n))
+    pos = 0<⇒pos (seq x n ℚ.- (+ 1 / n)) (p<q⇒0<q-p xₙ>1/n)
+
+    N-1 : ℕ
+    N-1 = proj₁ (archimedean-ℚ₂ (seq x n ℚ.- (+ 1 / n)) (+ 2 / 1) pos)
+
+    N : ℕ
+    N = suc N-1
+
+    part1 : + 2 / 1 ℚ.≤ (+ N / 1) ℚ.* (seq x n ℚ.- (+ 1 / n))
+    part1 = begin
+      + 2 / 1                                 <⟨ proj₂ (archimedean-ℚ₂ (seq x n ℚ.- (+ 1 / n)) (+ 2 / 1) pos) ⟩
+      (+ N-1) / 1 ℚ.* (seq x n ℚ.- (+ 1 / n)) ≤⟨ ℚP.*-monoˡ-≤-nonNeg {seq x n ℚ.- + 1 / n}
+                                                 (ℚP.positive⇒nonNegative {seq x n ℚ.- + 1 / n} pos) {+ N-1 / 1} {+ N / 1}
+                                                 (*≤* (ℤP.*-monoʳ-≤-nonNeg 1 (+≤+ (ℕP.n≤1+n N-1)))) ⟩
+      (+ N / 1) ℚ.* (seq x n ℚ.- (+ 1 / n))    ∎
+
+    part2 : + 2 / N ℚ.≤ seq x n ℚ.- (+ 1 / n)
+    part2 = begin
+      + 2 / N                                             ≈⟨ ℚ.*≡* (sym (ℤP.*-assoc (+ 2) (+ 1) (+ N))) ⟩
+      (+ 2 / 1) ℚ.* (+ 1 / N)                             ≤⟨ ℚP.*-monoˡ-≤-nonNeg _ part1 ⟩
+      (+ N / 1) ℚ.* (seq x n ℚ.- (+ 1 / n)) ℚ.* (+ 1 / N) ≈⟨ ℚ.*≡* (solve 3 (λ N p q ->
+                                                             ((N :* p) :* con (+ 1)) :* q := (p :* ((con (+ 1) :* q) :* N)))
+                                                             _≡_.refl (+ N) (↥ (seq x n ℚ.- (+ 1 / n))) (↧ (seq x n ℚ.- (+ 1 / n)))) ⟩
+      seq x n ℚ.- (+ 1 / n)                                ∎
+
+    part3 : + 1 / N ℚ.≤ seq x n ℚ.- (+ 1 / n) ℚ.- (+ 1 / N)
+    part3 = begin
+      + 1 / N                             ≈⟨ ℚ.*≡* (solve 1 (λ N ->
+                                             con (+ 1) :* (N :* N) := (((con (+ 2) :* N) :+ (:- con (+ 1) :* N)) :* N)) _≡_.refl (+ N)) ⟩
+      (+ 2 / N) ℚ.- (+ 1 / N)             ≤⟨ ℚP.+-monoˡ-≤ (ℚ.- (+ 1 / N)) part2 ⟩
+      seq x n ℚ.- (+ 1 / n) ℚ.- (+ 1 / N)  ∎
+
+    lem : ∀ (m : ℕ) -> m ℕ.≥ N -> seq x m ℚ.≥ + 1 / N
+    lem (suc k₂) N≤m = begin
+      + 1 / N                               ≤⟨ part3 ⟩
+      seq x n ℚ.- (+ 1 / n) ℚ.- (+ 1 / N)   ≤⟨ ℚP.+-monoʳ-≤ (seq x n ℚ.- (+ 1 / n)) {ℚ.- (+ 1 / N)} {ℚ.- (+ 1 / m)}
+                                               (ℚP.neg-mono-≤ (*≤* (ℤP.*-monoˡ-≤-nonNeg 1 (+≤+ N≤m)))) ⟩
+      seq x n ℚ.- (+ 1 / n) ℚ.- (+ 1 / m)   ≤⟨ ℚP.≤-respˡ-≃ (ℚsolve 3 (λ a b c -> a ℚ:- (b ℚ:+ c) ℚ:= a ℚ:- b ℚ:- c) ℚP.≃-refl (seq x n) (+ 1 / n) (+ 1 / m))
+                                                            (ℚP.+-monoʳ-≤ (seq x n) (ℚP.neg-mono-≤ (reg x n m))) ⟩
+      seq x n ℚ.- ℚ.∣ seq x n ℚ.- seq x m ∣ ≤⟨ ℚP.+-monoʳ-≤ (seq x n) (ℚP.neg-mono-≤ (p≤∣p∣ (seq x n ℚ.- seq x m))) ⟩
+      seq x n ℚ.- (seq x n ℚ.- seq x m)     ≈⟨ ℚsolve 2 (λ a b -> a ℚ:- (a ℚ:- b) ℚ:= b) ℚP.≃-refl (seq x n) (seq x m) ⟩
+      seq x m                                ∎
+      where
+        m : ℕ
+        m = suc k₂
