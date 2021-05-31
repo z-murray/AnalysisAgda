@@ -2167,3 +2167,116 @@ lemma2-8-2a x x≥0 (suc k₁) = n , _ , λ {(suc m) m≥n → ℚP.≤-trans (�
   where
     n : ℕ
     n = suc k₁
+
+archimedean-ℚ₃ : ∀ (p : ℚᵘ) -> ∀ (r : ℤ) -> ℚ.Positive p -> ∃ λ (N-1 : ℕ) -> r / (suc N-1) ℚ.< p
+archimedean-ℚ₃ p r 0<p = ℕ.pred N , (begin-strict
+  r / N                         ≈⟨ ℚP.≃-reflexive (ℚP./-cong (sym (ℤP.*-identityʳ r)) (sym (ℕP.*-identityˡ N)) _ _) ⟩
+  (r / 1) ℚ.* (+ 1 / N)         <⟨ ℚP.*-monoˡ-<-pos {+ 1 / N} _ {r / 1} {(+ N / 1) ℚ.* p} (ℚP.<-trans (proj₂ (archimedean-ℚ₂ p (r / 1) 0<p))
+                                   (ℚP.*-monoˡ-<-pos {p} 0<p {+ (ℕ.pred N) / 1} {+ N / 1} (ℚ.*<* (ℤP.*-monoʳ-<-pos 0 (+<+ (ℕP.n<1+n (ℕ.pred N))))))) ⟩
+  (+ N / 1) ℚ.* p ℚ.* (+ 1 / N) ≈⟨ ℚ.*≡* (solve 3 (λ N n d ->
+                                   ((N :* n) :* con (+ 1)) :* d := (n :* (con (+ 1) :* d :* N)))
+                                   _≡_.refl (+ N) (↥ p) (↧ p)) ⟩
+  p                              ∎)
+  where
+    open ℚP.≤-Reasoning
+    open import Data.Integer.Solver
+    open +-*-Solver
+    N : ℕ
+    N = suc (proj₁ (archimedean-ℚ₂ p (r / 1) 0<p))
+
+ℚ-≤-lemma : ∀ (x y : ℚᵘ) ->
+            (∀ (j : ℕ) -> {j≢0 : j ≢0} -> y ℚ.- (+ 1 / j) {j≢0} ℚ.≤ x) ->
+            y ℚ.≤ x
+ℚ-≤-lemma x y hyp with ℚP.<-cmp y x
+...               | tri< a ¬b ¬c = ℚP.<⇒≤ a
+...               | tri≈ ¬a b ¬c = ℚP.≤-reflexive b
+...               | tri> ¬a ¬b c = ⊥-elim (ℚP.<⇒≱ lem (hyp N))
+  where
+    open ℚP.≤-Reasoning
+    open import Data.Rational.Unnormalised.Solver
+    open +-*-Solver
+    N : ℕ
+    N = suc (proj₁ (archimedean-ℚ₃ (y ℚ.- x) (+ 1) (0<⇒pos (y ℚ.- x) (p<q⇒0<q-p c))))
+
+    lem : x ℚ.< y ℚ.- (+ 1 / N)
+    lem = begin-strict
+      x                             ≈⟨ solve 2 (λ a b -> a := a :+ b :- b) ℚP.≃-refl x (+ 1 / N) ⟩
+      x ℚ.+ (+ 1 / N) ℚ.- (+ 1 / N) <⟨ ℚP.+-monoˡ-< (ℚ.- (+ 1 / N))
+                                       (ℚP.+-monoʳ-< x (proj₂ (archimedean-ℚ₃ (y ℚ.- x) (+ 1) (0<⇒pos (y ℚ.- x) (p<q⇒0<q-p c))))) ⟩
+      x ℚ.+ (y ℚ.- x) ℚ.- (+ 1 / N) ≈⟨ solve 3 (λ a b c -> a :+ (b :- a) :- c := b :- c) ℚP.≃-refl x y (+ 1 / N) ⟩
+      y ℚ.- (+ 1 / N)                ∎
+
+{-
+Proof of ̄if direction of Lemma 2.8.2:
+  Let j∈ℤ⁺, let n = 2j, and let m = max{Nₙ, 2j}. Let k∈ℕ. We must show 
+that xₖ ≥ -k⁻¹. We have:
+              xₖ = xₘ - (xₘ - xₖ)
+                 ≥ xₘ - ∣xₘ - xₖ∣ 
+                 ≥ -n⁻¹ - ∣xₘ - xₖ∣   by assumption since m ≥ Nₙ
+                 ≥ -n⁻¹ - (m⁻¹ + k⁻¹) by regularity of x
+                 = -k⁻¹ - (m⁻¹ + n⁻¹)
+                 ≥ -k⁻¹ - (2j + 2j)   since m ≥ 2j and n = 2j
+                 = -k⁻¹ - 1/j.
+Thus, for all j∈ℤ⁺, we have
+                    xₖ ≥ -k⁻¹ - 1/j. 
+Hence xₖ ≥ -k⁻¹, and we are done.                                      □                                     
+-}
+lemma2-8-2b : ∀ (x : ℝ) -> (∀ (n : ℕ) -> {n≢0 : n ≢0} ->
+                           ∃ λ (Nₙ : ℕ) -> Nₙ ≢0 ×
+                           (∀ (m : ℕ) -> m ℕ.≥ Nₙ -> seq x m ℚ.≥ ℚ.- (+ 1 / n) {n≢0})) ->
+                           NonNegative x
+lemma2-8-2b x hyp K {K≢0} = lemB K {K≢0} (lemA K {K≢0})
+  where
+    open ℚP.≤-Reasoning
+    open import Data.Integer.Solver as ℤ-Solver
+    open ℤ-Solver.+-*-Solver
+    open import Data.Rational.Unnormalised.Solver as ℚ-Solver
+    open ℚ-Solver.+-*-Solver using ()
+      renaming
+        ( solve to ℚsolve
+        ; _:+_ to _ℚ:+_
+        ; _:-_ to _ℚ:-_
+        ; _:*_ to _ℚ:*_
+        ; :-_ to ℚ:-_
+        ; _:=_ to _ℚ:=_
+        )
+
+    lemA : ∀ (k : ℕ) -> {k≢0 : k ≢0} -> ∀ (j : ℕ) -> {j≢0 : j ≢0} ->
+           seq x k ℚ.≥ ℚ.- (+ 1 / k) {k≢0} ℚ.- (+ 1 / j) {j≢0}
+    lemA (suc k₁) (suc k₂) = begin
+      ℚ.- (+ 1 / k) ℚ.- (+ 1 / j)                 ≈⟨ ℚP.+-congʳ (ℚ.- (+ 1 / k)) {ℚ.- (+ 1 / j)} {ℚ.- ((+ 1 / (2 ℕ.* j)) ℚ.+ (+ 1 / (2 ℕ.* j)))}
+                                                     (ℚP.-‿cong (ℚ.*≡* (solve 1 (λ j ->
+                                                     con (+ 1) :* (con (+ 2) :* j :* (con (+ 2) :* j)) :=
+                                                     ((con (+ 1) :* (con (+ 2) :* j) :+ con (+ 1) :* (con (+ 2) :* j)) :* j))
+                                                     _≡_.refl (+ j)))) ⟩
+      ℚ.- (+ 1 / k) ℚ.- ((+ 1 / n) ℚ.+ (+ 1 / n)) ≤⟨ ℚP.+-monoʳ-≤ (ℚ.- (+ 1 / k)) {ℚ.- ((+ 1 / n) ℚ.+ (+ 1 / n))} {ℚ.- ((+ 1 / m) ℚ.+ (+ 1 / n))}
+                                                     (ℚP.neg-mono-≤ {(+ 1 / m) ℚ.+ (+ 1 / n)} {(+ 1 / n) ℚ.+ (+ 1 / n)}
+                                                     (ℚP.+-monoˡ-≤ (+ 1 / n) {+ 1 / m} {+ 1 / n} (*≤* (ℤP.*-monoˡ-≤-nonNeg 1 (+≤+ (ℕP.m≤n⊔m (suc Nₙ) n)))))) ⟩
+      ℚ.- (+ 1 / k) ℚ.- ((+ 1 / m) ℚ.+ (+ 1 / n)) ≈⟨ ℚsolve 3 (λ x y z ->
+                                                     ℚ:- x ℚ:- (y ℚ:+ z) ℚ:= ℚ:- z ℚ:- (y ℚ:+ x))
+                                                     ℚP.≃-refl (+ 1 / k) (+ 1 / m) (+ 1 / n) ⟩
+      ℚ.- (+ 1 / n) ℚ.- ((+ 1 / m) ℚ.+ (+ 1 / k)) ≤⟨ ℚP.+-mono-≤ (proj₂ (proj₂ (hyp n)) m (ℕP.≤-trans (ℕP.n≤1+n Nₙ) (ℕP.m≤m⊔n (suc Nₙ) n)))
+                                                                 (ℚP.neg-mono-≤ (reg x m k)) ⟩
+      seq x m ℚ.- ℚ.∣ seq x m ℚ.- seq x k ∣       ≤⟨ ℚP.+-monoʳ-≤ (seq x m) (ℚP.neg-mono-≤ (p≤∣p∣ (seq x m ℚ.- seq x k))) ⟩
+      seq x m ℚ.- (seq x m ℚ.- seq x k)           ≈⟨ ℚsolve 2 (λ x y -> x ℚ:- (x ℚ:- y) ℚ:= y) ℚP.≃-refl (seq x m) (seq x k) ⟩
+      seq x k                                         ∎
+      where
+        k : ℕ
+        k = suc k₁
+
+        j : ℕ
+        j = suc k₂
+
+        n : ℕ
+        n = 2 ℕ.* j
+
+        Nₙ : ℕ
+        Nₙ = proj₁ (hyp n)
+
+        m : ℕ
+        m = (suc Nₙ) ℕ.⊔ 2 ℕ.* j
+
+    lemB : ∀ (k : ℕ) -> {k≢0 : k ≢0} -> (∀ (j : ℕ) -> {j≢0 : j ≢0} ->
+           seq x k ℚ.≥ ℚ.- (+ 1 / k) {k≢0} ℚ.- (+ 1 / j) {j≢0}) ->
+           seq x k ℚ.≥ ℚ.- (+ 1 / k) {k≢0}
+    lemB (suc k₁) = ℚ-≤-lemma (seq x (suc k₁)) (ℚ.- (+ 1 / (suc k₁)))
