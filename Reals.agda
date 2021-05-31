@@ -2082,9 +2082,9 @@ archimedean-ℚ₂ p r p>0 = N , (begin-strict
     N : ℕ
     N = proj₁ (archimedean-ℚ p r p>0)
 
-lemma2-8a : ∀ x -> Positive x -> ∃ λ (N : ℕ) -> ∀ (m : ℕ) -> m ℕ.≥ suc N ->
+lemma2-8-1a : ∀ x -> Positive x -> ∃ λ (N : ℕ) -> ∀ (m : ℕ) -> m ℕ.≥ suc N ->
             seq x m ℚ.≥ + 1 / (suc N) 
-lemma2-8a x (n-1 , xₙ>1/n) = N-1 , lem
+lemma2-8-1a x (n-1 , xₙ>1/n) = N-1 , lem
   where
     open ℚP.≤-Reasoning
     open import Data.Integer.Solver as ℤ-Solver
@@ -2147,3 +2147,15 @@ lemma2-8a x (n-1 , xₙ>1/n) = N-1 , lem
       where
         m : ℕ
         m = suc k₂
+
+lemma2-8-1b : ∀ (x : ℝ) ->
+              (∃ λ (N-1 : ℕ) -> ∀ (m : ℕ) -> m ℕ.≥ suc N-1 -> seq x m ℚ.≥ + 1 / (suc N-1)) ->
+              Positive x
+lemma2-8-1b x (N-1 , proof) = N , (begin-strict
+  + 1 / (suc N) <⟨ ℚ.*<* (ℤP.*-monoˡ-<-pos 0 (+<+ (ℕP.n<1+n N))) ⟩
+  + 1 / N       ≤⟨ proof (suc N) (ℕ.s≤s (ℕP.n≤1+n N-1)) ⟩
+  seq x (suc N)  ∎)
+  where
+    open ℚP.≤-Reasoning
+    N : ℕ
+    N = suc N-1
