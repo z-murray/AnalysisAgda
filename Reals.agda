@@ -2280,3 +2280,300 @@ lemma2-8-2b x hyp K {K≢0} = lemB K {K≢0} (lemA K {K≢0})
            seq x k ℚ.≥ ℚ.- (+ 1 / k) {k≢0} ℚ.- (+ 1 / j) {j≢0}) ->
            seq x k ℚ.≥ ℚ.- (+ 1 / k) {k≢0}
     lemB (suc k₁) = ℚ-≤-lemma (seq x (suc k₁)) (ℚ.- (+ 1 / (suc k₁)))
+
+{-
+Proposition:
+  If x is positive and x ≃ y, then y is positive.
+Proof
+  Since x is positive, there is n∈ℕ such that xₙ > n⁻¹. Suppose, towards contradiction, that
+yₙ ≤ n⁻¹. Then yₙ ≤ n⁻¹ < xₙ.  
+  By Lemma 2.8.1, there is N∈ℕ such that m ≥ N implies xₘ ≥ N⁻¹. Let m ≥ N. Suppose, towards
+contradiction, that yₘ < N⁻¹. We have:
+xₘ ≥ yₘ - ∣yₘ - xₘ∣
+   
+    
+-}
+pos-cong : ∀ x y -> x ≃ y -> Positive x -> Positive y
+pos-cong x y x≃y posx = {!!}
+{-
+Let x be a positive real number. By Lemma 2.8.1, there is N∈ℕ such that
+                           xₘ ≥ N⁻¹      (m ≥ N).
+Let n∈ℕ and let Nₙ = N. Then:
+              -n⁻¹ < 0
+                   < N⁻¹
+                   ≤ xₘ
+for all m ≥ Nₙ. Hence x is nonnegative by Lemma 2.8.2.                □
+-}
+pos⇒nonNeg : ∀ x -> Positive x -> NonNegative x
+pos⇒nonNeg x posx = lemma2-8-2b x lemA
+  where
+    open ℚP.≤-Reasoning
+    N : ℕ
+    N = suc (proj₁ (lemma2-8-1a x posx))
+
+    lemA : ∀ (n : ℕ) -> {n≢0 : n ≢0} -> ∃ λ (Nₙ : ℕ) ->
+          Nₙ ≢0 × ∀ (m : ℕ) -> m ℕ.≥ Nₙ -> seq x m ℚ.≥ ℚ.- (+ 1 / n) {n≢0}
+    lemA (suc k₁) = N , _ , lemB
+      where
+        n : ℕ
+        n = suc k₁
+
+        test : ℚ.Negative (ℚ.- (+ 1 / n))
+        test = _
+
+        lemB : ∀ (m : ℕ) -> m ℕ.≥ N -> seq x m ℚ.≥ ℚ.- (+ 1 / n)
+        lemB m m≥N = begin
+          ℚ.- (+ 1 / n) <⟨ ℚP.negative⁻¹ _ ⟩
+          0ℚᵘ           <⟨ ℚP.positive⁻¹ _ ⟩
+          + 1 / N       ≤⟨ proj₂ (lemma2-8-1a x posx) m m≥N ⟩
+          seq x m        ∎
+
+{-
+Proposition:
+  If x and y are positive, then so is x + y.
+Proof:
+  By Lemma 2.8.1, there is N₁∈ℕ such that m ≥ N₁ implies xₘ ≥ N₂⁻¹. Similarly,
+there is N₂∈ℕ such that m ≥ N₂ implies yₘ ≥ N₂⁻¹. Define N = max{N₁, N₂}, and
+let m ≥ N. We have:
+(x + y)ₘ = x₂ₘ + y₂ₘ
+         ≥ N₁⁻¹ + N₂⁻¹
+         ≥ N⁻¹ + N⁻¹
+         ≥ N⁻¹.
+Thus (x + y)ₘ ≥ N⁻¹ for all m ≥ N. By Lemma 2.8.1, x + y is positive.         □
+-}
+posx,y⇒posx+y : ∀ x y -> Positive x -> Positive y -> Positive (x + y)
+posx,y⇒posx+y x y posx posy = lemma2-8-1b (x + y) (ℕ.pred N , lem)
+  where
+    open ℚP.≤-Reasoning
+    N₁ : ℕ
+    N₁ = suc (proj₁ (lemma2-8-1a x posx))
+
+    N₂ : ℕ
+    N₂ = suc (proj₁ (lemma2-8-1a y posy))
+
+    N : ℕ
+    N = N₁ ℕ.⊔ N₂
+
+    lem : ∀ (m : ℕ) -> m ℕ.≥ N -> seq (x + y) m ℚ.≥ + 1 / N
+    lem m m≥N = begin
+      + 1 / N                             ≤⟨ ℚP.p≤p+q {+ 1 / N} {+ 1 / N} _ ⟩
+      (+ 1 / N) ℚ.+ (+ 1 / N)             ≤⟨ ℚP.+-mono-≤ {+ 1 / N} {+ 1 / N₁} {+ 1 / N} {+ 1 / N₂}
+                                             (*≤* (ℤP.*-monoˡ-≤-nonNeg 1 (+≤+ (ℕP.m≤m⊔n N₁ N₂))))
+                                             (*≤* (ℤP.*-monoˡ-≤-nonNeg 1 (+≤+ (ℕP.m≤n⊔m N₁ N₂)))) ⟩
+      (+ 1 / N₁) ℚ.+ (+ 1 / N₂)           ≤⟨ ℚP.+-mono-≤ {+ 1 / N₁} {seq x (2 ℕ.* m)} {+ 1 / N₂} {seq y (2 ℕ.* m)}
+                                             (proj₂ (lemma2-8-1a x posx) (2 ℕ.* m)
+                                             (ℕP.≤-trans (ℕP.m≤m⊔n N₁ N₂) (ℕP.≤-trans m≥N (ℕP.m≤n*m m {2} ℕP.0<1+n))))
+                                             (proj₂ (lemma2-8-1a y posy) (2 ℕ.* m)
+                                             (ℕP.≤-trans (ℕP.m≤n⊔m N₁ N₂) (ℕP.≤-trans m≥N (ℕP.m≤n*m m {2} ℕP.0<1+n)))) ⟩
+      seq x (2 ℕ.* m) ℚ.+ seq y (2 ℕ.* m)  ∎
+
+nonNegx,y⇒nonNegx+y : ∀ x y -> NonNegative x -> NonNegative y -> NonNegative (x + y)
+nonNegx,y⇒nonNegx+y x y nonx nony = lemma2-8-2b (x + y) lemA
+  where
+    open ℚP.≤-Reasoning
+    open import Data.Integer.Solver
+    open +-*-Solver
+    lemA : ∀ (n : ℕ) -> {n≢0 : n ≢0} -> ∃ λ (Nₙ : ℕ) -> Nₙ ≢0 × ∀ (m : ℕ) -> m ℕ.≥ Nₙ ->
+          seq (x + y) m ℚ.≥ ℚ.- (+ 1 / n) {n≢0}
+    lemA (suc k₁) = N , _ , lemB
+      where
+        n : ℕ
+        n = suc k₁
+
+        Nx : ℕ
+        Nx = proj₁ (lemma2-8-2a x nonx (2 ℕ.* n))
+
+        Ny : ℕ
+        Ny = proj₁ (lemma2-8-2a y nony (2 ℕ.* n))
+
+        N : ℕ
+        N = Nx ℕ.⊔ Ny
+
+        lemB : ∀ (m : ℕ) -> m ℕ.≥ N -> seq (x + y) m ℚ.≥ ℚ.- (+ 1 / n)
+        lemB m m≥N = begin
+          ℚ.- (+ 1 / n)                               ≈⟨ ℚ.*≡* (solve 1 (λ n ->
+                                                         (:- con (+ 1)) :* (con (+ 2) :* n :* (con (+ 2) :* n)) :=
+                                                         (((:- con (+ 1)) :* (con (+ 2) :* n) :+ ((:- con (+ 1)) :* (con (+ 2) :* n))) :* n))
+                                                         _≡_.refl (+ n)) ⟩
+          ℚ.- (+ 1 / (2 ℕ.* n)) ℚ.- (+ 1 / (2 ℕ.* n)) ≤⟨ ℚP.+-mono-≤
+                                                         (proj₂ (proj₂ (lemma2-8-2a x nonx (2 ℕ.* n))) (2 ℕ.* m)
+                                                                (ℕP.≤-trans (ℕP.m≤m⊔n Nx Ny) (ℕP.≤-trans m≥N (ℕP.m≤n*m m {2} ℕP.0<1+n))))
+                                                         (proj₂ (proj₂ (lemma2-8-2a y nony (2 ℕ.* n))) (2 ℕ.* m)
+                                                                (ℕP.≤-trans (ℕP.m≤n⊔m Nx Ny) (ℕP.≤-trans m≥N (ℕP.m≤n*m m {2} ℕP.0<1+n)))) ⟩
+          seq x (2 ℕ.* m) ℚ.+ seq y (2 ℕ.* m)          ∎
+
+{-
+Suppose x≃y and x is nonnegative. WTS y is nonnegative. Then, for each n∈ℕ, there is
+Nₙ∈ℕ such that m≥Nₙ implies xₘ ≥ -n⁻¹. Thus there is N₁∈ℕ such that m ≥ N₁ implies
+xₘ ≥ -(2n)⁻¹. Since x ≃ y, there is N₂∈ℕ such that m ≥ N₂ implies ∣xₘ - yₘ∣ ≤ (2n)⁻¹.
+Let N = max{N₁, N₂} and let m ≥ N. We have:
+yₘ ≥ xₘ - ∣xₘ - yₘ∣
+   ≥ -(2n)⁻¹ -  (2n)⁻¹
+   = -n⁻¹,
+so yₘ ≥ -n⁻¹ for all m ≥ N. Thus y is nonnegative.                                □
+-}
+
+nonNeg-cong : ∀ x y -> x ≃ y -> NonNegative x -> NonNegative y
+nonNeg-cong x y x≃y nonx = lemma2-8-2b y lemA
+  where
+    open ℚP.≤-Reasoning
+    open import Data.Integer.Solver as ℤ-Solver
+    open ℤ-Solver.+-*-Solver
+    open import Data.Rational.Unnormalised.Solver as ℚ-Solver
+    open ℚ-Solver.+-*-Solver using ()
+      renaming
+        ( solve to ℚsolve
+        ; _:+_ to _ℚ:+_
+        ; _:-_ to _ℚ:-_
+        ; _:=_ to _ℚ:=_
+        )
+
+    lemA : ∀ (n : ℕ) -> {n≢0 : n ≢0} -> ∃ λ (Nₙ : ℕ) -> Nₙ ≢0 ×
+           ∀ (m : ℕ) -> m ℕ.≥ Nₙ -> seq y m ℚ.≥ ℚ.- (+ 1 / n)
+    lemA (suc k₁) = N , _ , lemB
+      where
+        n : ℕ
+        n = suc k₁
+        
+        N₁ : ℕ
+        N₁ = proj₁ (lemma2-8-2a x nonx (2 ℕ.* n))
+
+        N₂ : ℕ
+        N₂ = proj₁ (lemma1A x y x≃y (2 ℕ.* n))
+
+        N : ℕ
+        N = suc (N₁ ℕ.⊔ N₂)
+
+        lemB : ∀ (m : ℕ) -> m ℕ.≥ N -> seq y m ℚ.≥ ℚ.- (+ 1 / n)
+        lemB m m≥N = begin
+          ℚ.- (+ 1 / n)                               ≈⟨ ℚ.*≡* (solve 1 (λ n ->
+                                                         (:- con (+ 1)) :* (con (+ 2) :* n :* (con (+ 2) :* n)) :=
+                                                         (((:- con (+ 1)) :* (con (+ 2) :* n) :+ ((:- con (+ 1)) :* (con (+ 2) :* n))) :* n))
+                                                         _≡_.refl (+ n)) ⟩
+          ℚ.- (+ 1 / (2 ℕ.* n)) ℚ.- (+ 1 / (2 ℕ.* n)) ≤⟨ ℚP.+-mono-≤
+                                                         (proj₂ (proj₂ (lemma2-8-2a x nonx (2 ℕ.* n))) m
+                                                         (ℕP.≤-trans (ℕP.m≤m⊔n N₁ N₂) (ℕP.≤-trans (ℕP.n≤1+n (N₁ ℕ.⊔ N₂)) m≥N)))
+                                                         (ℚP.neg-mono-≤ (proj₂ (lemma1A x y x≃y (2 ℕ.* n)) m (ℕP.<-transʳ (ℕP.m≤n⊔m N₁ N₂) m≥N))) ⟩
+          seq x m ℚ.- ℚ.∣ seq x m ℚ.- seq y m ∣       ≤⟨ ℚP.+-monoʳ-≤ (seq x m) (ℚP.neg-mono-≤ (p≤∣p∣ (seq x m ℚ.- seq y m))) ⟩
+          seq x m ℚ.- (seq x m ℚ.- seq y m)           ≈⟨ ℚsolve 2 (λ x y -> x ℚ:- (x ℚ:- y) ℚ:= y) ℚP.≃-refl (seq x m) (seq y m) ⟩
+          seq y m                                      ∎
+
+{-
+∀j∈ℕ ∃N∈ℕ ∀n>N (∣∣xₘ∣ - xₘ∣ ≤ 1/j)
+Proof:
+xₘ ≤ ∣xₘ∣
+  Since ∣x∣ is nonnegative, there is N₁∈ℕ such that m ≥ N₁ implies
+∣xₘ∣ ≥ -(2n)⁻¹. Since x is nonnegative, there is N₂∈ℕ such that m ≥ N₂ implies
+ xₘ ≥ -(2n)⁻¹. 
+∣∣xₘ∣ - xₘ∣ ≤ 2/n?
+-2/n ≤ ∣xₘ∣ - xₘ ≤ 2/n
+-2/n + xₘ ≤ ∣xₘ∣ ≤ 2/n + xₘ
+
+-2/n ≤ xₘ - ∣xₘ∣ ≤ 2/n
+xₘ - 2/n ≤ ∣xₘ∣
+
+
+           
+-}
+
+{-
+x pos, y neg:
+x₂ₖₘy₂ₖₘ ≥ -n⁻¹ for all m≥N=Nx⊔Ny?
+x₂ₖₘy₂ₖₘ ≥ x₂ₖₘ - ∣x₂ₖₘ - x₂ₖₘy₂ₖₘ∣
+         ≥ -n⁻¹ - ∣x₂ₖₘ∣ * ∣1 - y₂ₖₘ∣
+         ≥ -n⁻¹ + n⁻¹ * ∣1 - y₂ₖₘ∣
+         ≥ -n⁻¹
+x₂ₖₘy₂ₖₙ ≥ -n⁻¹ - ∣-n⁻¹ - x₂ₖₘy₂ₖₘ∣
+         ≥ -n⁻¹ - 
+∣x₂ₖₘ∣ ≥ -n⁻¹ ⇒ -∣x₂ₖₘ∣ ≤ n⁻¹
+
+x₂ₖₘy₂ₖₘ
+-}
+{-
+nonNegx,y⇒nonNegx*y : ∀ x y -> NonNegative x -> NonNegative y -> NonNegative (x * y)
+nonNegx,y⇒nonNegx*y x y nonx nony = lemma2-8-2b (x * y) lemA
+  where
+    open ℚP.≤-Reasoning
+    lemA : ∀ (n : ℕ) -> {n≢0 : n ≢0} -> ∃ λ (Nₙ : ℕ) -> Nₙ ≢0 ×
+           ∀ (m : ℕ) -> m ℕ.≥ Nₙ -> seq (x * y) m ℚ.≥ ℚ.- (+ 1 / n) {n≢0}
+    lemA (suc k₁) = N , _ , lemB
+      where
+        n : ℕ
+        n = suc k₁
+        
+        Nx : ℕ
+        Nx = proj₁ (lemma2-8-2a x nonx n)
+
+        Ny : ℕ
+        Ny = proj₁ (lemma2-8-2a y nony n)
+
+        N : ℕ
+        N = Nx ℕ.⊔ Ny
+
+        k : ℕ
+        k = K x ℕ.⊔ K y
+
+        lemB : ∀ (m : ℕ) -> m ℕ.≥ N -> seq (x * y) m ℚ.≥ ℚ.- (+ 1 / n)
+        lemB m m≥N = begin
+          ℚ.- (+ 1 / n)          ≤⟨ {!!} ⟩
+          ℚ.- (+ 1 / n) ℚ.+
+          (+ 1 / n) ℚ.* ℚ.∣ ℚ.1ℚᵘ ℚ.- y₂ₖₘ ∣ ≤⟨ ℚP.+-monoʳ-≤ (ℚ.- (+ 1 / n)) (ℚP.*-monoˡ-≤-nonNeg {ℚ.∣ ℚ.1ℚᵘ ℚ.- y₂ₖₘ ∣} _
+                                                (ℚP.neg-mono-≤ {!!})) ⟩
+          ℚ.- (+ 1 / n) ℚ.+
+          (ℚ.- ℚ.∣ x₂ₖₘ ∣) ℚ.* ℚ.∣ ℚ.1ℚᵘ ℚ.- y₂ₖₘ ∣ ≈⟨ {!!} ⟩
+          {!!} ∎
+          where
+            x₂ₖₘ : ℚᵘ
+            x₂ₖₘ = seq x (2 ℕ.* k ℕ.* m)
+
+            y₂ₖₘ : ℚᵘ
+            y₂ₖₘ = seq y (2 ℕ.* k ℕ.* m)
+
+            test : + 1 / n ℚ
+          -}
+
+{-
+Proposition:
+  If x is positive and y is nonnegative, then x + y is positive.
+Proof:
+  Since x is positive, there is an N₁∈ℕ such that xₘ ≥ N₁⁻¹ for all m ≥ N₁. Since y is
+nonnegative, there is N₂∈ℕ such that, for all m ≥ N₂, we have yₘ ≥ -(2N₁)⁻¹. Let N = 2max{N₁, N₂}.
+Let m ≥ N ≥ N₁, N₂. We have:
+(x + y)ₘ  = x₂ₘ + y₂ₘ
+          ≥ N₁⁻¹ - (2N₁)⁻¹
+          = (2N₁)⁻¹.
+          ≥ N⁻¹.
+Thus (x + y)ₘ ≥ N⁻¹ for all m ≥ N. By Lemma 2.8.1, x + y is positive.                           □
+-}
+posx∧nonNegy⇒posx+y : ∀ x y -> Positive x -> NonNegative y -> Positive (x + y)
+posx∧nonNegy⇒posx+y x y posx nony = lemma2-8-1b (x + y) (ℕ.pred N , lem)
+  where
+    open ℚP.≤-Reasoning
+    open import Data.Integer.Solver
+    open +-*-Solver
+    N₁ : ℕ
+    N₁ = suc (proj₁ (lemma2-8-1a x posx))
+
+    N₂ : ℕ
+    N₂ = proj₁ (lemma2-8-2a y nony (2 ℕ.* N₁))
+
+    N : ℕ
+    N = 2 ℕ.* (N₁ ℕ.⊔ N₂)
+
+    lem : ∀ (m : ℕ) -> m ℕ.≥ N -> seq (x + y) m ℚ.≥ + 1 / N
+    lem m m≥N = begin
+      + 1 / N                             ≤⟨ *≤* (ℤP.*-monoˡ-≤-nonNeg 1 (ℤP.*-monoˡ-≤-nonNeg 2 (+≤+ (ℕP.m≤m⊔n N₁ N₂)))) ⟩
+      + 1 / (2 ℕ.* N₁)                    ≈⟨ ℚ.*≡* (solve 1 (λ N₁ ->
+                                             con (+ 1) :* (N₁ :* (con (+ 2) :* N₁)) :=
+                                             (con (+ 1) :* (con (+ 2) :* N₁) :+ (:- con (+ 1)) :* N₁) :* (con (+ 2) :* N₁))
+                                             _≡_.refl (+ N₁)) ⟩
+      (+ 1 / N₁) ℚ.- (+ 1 / (2 ℕ.* N₁))   ≤⟨ ℚP.+-mono-≤ (proj₂ (lemma2-8-1a x posx) (2 ℕ.* m)
+                                             (ℕP.≤-trans (ℕP.m≤m⊔n N₁ N₂) (ℕP.≤-trans (ℕP.m≤n*m (N₁ ℕ.⊔ N₂) {2} ℕP.0<1+n)
+                                             (ℕP.≤-trans m≥N (ℕP.m≤n*m m {2} ℕP.0<1+n)))))
+                                             (proj₂ (proj₂ (lemma2-8-2a y nony (2 ℕ.* N₁))) (2 ℕ.* m)
+                                             (ℕP.≤-trans (ℕP.m≤n⊔m N₁ N₂) (ℕP.≤-trans (ℕP.m≤n*m (N₁ ℕ.⊔ N₂) {2} ℕP.0<1+n)
+                                             (ℕP.≤-trans m≥N (ℕP.m≤n*m m {2} ℕP.0<1+n))))) ⟩
+      seq x (2 ℕ.* m) ℚ.+ seq y (2 ℕ.* m)  ∎
+
+∣x∣nonNeg : ∀ x -> NonNegative ∣ x ∣
+∣x∣nonNeg x = nonNeg-cong ∣ x ∣₂ ∣ x ∣ (≃-symm {∣ x ∣} {∣ x ∣₂} (∣x∣≃∣x∣₂ x)) λ {(suc k₁) -> ℚP.≤-trans (ℚP.nonPositive⁻¹ _) (ℚP.0≤∣p∣ (seq x (suc k₁)))}
