@@ -2547,74 +2547,98 @@ posx∧nonNegy⇒posx+y x y posx nony = lemma2-8-1b (x + y) (ℕ.pred N , lem)
 ∣x∣nonNeg x = nonNeg-cong ∣ x ∣₂ ∣ x ∣ (≃-symm {∣ x ∣} {∣ x ∣₂} (∣x∣≃∣x∣₂ x)) λ {(suc k₁) -> ℚP.≤-trans (ℚP.nonPositive⁻¹ _) (ℚP.0≤∣p∣ (seq x (suc k₁)))}
 
 {-
+Module for chain of equality reasoning on ℝ
+-}
+module ≃-Reasoning where
+  open import Relation.Binary.Reasoning.Setoid ≃-setoid
+    public
+
+{-
+Proposition:
+  If x is nonnegative, then ∣x∣ = x.
+Proof:
+  Let j∈ℕ. Since x is nonnegative, there is N∈ℕ such that
+                         xₘ ≥ -(2j)⁻¹         (m ≥ N).
+Let m ≥ N. Then -2xₘ ≤ j⁻¹. Either xₘ ≥ 0 or xₘ < 0.
+Case 1: Suppose xₘ ≥ 0. Then:
+     ∣∣xₘ∣ - xₘ∣ = ∣xₘ∣ - xₘ
+                = xₘ - xₘ
+                = 0
+                ≤ j⁻¹
+
+Case 2: Suppose xₘ < 0. Then:
+     ∣∣xₘ∣ - xₘ∣ = ∣xₘ∣ - xₘ
+                = -xₘ - xₘ
+                = -2xₘ
+                ≤ j⁻¹.
+Thus ∣∣xₘ∣ - xₘ∣ ≤ j⁻¹ for all m ≥ N. By Lemma 1, ∣x∣ = x. □
+-}
+nonNegx⇒∣x∣₂≃x : ∀ x -> NonNegative x -> ∣ x ∣₂ ≃ x
+nonNegx⇒∣x∣₂≃x x nonx = lemma1B ∣ x ∣₂ x lemA
+  where
+    open ℚP.≤-Reasoning
+    open import Data.Integer.Solver
+    open +-*-Solver
+    lemA : ∀ (j : ℕ) -> {j≢0 : j ≢0} -> ∃ λ (N : ℕ) -> ∀ (n : ℕ) -> N ℕ.< n ->
+          ℚ.∣ seq ∣ x ∣₂ n ℚ.- seq x n ∣ ℚ.≤ (+ 1 / j) {j≢0}
+    lemA (suc k₁) = N , lemB
+      where
+        j : ℕ
+        j = suc k₁
+
+        N : ℕ
+        N = proj₁ (lemma2-8-2a x nonx (2 ℕ.* j))
+
+        lemB : ∀ (n : ℕ) -> N ℕ.< n -> ℚ.∣ seq ∣ x ∣₂ n ℚ.- seq x n ∣ ℚ.≤ + 1 / j
+        lemB (suc k₂) N<n = [ left , right ]′ (ℚP.≤-total (seq x n) 0ℚᵘ)
+          where
+            n : ℕ
+            n = suc k₂
+
+            -xₙ≤1/2j : ℚ.- seq x n ℚ.≤ + 1 / (2 ℕ.* j)
+            -xₙ≤1/2j = begin
+              ℚ.- seq x n                 ≤⟨ ℚP.neg-mono-≤ (proj₂ (proj₂ (lemma2-8-2a x nonx (2 ℕ.* j))) n (ℕP.<⇒≤ N<n)) ⟩
+              ℚ.- (ℚ.- (+ 1 / (2 ℕ.* j))) ≈⟨ ℚP.neg-involutive (+ 1 / (2 ℕ.* j)) ⟩
+              + 1 / (2 ℕ.* j)              ∎
+
+            left : seq x n ℚ.≤ 0ℚᵘ -> ℚ.∣ seq ∣ x ∣₂ n ℚ.- seq x n ∣ ℚ.≤ + 1 / j
+            left hyp = begin
+              ℚ.∣ seq ∣ x ∣₂ n ℚ.- seq x n ∣          ≈⟨ ℚP.0≤p⇒∣p∣≃p (ℚP.p≤q⇒0≤q-p (p≤∣p∣ (seq x n))) ⟩
+              ℚ.∣ seq x n ∣ ℚ.- seq x n               ≈⟨ ℚP.+-congˡ (ℚ.- seq x n) (ℚP.≃-sym (ℚP.∣-p∣≃∣p∣ (seq x n))) ⟩
+              ℚ.∣ ℚ.- seq x n ∣ ℚ.- seq x n           ≈⟨ ℚP.+-congˡ (ℚ.- seq x n) (ℚP.0≤p⇒∣p∣≃p (ℚP.neg-mono-≤ hyp)) ⟩
+              ℚ.- seq x n ℚ.- seq x n                 ≤⟨ ℚP.+-mono-≤ -xₙ≤1/2j -xₙ≤1/2j ⟩
+              (+ 1 / (2 ℕ.* j)) ℚ.+ (+ 1 / (2 ℕ.* j)) ≈⟨ ℚ.*≡* (solve 1 (λ j ->
+                                                         (con (+ 1) :* (con (+ 2) :* j) :+ con (+ 1) :* (con (+ 2) :* j)) :* j :=
+                                                         (con (+ 1) :* (con (+ 2) :* j :* (con (+ 2) :* j)))) _≡_.refl (+ j)) ⟩
+              + 1 / j                                  ∎
+
+            right : 0ℚᵘ ℚ.≤ seq x n -> ℚ.∣ seq ∣ x ∣₂ n ℚ.- seq x n ∣ ℚ.≤ + 1 / j
+            right hyp = begin
+              ℚ.∣ ℚ.∣ seq x n ∣ ℚ.- seq x n ∣  ≈⟨ ℚP.0≤p⇒∣p∣≃p (ℚP.p≤q⇒0≤q-p (p≤∣p∣ (seq x n))) ⟩
+              ℚ.∣ seq x n ∣ ℚ.- seq x n       ≈⟨ ℚP.+-congˡ (ℚ.- seq x n) (ℚP.0≤p⇒∣p∣≃p hyp) ⟩
+              seq x n ℚ.- seq x n             ≈⟨ ℚP.+-inverseʳ (seq x n) ⟩
+              0ℚᵘ                             ≤⟨ ℚP.nonNegative⁻¹ _ ⟩
+              + 1 / j                          ∎
+     
+nonNegx⇒∣x∣≃x : ∀ x -> NonNegative x -> ∣ x ∣ ≃ x
+nonNegx⇒∣x∣≃x x nonx = ≃-trans {∣ x ∣} {∣ x ∣₂} {x} (∣x∣≃∣x∣₂ x) (nonNegx⇒∣x∣₂≃x x nonx)
+
+{-
 Proposition:
   If x and y are nonnegative, then so is x * y.
 Proof:
-  Since x and y are nonnegative, for each n∈ℕ, there is Nx, Ny∈ℕ such that
-                           xₘ ≥ -n⁻¹         (m ≥ Nx), and
-                           yₘ ≥ -n⁻¹         (m ≥ Ny).
-Let k = max{Kx, Ky}, let N = max{Nx, Ny}, and let m ≥ kN. If x₂ₖₘ and y₂ₖₘ
-are both nonnegative or both negative, then we are done. Suppose, WLOG, that
-x₂ₖₘ is nonnegative and y₂ₖₘ is negative. Then y₂ₖₘ = -∣y₂ₖₘ∣. Note that
-∣y₂ₖₘ∣ ≤ K∣y∣, so -∣y₂ₖₘ∣ ≥ -K∣y∣. We have: 
-x₂ₖₘy₂ₖₘ = x₂ₖₘ * (-∣y₂ₖₘ∣)
-         ≥ x₂ₖₘ * -K∣y∣
-         ≥ 
-Either xₘ ≥ n⁻¹ or xₘ ≤ n⁻¹.
-Case 1: Suppose xₘ ≥ (K∣y∣ * n)⁻¹. Then:
-x₂ₖₘy₂ₖₘ ≥ x₂ₖₘ * (-K∣y∣)
-         ≥ (K∣y∣ * n)⁻¹ * (-K∣y∣)
-         = -n⁻¹.
-Case 2: Suppose xₘ ≤ (K∣y∣ * n)⁻¹. Then -xₘ ≥ -(K∣y∣ * n)⁻¹. We have:
-x₂ₖₘy₂ₖₘ ≥ x₂ₖₘ * (-K∣y∣)
-         = -x₂ₖₘ * K∣y∣
-         ≥ -(K∣y∣ * n)⁻¹ * K∣y∣
-         = -n⁻¹.
-
-Either x₂ₖₘ ≥ n⁻¹ or x₂ₖₘ ≤ n⁻¹.
-Case 1: Suppose x₂ₖₘ ≥ n⁻¹. From x₂ₖₘ ≥ -n⁻¹, we get -x₂ₖₘ ≤ 
-x₂ₖₘy₂ₖₘ ≥ x₂ₖₘ * (-n⁻¹)
-         
-
-Case 2: Suppose x₂ₖₘ ≤ n⁻¹. Then -x₂ₖₘ ≥ -n⁻¹, and:
-x₂ₖₘy₂ₖₘ ≥ x₂ₖₘ * (-n⁻¹)
-         = -x₂ₖₘ * n⁻¹
-         ≥ -n⁻¹ * n⁻¹
-         ≥ -n⁻¹.
+  Since x and y are nonnegative, we have x = ∣x∣ and y = ∣y∣. Then x*y = ∣x∣*∣y∣ = ∣x*y∣, which is nonnegative. □
 -}
-
 nonNegx,y⇒nonNegx*y : ∀ x y -> NonNegative x -> NonNegative y -> NonNegative (x * y)
-nonNegx,y⇒nonNegx*y x y nonx nony = {!!} {-lemma2-8-2b (x * y) lemA
+nonNegx,y⇒nonNegx*y x y nonx nony = nonNeg-cong ∣ x * y ∣ (x * y) lem (∣x∣nonNeg (x * y))
   where
-    open ℚP.≤-Reasoning
-    lemA : ∀ (n : ℕ) -> {n≢0 : n ≢0} -> ∃ λ (Nₙ : ℕ) -> Nₙ ≢0 ×
-           ∀ (m : ℕ) -> m ℕ.≥ Nₙ -> seq (x * y) m ℚ.≥ ℚ.- (+ 1 / n) {n≢0}
-    lemA (suc k₁) = N , _ , lemB
-      where
-        k : ℕ
-        k = K x ℕ.⊔ K y
-
-        n : ℕ
-        n = suc k₁
-
-        N₁ : ℕ
-        N₁ = proj₁ (lemma2-8-2a x nonx n)
-
-        N₂ : ℕ
-        N₂ = proj₁ (lemma2-8-2a y nony n)
-
-        N : ℕ
-        N = N₁ ℕ.⊔ N₂
-
-        lemB : ∀ (m : ℕ) -> m ℕ.≥ N -> seq (x * y) m ℚ.≥ ℚ.- (+ 1 / n)
-        lemB m m≥N = [ {!!} , {!!} ]′ {!!}
-          where
-            x₂ₖₘ : ℚᵘ
-            x₂ₖₘ = seq x (2 ℕ.* k ℕ.* m)
-
-            y₂ₖₘ : ℚᵘ
-            y₂ₖₘ = seq y (2 ℕ.* k ℕ.* m)-}
-
+    open ≃-Reasoning
+    lem : ∣ x * y ∣ ≃ x * y
+    lem = begin
+      ∣ x * y ∣     ≈⟨ ∣x*y∣≃∣x∣*∣y∣ x y ⟩
+      ∣ x ∣ * ∣ y ∣ ≈⟨ *-cong {∣ x ∣} {x} {∣ y ∣} {y} (nonNegx⇒∣x∣≃x x nonx) (nonNegx⇒∣x∣≃x y nony) ⟩
+      x * y          ∎
+      
 {-
 Proposition:
   If x and y are positive, then so is x * y.
@@ -2886,13 +2910,6 @@ x ≥ y = y ≤ x
 Negative : Pred ℝ 0ℓ
 Negative x = Positive (- x)
 
-{-
-Module for chain of equality reasoning on ℝ
--}
-module ≃-Reasoning where
-  open import Relation.Binary.Reasoning.Setoid ≃-setoid
-    public
-
 <⇒≤ : _<_ ⇒ _≤_
 <⇒≤ {x} {y} x<y = pos⇒nonNeg (y - x) x<y
 
@@ -2962,6 +2979,3 @@ nonNeg-refl x = nonNeg-cong 0ℝ (x - x) (≃-symm {x - x} {0ℝ} (+-inverseʳ x
 
 +-monoˡ-≤ : ∀ (x : ℝ) -> (_+ x) Preserves _≤_ ⟶ _≤_
 +-monoˡ-≤ x {y} {z} y≤z = +-mono-≤ {y} {z} {x} {x} y≤z (nonNeg-refl x)
-
-
-
