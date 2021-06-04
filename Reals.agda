@@ -290,8 +290,9 @@ antidensity-ℤ : ¬(∃ λ (n : ℤ) -> + 0 ℤ.< n × n ℤ.< + 1)
 antidensity-ℤ (+[1+ n ] , +<+ m<n , +<+ (ℕ.s≤s ()))
 
   
-infixl 6 _+_ _⊔_
-infix 8 -_
+infixl 6 _+_ _-_ _⊔_ _⊓_
+infixl 7 _*_
+infix 8 -_ _*
 
 _+_ : ℝ -> ℝ -> ℝ
 seq (x + y) n = seq x (2 ℕ.* n) ℚ.+ seq y (2 ℕ.* n)
@@ -710,13 +711,6 @@ Proofs that the above operations are well-defined functions
   ℚ.∣ seq x (2 ℕ.* n) ℚ.- seq z (2 ℕ.* n) ∣ ℚ.+
   ℚ.∣ seq y (2 ℕ.* n) ℚ.- seq w (2 ℕ.* n) ∣     ≤⟨ ℚP.≤-trans (ℚP.+-monoˡ-≤ ℚ.∣ seq y (2 ℕ.* n) ℚ.- seq w (2 ℕ.* n) ∣ (x≃z (2 ℕ.* n)))
                                                               (ℚP.+-monoʳ-≤ (+ 2 / (2 ℕ.* n)) (y≃w (2 ℕ.* n))) ⟩
-  {-
-    2/(2n) + 2/(2n)
-    2*2n + 2*2n / 2n*2n
-    = 2/n
-    <->
-    (2*2n + 2*2n) * n = 2 * (2n*2n)
-  -}
   (+ 2 / (2 ℕ.* n)) ℚ.+ (+ 2 / (2 ℕ.* n))       ≈⟨ ℚ.*≡* (solve 1 (λ n ->
                                                    (con (+ 2) :* (con (+ 2) :* n) :+ con (+ 2) :* (con (+ 2) :* n)) :* n :=
                                                    (con (+ 2) :* ((con (+ 2) :* n) :* (con (+ 2) :* n)))) _≡_.refl (+ n)) ⟩
@@ -2878,6 +2872,7 @@ xₘ ⊓ yₘ = xₘ. We have:
          ≥ Nx⁻¹
          ≥ N⁻¹.
 -}
+
 posx,y⇒posx⊓y : ∀ x y -> Positive x -> Positive y -> Positive (x ⊓ y)
 posx,y⇒posx⊓y x y posx posy = pos-cong (x ⊓₂ y) (x ⊓ y) (≃-symm {x ⊓ y} {x ⊓₂ y} (x⊓y≃x⊓₂y x y))
                               (lemma2-8-1b (x ⊓₂ y) (ℕ.pred N , lem))
@@ -2909,6 +2904,8 @@ posx,y⇒posx⊓y x y posx posy = pos-cong (x ⊓₂ y) (x ⊓ y) (≃-symm {x �
           seq y m             ≈⟨ ℚP.≃-sym (ℚP.p≥q⇒p⊓q≃q hyp) ⟩
           seq x m ℚ.⊓ seq y m   ∎
 
+infix 4 _<_ _>_ _≤_ _≥_
+
 _<_ : Rel ℝ 0ℓ
 x < y = Positive (y - x)
 
@@ -2928,7 +2925,7 @@ Negative x = Positive (- x)
 <⇒≤ {x} {y} x<y = pos⇒nonNeg (y - x) x<y
 
 <-≤-trans : Trans _<_ _≤_ _<_
-<-≤-trans {x} {y} {z} x<y y≤z = pos-cong (y - x + z - y) (z - x) lem (posx∧nonNegy⇒posx+y (y - x) (z - y) x<y y≤z)
+<-≤-trans {x} {y} {z} x<y y≤z = pos-cong (y - x + (z - y)) (z - x) lem (posx∧nonNegy⇒posx+y (y - x) (z - y) x<y y≤z)
   where
     open ≃-Reasoning
     lem : (y - x) + (z - y) ≃ z - x
@@ -2956,7 +2953,7 @@ Negative x = Positive (- x)
 <-trans {x} {y} {z} = ≤-<-trans {x} {y} {z} ∘ <⇒≤ {x} {y}
 
 ≤-trans : Transitive _≤_
-≤-trans {x} {y} {z} x≤y y≤z = nonNeg-cong (z - y + y - x) (z - x) lem (nonNegx,y⇒nonNegx+y (z - y) (y - x) y≤z x≤y)
+≤-trans {x} {y} {z} x≤y y≤z = nonNeg-cong (z - y + (y - x)) (z - x) lem (nonNegx,y⇒nonNegx+y (z - y) (y - x) y≤z x≤y)
   where
     open ≃-Reasoning
     lem : (z - y) + (y - x) ≃ z - x
@@ -3158,8 +3155,12 @@ Proof:
 Since x ≤ y, y - x is nonnegative. Thus -x ≥ -y. □
 -}
 
-{-*-monoʳ-≤-nonNeg : ∀ x y z -> x ≤ z -> 0ℝ ≤ y -> x * y ≤ z * y
-*-monoʳ-≤-nonNeg x y z x≤z 0≤y = ?
--}
-
-
+*-monoʳ-≤-nonNeg : ∀ x y z -> x ≤ z -> NonNegative y -> x * y ≤ z * y
+*-monoʳ-≤-nonNeg x y z x≤z nony = nonNeg-cong ((z - x) * y) (z * y - x * y) lem (nonNegx,y⇒nonNegx*y (z - x) y x≤z nony)
+  where
+    open ≃-Reasoning
+    lem : (z - x) * y ≃ z * y - x * y
+    lem = begin
+      (z - x) * y        ≈⟨ *-distribʳ-+ y z (- x) ⟩
+      z * y + (- x) * y  ≈⟨ +-congʳ (z * y) { - x * y} { - (x * y)} {!!} ⟩
+      z * y - x * y       ∎
