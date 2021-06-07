@@ -292,7 +292,7 @@ antidensity-ℤ (+[1+ n ] , +<+ m<n , +<+ (ℕ.s≤s ()))
   
 infixl 6 _+_ _-_ _⊔_ _⊓_
 infixl 7 _*_
-infix 8 -_ _*
+infix 8 -_ _⋆
 
 _+_ : ℝ -> ℝ -> ℝ
 seq (x + y) n = seq x (2 ℕ.* n) ℚ.+ seq y (2 ℕ.* n)
@@ -681,9 +681,9 @@ x - y = x + (- y)
 -- Gets a real representation of a rational number.
 -- For a rational α, one real representation is the sequence
 -- α* = (α, α, α, α, α, ...).
-_* : ℚᵘ -> ℝ
-seq (p *) n = p
-reg (p *) (suc m) (suc n) = begin
+_⋆ : ℚᵘ -> ℝ
+seq (p ⋆) n = p
+reg (p ⋆) (suc m) (suc n) = begin
   ℚ.∣ p ℚ.- p ∣ ≈⟨ ℚP.∣-∣-cong (ℚP.p≃q⇒p-q≃0 p p ℚP.≃-refl) ⟩
   0ℚᵘ ≤⟨ ℚP.nonNegative⁻¹ _ ⟩
   ((+ 1) / (suc m)) ℚ.+ ((+ 1) / (suc n)) ∎
@@ -796,10 +796,10 @@ Proofs that the above operations are well-defined functions
     4n = 2 ℕ.* 2n
 
 0ℝ : ℝ
-0ℝ = 0ℚᵘ *
+0ℝ = 0ℚᵘ ⋆
 
 1ℝ : ℝ
-1ℝ = ℚ.1ℚᵘ *
+1ℝ = ℚ.1ℚᵘ ⋆
 
 +-identityˡ : LeftIdentity _≃_ 0ℝ _+_
 +-identityˡ x (suc k₁) = begin
@@ -843,8 +843,8 @@ Proofs that the above operations are well-defined functions
 +-inverse : Inverse _≃_ 0ℝ -_ _+_
 +-inverse = +-inverseˡ , +-inverseʳ
 
-ℚ*-distrib-+ : ∀ (p r : ℚᵘ) -> (p ℚ.+ r) * ≃ p * + r *
-ℚ*-distrib-+ (mkℚᵘ p q-1) (mkℚᵘ u v-1) (suc k₁) = begin
+⋆-distrib-+ : ∀ (p r : ℚᵘ) -> (p ℚ.+ r) ⋆ ≃ p ⋆ + r ⋆
+⋆-distrib-+ (mkℚᵘ p q-1) (mkℚᵘ u v-1) (suc k₁) = begin
   ℚ.∣ ((p / q) ℚ.+ (u / v)) ℚ.- ((p / q) ℚ.+ (u / v)) ∣ ≈⟨ ℚP.∣-∣-cong (ℚP.+-inverseʳ ((p / q) ℚ.+ (u / v))) ⟩
   0ℚᵘ                                                   ≤⟨ *≤* (ℤP.≤-trans (ℤP.≤-reflexive (ℤP.*-zeroˡ (+ n))) (+≤+ ℕ.z≤n)) ⟩
   (+ 2) / n                                              ∎
@@ -859,8 +859,8 @@ Proofs that the above operations are well-defined functions
     v : ℕ
     v = suc v-1
 
-ℚ*-distrib-neg : ∀ (p : ℚᵘ) -> (ℚ.- p) * ≃ - (p *)
-ℚ*-distrib-neg p (suc k₁) = begin
+⋆-distrib-neg : ∀ (p : ℚᵘ) -> (ℚ.- p) ⋆ ≃ - (p ⋆)
+⋆-distrib-neg p (suc k₁) = begin
   ℚ.∣ ℚ.- p ℚ.- (ℚ.- p) ∣ ≈⟨ ℚP.∣-∣-cong (ℚP.+-inverseʳ (ℚ.- p)) ⟩
   0ℚᵘ                     ≤⟨ *≤* (ℤP.≤-trans (ℤP.≤-reflexive (ℤP.*-zeroˡ (+ n))) (+≤+ ℕ.z≤n)) ⟩
   (+ 2) / n                ∎
@@ -3131,29 +3131,68 @@ testing₃ = lem (+-*-commutativeRing)
           Solver rawRing (ACR.fromCommutativeRing R) (ACR.-raw-almostCommutative⟶ (ACR.fromCommutativeRing R)) R-weaklyDec
 
         open R-Solver
+
+UPDATE
+It seems (3) won't fix the problem. I tried the newest developmental release as of June 7th, 2021, and it didn't work.
+Solution (2) might be promising if I can make some sort of function that says something for general rings R like
+"If ϕᴿ(x₁,...,xₙ) = ψᴿ(x₁,...,xₙ) for all xᵢ∈R and for all rings R, then ϕ̂(x₁,...,xₙ) = ψ(x₁,...,xₙ) for all xᵢ∈ℝ.
+That might save me the trouble of declaring a general ring solver and whatnot over and over again. Not sure if this
+is possible, though.
 -}
 
-{-
-x ≤ z ∧ y ≥ 0 ⇒ xy ≤ zy
-Proof:
-zy - xy = (z-x)y
-Since x ≤ z and 0 ≤ y, z - x and y are nonnegative. Thus (z-x)y is nonnegative, and xy ≤ zy. □
+neg-distribˡ-* : ∀ x y -> - (x * y) ≃ - x * y
+neg-distribˡ-* x y = begin
+  - (x * y)                       ≈⟨ ≃-trans { - (x * y)} { - (x * y) + 0ℝ} { - (x * y) + 0ℝ * y}
+                                     (≃-symm { - (x * y) + 0ℝ} { - (x * y)} (+-identityʳ (- (x * y))))
+                                     (+-congʳ (- (x * y)) {0ℝ} {0ℝ * y} (≃-symm {0ℝ * y} {0ℝ} (*-zeroˡ y))) ⟩
+  - (x * y) + 0ℝ * y              ≈⟨ +-congʳ (- (x * y)) {0ℝ * y} {(x - x) * y} (*-congʳ {y} {0ℝ} {x - x} (≃-symm {x - x} {0ℝ} (+-inverseʳ x))) ⟩
+  - (x * y) + (x - x) * y         ≈⟨ +-congʳ (- (x * y)) {(x - x) * y} {x * y + (- x) * y} (*-distribʳ-+ y x (- x)) ⟩
+  - (x * y) + (x * y + (- x) * y) ≈⟨ ≃-symm { - (x * y) + x * y + - x * y} { - (x * y) + (x * y + - x * y)}
+                                     (+-assoc (- (x * y)) (x * y) ((- x) * y)) ⟩
+  - (x * y) + x * y + (- x) * y   ≈⟨ +-congˡ (- x * y) { - (x * y) + x * y} {0ℝ} (+-inverseˡ (x * y)) ⟩
+  0ℝ + (- x) * y                  ≈⟨ +-identityˡ ((- x) * y) ⟩
+  (- x) * y                        ∎
+  where
+    open ≃-Reasoning
 
-x < z ∧ y > 0 ⇒ xy < zy
-Proof:
-zy - xy = (z-x)y
-Since x < z and 0 < y, z - x and y are positive. Thus (z-x)y is positive, and xy < zy. □
+neg-distribʳ-* : ∀ x y -> - (x * y) ≃ x * (- y)
+neg-distribʳ-* x y = begin
+  - (x * y) ≈⟨ -‿cong {x * y} {y * x} (*-comm x y) ⟩
+  - (y * x) ≈⟨ neg-distribˡ-* y x ⟩
+  - y * x   ≈⟨ *-comm (- y) x ⟩
+  x * (- y)  ∎
+  where
+    open ≃-Reasoning
 
-x < y ⇒ -x > -y
-Proof: 
--x - -y = y - x
-Since x < y, y - x is positive. Thus -x > -y. □
+≤-reflexive : _≃_ ⇒ _≤_
+≤-reflexive {x} {y} x≃y = nonNeg-cong (x - x) (y - x) (+-congˡ (- x) {x} {y} x≃y) (nonNeg-refl x)
 
-x ≤ y ⇒ -x ≥ -y
-Proof:
--x - y = y - x
-Since x ≤ y, y - x is nonnegative. Thus -x ≥ -y. □
--}
+≤-refl : Reflexive _≤_
+≤-refl {x} = ≤-reflexive {x} {x} (≃-refl {x})
+
+≤-isPreorder : IsPreorder _≃_ _≤_
+IsPreorder.isEquivalence ≤-isPreorder = ≃-isEquivalence
+IsPreorder.reflexive ≤-isPreorder {x} {y} x≃y = ≤-reflexive {x} {y} x≃y
+IsPreorder.trans ≤-isPreorder {x} {y} {z} = ≤-trans {x} {y} {z}
+
+<-respʳ-≃ : _<_ Respectsʳ _≃_
+<-respʳ-≃ {x} {y} {z} y≃z x<y = <-≤-trans {x} {y} {z} x<y (≤-reflexive {y} {z} y≃z)
+
+<-respˡ-≃ : _<_ Respectsˡ _≃_
+<-respˡ-≃ {x} {y} {z} y≃z y<x = ≤-<-trans {z} {y} {x} (≤-reflexive {z} {y} (≃-symm {y} {z} y≃z)) y<x
+
+<-resp-≃ : _<_ Respects₂ _≃_
+<-resp-≃ = (λ {x} {y} {z} -> <-respʳ-≃ {x} {y} {z}) , λ {x} {y} {z} -> <-respˡ-≃ {x} {y} {z}
+
+module ≤-Reasoning where
+  open import Relation.Binary.Reasoning.Base.Triple
+    ≤-isPreorder
+    (λ {x} {y} {z} -> <-trans {x} {y} {z})
+    <-resp-≃
+    (λ {x} {y} -> <⇒≤ {x} {y})
+    (λ {x} {y} {z} -> <-≤-trans {x} {y} {z})
+    (λ {x} {y} {z} -> ≤-<-trans {x} {y} {z})
+    public
 
 *-monoʳ-≤-nonNeg : ∀ x y z -> x ≤ z -> NonNegative y -> x * y ≤ z * y
 *-monoʳ-≤-nonNeg x y z x≤z nony = nonNeg-cong ((z - x) * y) (z * y - x * y) lem (nonNegx,y⇒nonNegx*y (z - x) y x≤z nony)
@@ -3162,5 +3201,168 @@ Since x ≤ y, y - x is nonnegative. Thus -x ≥ -y. □
     lem : (z - x) * y ≃ z * y - x * y
     lem = begin
       (z - x) * y        ≈⟨ *-distribʳ-+ y z (- x) ⟩
-      z * y + (- x) * y  ≈⟨ +-congʳ (z * y) { - x * y} { - (x * y)} {!!} ⟩
+      z * y + (- x) * y  ≈⟨ +-congʳ (z * y) { - x * y} { - (x * y)} (≃-symm { - (x * y)} { - x * y} (neg-distribˡ-* x y)) ⟩
       z * y - x * y       ∎
+
+*-monoˡ-≤-nonNeg : ∀ x y z -> x ≤ z -> NonNegative y -> y * x ≤ y * z
+*-monoˡ-≤-nonNeg x y z x≤z nony = begin
+  y * x ≈⟨ *-comm y x ⟩
+  x * y ≤⟨ *-monoʳ-≤-nonNeg x y z x≤z nony ⟩
+  z * y ≈⟨ *-comm z y ⟩
+  y * z  ∎
+  where
+    open ≤-Reasoning
+
+*-monoʳ-<-pos : ∀ {y} -> Positive y -> (_*_ y) Preserves _<_ ⟶ _<_
+*-monoʳ-<-pos {y} posy {x} {z} x<z = pos-cong (y * (z - x)) (y * z - y * x) lem (posx,y⇒posx*y y (z - x) posy x<z)
+  where
+    open ≃-Reasoning
+    lem : y * (z - x) ≃ y * z - y * x
+    lem = begin
+      y * (z - x)       ≈⟨ *-distribˡ-+ y z (- x) ⟩
+      y * z + y * (- x) ≈⟨ +-congʳ (y * z) {y * (- x)} { - (y * x)} (≃-symm { - (y * x)} {y * (- x)} (neg-distribʳ-* y x)) ⟩
+      y * z - y * x      ∎
+
+*-monoˡ-<-pos : ∀ {y} -> Positive y -> (_* y) Preserves _<_ ⟶ _<_
+*-monoˡ-<-pos {y} posy {x} {z} x<z = begin-strict
+  x * y ≈⟨ *-comm x y ⟩
+  y * x <⟨ *-monoʳ-<-pos {y} posy {x} {z} x<z ⟩
+  y * z ≈⟨ *-comm y z ⟩
+  z * y  ∎
+  where
+    open ≤-Reasoning
+
+neg-mono-< : -_ Preserves _<_ ⟶ _>_
+neg-mono-< {x} {y} x<y = pos-cong (y - x) (- x - (- y)) lem x<y
+  where
+    open ≃-Reasoning
+    lem : y - x ≃ - x - (- y)
+    lem = begin
+      y - x       ≈⟨ +-congˡ (- x) {y} { - (- y)} (≃-symm { - (- y)} {y} (neg-involutive y)) ⟩
+      - (- y) - x ≈⟨ +-comm (- (- y)) (- x) ⟩
+      - x - (- y)  ∎
+
+neg-mono-≤ : -_ Preserves _≤_ ⟶ _≥_
+neg-mono-≤ {x} {y} x≤y = nonNeg-cong (y - x) (- x - (- y)) lem x≤y
+  where
+    open ≃-Reasoning
+    lem : y - x ≃ - x - (- y)
+    lem = begin
+      y - x       ≈⟨ +-congˡ (- x) {y} { - (- y)} (≃-symm { - (- y)} {y} (neg-involutive y)) ⟩
+      - (- y) - x ≈⟨ +-comm (- (- y)) (- x) ⟩
+      - x - (- y)  ∎
+
+x≤x⊔y : ∀ x y -> x ≤ x ⊔ y
+x≤x⊔y x y (suc k₁) = begin
+  ℚ.- (+ 1 / n)                                           ≤⟨ ℚP.nonPositive⁻¹ _ ⟩
+  0ℚᵘ                                                     ≈⟨ ℚP.≃-sym (ℚP.+-inverseʳ (seq x (2 ℕ.* n))) ⟩
+  seq x (2 ℕ.* n) ℚ.- seq x (2 ℕ.* n)                     ≤⟨ ℚP.+-monoˡ-≤ (ℚ.- seq x (2 ℕ.* n)) (ℚP.p≤p⊔q (seq x (2 ℕ.* n)) (seq y (2 ℕ.* n))) ⟩
+  seq x (2 ℕ.* n) ℚ.⊔ seq y (2 ℕ.* n) ℚ.- seq x (2 ℕ.* n)  ∎
+  where
+    open ℚP.≤-Reasoning
+    n : ℕ
+    n = suc k₁
+
+x≤y⊔x : ∀ x y -> x ≤ y ⊔ x
+x≤y⊔x x y = begin
+  x     ≤⟨ x≤x⊔y x y ⟩
+  x ⊔ y ≈⟨ ⊔-comm x y ⟩
+  y ⊔ x  ∎
+  where
+    open ≤-Reasoning
+
+x⊓y≤x : ∀ x y -> x ⊓ y ≤ x
+x⊓y≤x x y = nonNeg-cong (x - (x ⊓₂ y)) (x - (x ⊓ y)) lemA lemB
+  where
+    open ℚP.≤-Reasoning
+    lemA : x - (x ⊓₂ y) ≃ x - (x ⊓ y)
+    lemA = +-congʳ x { - (x ⊓₂ y)} { - (x ⊓ y)} (-‿cong {x ⊓₂ y} {x ⊓ y}
+           (≃-symm {x ⊓ y} {x ⊓₂ y} (x⊓y≃x⊓₂y x y)))
+
+    lemB : x ⊓₂ y ≤ x
+    lemB (suc k₁) = begin
+      ℚ.- (+ 1 / n)                             ≤⟨ ℚP.nonPositive⁻¹ _ ⟩
+      0ℚᵘ                                       ≈⟨ ℚP.≃-sym (ℚP.+-inverseʳ (seq x (2 ℕ.* n))) ⟩ 
+      seq x (2 ℕ.* n) ℚ.- seq x (2 ℕ.* n)       ≤⟨ ℚP.+-monoʳ-≤ (seq x (2 ℕ.* n)) (ℚP.neg-mono-≤ (ℚP.p⊓q≤p (seq x (2 ℕ.* n)) (seq y (2 ℕ.* n)))) ⟩
+      seq x (2 ℕ.* n) ℚ.- seq (x ⊓₂ y) (2 ℕ.* n) ∎
+      where
+        n : ℕ
+        n = suc k₁
+
+x⊓y≤y : ∀ x y -> x ⊓ y ≤ y
+x⊓y≤y x y = begin
+  x ⊓ y ≈⟨ ⊓-comm x y ⟩
+  y ⊓ x ≤⟨ x⊓y≤x y x ⟩
+  y      ∎
+  where
+    open ≤-Reasoning
+
+{-
+x ≤ y, y ≤ x ⇒ x ≃ y
+Proof:
+y - x and x - y nonnegative, so
+                     y₂ₙ - x₂ₙ ≥ -n⁻¹    (n∈ℤ⁺), and
+                     x₂ₙ - y₂ₙ ≥ -n⁻¹    (n∈ℤ⁺).
+Then
+                     xₙ - yₙ ≤ n⁻¹
+                     yₙ - xₙ ≤ n⁻¹.
+We have:
+∣xₙ - yₙ∣ = xₙ - yₙ
+
+x - y = y - x
+
+x - y = y - x ⇔ x + x = y + y
+
+∀n∈ℕ ∃Nₙ∈ℕ ∀m≥N (x₂ₘ - y₂ₘ ≥ -n⁻¹)
+
+∀n∈ℕ (x₂ₙ - y₂ₙ ≥ -n⁻¹)
+WTS
+∃N∈ℕ ∀n>N (∣xₙ - yₙ∣ ≤ 1/j)
+
+-}
+≤-antisym : Antisymmetric _≃_ _≤_
+≤-antisym = {!!}
+{-≤-antisym {x} {y} x≤y y≤x = lemma1B x y lemA
+  where
+    lemA : ∀ (j : ℕ) -> {j≢0 : j ≢0} -> ∃ λ (N : ℕ) -> ∀ (n : ℕ) -> N ℕ.< n ->
+          ℚ.∣ seq x n ℚ.- seq y n ∣ ℚ.≤ (+ 1 / j) {j≢0}
+    lemA (suc k₁) = N , lemB
+      where
+        j : ℕ
+        j = suc k₁
+
+        N₁ : ℕ
+        N₁ = proj₁ (lemma2-8-2a (y - x) x≤y j)
+
+        N₂ : ℕ
+        N₂ = proj₁ (lemma2-8-2a (x - y) y≤x j)
+
+        N : ℕ
+        N = N₁ ℕ.⊔ N₂
+
+        lemB : ∀ (n : ℕ) -> N ℕ.< n ->
+               ℚ.∣ seq x n ℚ.- seq y n ∣ ℚ.≤ + 1 / j
+        lemB n N<n = [ left , right ]′ (ℚP.≤-total (seq x n) (seq y n))
+          where
+            open ℚP.≤-Reasoning
+            open import Data.Rational.Unnormalised.Solver
+            open +-*-Solver
+            neg-helper : ℚ.- (seq x n ℚ.- seq y n) ℚ.≃ seq y n ℚ.- seq x n
+            neg-helper = solve 2 (λ x y -> :- (x :- y) := y :- x) ℚP.≃-refl (seq x n) (seq y n)
+-- -(yₙ - xₙ) ≥ -1/j
+{-
+ y ≤ x ⇒ xₙ - yₙ ≥ -1/j
+       ⇒ -(xₙ - yₙ) ≤ --1/j
+       ⇔ xₙ - yₙ ≥ -1/j
+-}
+            left : seq x n ℚ.≤ seq y n -> ℚ.∣ seq x n ℚ.- seq y n ∣ ℚ.≤ + 1 / j
+            left hyp = begin
+              ℚ.∣ seq x n ℚ.- seq y n ∣       ≈⟨ {!!} ⟩
+              ℚ.∣ ℚ.- (seq x n ℚ.- seq y n) ∣ ≈⟨ {!!} ⟩
+              ℚ.- (seq x n ℚ.- seq y n)       ≤⟨ ℚP.≤-respʳ-≃ (ℚP.neg-involutive (+ 1 / j))
+                                                 (ℚP.neg-mono-≤ {!proj₂ (proj₂ (lemma2-8-2a (x - y) y≤x j))!}) ⟩
+              + 1 / j                          ∎
+
+            right : seq y n ℚ.≤ seq x n -> ℚ.∣ seq x n ℚ.- seq y n ∣ ℚ.≤ + 1 / j
+            right hyp = {!!}
+            -}
