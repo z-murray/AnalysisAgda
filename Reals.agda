@@ -3298,71 +3298,137 @@ x⊓y≤y x y = begin
     open ≤-Reasoning
 
 {-
-x ≤ y, y ≤ x ⇒ x ≃ y
+Proposition:
+  ≤ is antisymmetric.
 Proof:
-y - x and x - y nonnegative, so
-                     y₂ₙ - x₂ₙ ≥ -n⁻¹    (n∈ℤ⁺), and
-                     x₂ₙ - y₂ₙ ≥ -n⁻¹    (n∈ℤ⁺).
-Then
-                     xₙ - yₙ ≤ n⁻¹
-                     yₙ - xₙ ≤ n⁻¹.
-We have:
-∣xₙ - yₙ∣ = xₙ - yₙ
-
-x - y = y - x
-
-x - y = y - x ⇔ x + x = y + y
-
-∀n∈ℕ ∃Nₙ∈ℕ ∀m≥N (x₂ₘ - y₂ₘ ≥ -n⁻¹)
-
-∀n∈ℕ (x₂ₙ - y₂ₙ ≥ -n⁻¹)
-WTS
-∃N∈ℕ ∀n>N (∣xₙ - yₙ∣ ≤ 1/j)
-
+Since y - x and x - y are nonnegative, for all n∈ℕ, we have
+                              y₂ₙ - x₂ₙ ≥ -n⁻¹          (1), and
+                              x₂ₙ - y₂ₙ ≥ -n⁻¹          (2)
+Let n∈ℕ. Either ∣x₂ₙ - y₂ₙ∣ = x₂ₙ - y₂ₙ or ∣x₂ₙ - y₂ₙ∣ = y₂ₙ - x₂ₙ.
+Case 1: We have: 
+∣x₂ₙ - y₂ₙ∣ = x₂ₙ - y₂ₙ
+            ≤ n⁻¹      by (1)
+            ≤ 2n⁻¹.
+Case 2: Similar.
+Thus x - y ≃ 0. Hence x ≃ y.                                    □
 -}
 ≤-antisym : Antisymmetric _≃_ _≤_
-≤-antisym = {!!}
-{-≤-antisym {x} {y} x≤y y≤x = lemma1B x y lemA
+≤-antisym {x} {y} x≤y y≤x = ≃-symm {y} {x} lemB
   where
-    lemA : ∀ (j : ℕ) -> {j≢0 : j ≢0} -> ∃ λ (N : ℕ) -> ∀ (n : ℕ) -> N ℕ.< n ->
-          ℚ.∣ seq x n ℚ.- seq y n ∣ ℚ.≤ (+ 1 / j) {j≢0}
-    lemA (suc k₁) = N , lemB
+    lemA : x - y ≃ 0ℝ
+    lemA (suc k₁) = begin
+      ℚ.∣ seq x (2 ℕ.* n) ℚ.- seq y (2 ℕ.* n) ℚ.- 0ℚᵘ ∣ ≈⟨ ℚP.∣-∣-cong (ℚP.+-identityʳ (seq x (2 ℕ.* n) ℚ.- seq y (2 ℕ.* n))) ⟩
+      ℚ.∣ seq x (2 ℕ.* n) ℚ.- seq y (2 ℕ.* n) ∣         ≤⟨ [ left , right ]′ (ℚP.≤-total (seq x (2 ℕ.* n)) (seq y (2 ℕ.* n))) ⟩
+      + 2 / n                                            ∎
       where
-        j : ℕ
-        j = suc k₁
+        open ℚP.≤-Reasoning
+        open import Data.Rational.Unnormalised.Solver
+        open +-*-Solver
+        n : ℕ
+        n = suc k₁
 
-        N₁ : ℕ
-        N₁ = proj₁ (lemma2-8-2a (y - x) x≤y j)
+        left : seq x (2 ℕ.* n) ℚ.≤ seq y (2 ℕ.* n) -> ℚ.∣ seq x (2 ℕ.* n) ℚ.- seq y (2 ℕ.* n) ∣ ℚ.≤ + 2 / n
+        left hyp = begin
+          ℚ.∣ seq x (2 ℕ.* n) ℚ.- seq y (2 ℕ.* n) ∣ ≈⟨ ℚP.≃-trans (ℚP.≃-sym (ℚP.∣-p∣≃∣p∣ (seq x (2 ℕ.* n) ℚ.- seq y (2 ℕ.* n))))
+                                                       (ℚP.0≤p⇒∣p∣≃p (ℚP.neg-mono-≤ (ℚP.p≤q⇒p-q≤0 hyp))) ⟩
+          ℚ.- (seq x (2 ℕ.* n) ℚ.- seq y (2 ℕ.* n)) ≤⟨ ℚP.≤-respʳ-≃ (ℚP.neg-involutive (+ 1 / n)) (ℚP.neg-mono-≤ (y≤x n)) ⟩
+          + 1 / n                                   ≤⟨ *≤* (ℤP.*-monoʳ-≤-nonNeg n {+ 1} {+ 2} (+≤+ (ℕ.s≤s ℕ.z≤n))) ⟩
+          + 2 / n                                    ∎
 
-        N₂ : ℕ
-        N₂ = proj₁ (lemma2-8-2a (x - y) y≤x j)
+        right : seq y (2 ℕ.* n) ℚ.≤ seq x (2 ℕ.* n) -> ℚ.∣ seq x (2 ℕ.* n) ℚ.- seq y (2 ℕ.* n) ∣ ℚ.≤ + 2 / n
+        right hyp = begin
+          ℚ.∣ seq x (2 ℕ.* n) ℚ.- seq y (2 ℕ.* n) ∣ ≈⟨ ℚP.0≤p⇒∣p∣≃p (ℚP.p≤q⇒0≤q-p hyp) ⟩
+          seq x (2 ℕ.* n) ℚ.- seq y (2 ℕ.* n)       ≈⟨ solve 2 (λ x y -> x :- y := :- (y :- x)) ℚP.≃-refl (seq x (2 ℕ.* n)) (seq y (2 ℕ.* n)) ⟩
+          ℚ.- (seq y (2 ℕ.* n) ℚ.- seq x (2 ℕ.* n)) ≤⟨ ℚP.≤-respʳ-≃ (ℚP.neg-involutive (+ 1 / n)) (ℚP.neg-mono-≤ (x≤y n)) ⟩
+          + 1 / n                                   ≤⟨ *≤* (ℤP.*-monoʳ-≤-nonNeg n {+ 1} {+ 2} (+≤+ (ℕ.s≤s ℕ.z≤n))) ⟩
+          + 2 / n                                    ∎
 
-        N : ℕ
-        N = N₁ ℕ.⊔ N₂
+    lemB : y ≃ x
+    lemB = begin
+      y             ≈⟨ ≃-symm {y + 0ℝ} {y} (+-identityʳ y) ⟩
+      y + 0ℝ        ≈⟨ +-congʳ y {0ℝ} {x - y} (≃-symm {x - y} {0ℝ} lemA) ⟩
+      y + (x - y)   ≈⟨ +-congʳ y {x - y} { - y + x} (+-comm x (- y)) ⟩
+      y + (- y + x) ≈⟨ ≃-symm {y - y + x} {y + (- y + x)} (+-assoc y (- y) x) ⟩
+      y - y + x     ≈⟨ +-congˡ x {y - y} {0ℝ} (+-inverseʳ y) ⟩
+      0ℝ + x        ≈⟨ +-identityˡ x ⟩
+      x              ∎
+      where
+        open ≃-Reasoning
 
-        lemB : ∀ (n : ℕ) -> N ℕ.< n ->
-               ℚ.∣ seq x n ℚ.- seq y n ∣ ℚ.≤ + 1 / j
-        lemB n N<n = [ left , right ]′ (ℚP.≤-total (seq x n) (seq y n))
-          where
-            open ℚP.≤-Reasoning
-            open import Data.Rational.Unnormalised.Solver
-            open +-*-Solver
-            neg-helper : ℚ.- (seq x n ℚ.- seq y n) ℚ.≃ seq y n ℚ.- seq x n
-            neg-helper = solve 2 (λ x y -> :- (x :- y) := y :- x) ℚP.≃-refl (seq x n) (seq y n)
--- -(yₙ - xₙ) ≥ -1/j
+0≤∣x∣ : ∀ x -> 0ℝ ≤ ∣ x ∣
+0≤∣x∣ x = nonNeg-cong ∣ x ∣ (∣ x ∣ - 0ℝ) (≃-symm {∣ x ∣ - 0ℝ} {∣ x ∣} (+-identityʳ ∣ x ∣)) (∣x∣nonNeg x)
+
+∣x+y∣₂≤∣x∣₂+∣y∣₂ : ∀ x y -> ∣ x + y ∣₂ ≤ ∣ x ∣₂ + ∣ y ∣₂
+∣x+y∣₂≤∣x∣₂+∣y∣₂ x y (suc k₁) = begin
+  ℚ.- (+ 1 / n)                        ≤⟨ ℚP.nonPositive⁻¹ _ ⟩
+  0ℚᵘ                                  ≈⟨ ℚP.≃-sym (ℚP.+-inverseʳ (∣x₄ₙ∣ ℚ.+ ∣y₄ₙ∣)) ⟩
+  ∣x₄ₙ∣ ℚ.+ ∣y₄ₙ∣ ℚ.- (∣x₄ₙ∣ ℚ.+ ∣y₄ₙ∣) ≤⟨ ℚP.+-monoʳ-≤ (∣x₄ₙ∣ ℚ.+ ∣y₄ₙ∣)
+                                          (ℚP.neg-mono-≤ (ℚP.∣p+q∣≤∣p∣+∣q∣ (seq x (2 ℕ.* (2 ℕ.* n))) (seq y (2 ℕ.* (2 ℕ.* n))))) ⟩
+  ∣x₄ₙ∣ ℚ.+ ∣y₄ₙ∣ ℚ.- ∣x₄ₙ+y₄ₙ∣          ∎
+  where
+    open ℚP.≤-Reasoning
+    n : ℕ
+    n = suc k₁
+
+    ∣x₄ₙ∣ : ℚᵘ
+    ∣x₄ₙ∣ = ℚ.∣ seq x (2 ℕ.* (2 ℕ.* n)) ∣
+
+    ∣y₄ₙ∣ : ℚᵘ
+    ∣y₄ₙ∣ = ℚ.∣ seq y (2 ℕ.* (2 ℕ.* n)) ∣
+
+    ∣x₄ₙ+y₄ₙ∣ : ℚᵘ
+    ∣x₄ₙ+y₄ₙ∣ = ℚ.∣ seq x (2 ℕ.* (2 ℕ.* n)) ℚ.+ seq y (2 ℕ.* (2 ℕ.* n)) ∣
+
+∣x+y∣≤∣x∣+∣y∣ : ∀ x y -> ∣ x + y ∣ ≤ ∣ x ∣ + ∣ y ∣
+∣x+y∣≤∣x∣+∣y∣ x y = begin
+  ∣ x + y ∣       ≈⟨ ∣x∣≃∣x∣₂ (x + y) ⟩
+  ∣ x + y ∣₂      ≤⟨ ∣x+y∣₂≤∣x∣₂+∣y∣₂ x y ⟩
+  ∣ x ∣₂ + ∣ y ∣₂ ≈⟨ +-cong {∣ x ∣₂} {∣ x ∣} {∣ y ∣₂} {∣ y ∣}
+                     (≃-symm {∣ x ∣} {∣ x ∣₂} (∣x∣≃∣x∣₂ x))
+                     (≃-symm {∣ y ∣} {∣ y ∣₂} (∣x∣≃∣x∣₂ y)) ⟩
+  ∣ x ∣ + ∣ y ∣    ∎
+  where
+    open ≤-Reasoning
+
+_≄_ : Rel ℝ 0ℓ
+x ≄ y = x < y ⊎ y < x
+
+_⁻¹ : ℝ -> ℝ
+seq (x ⁻¹) = {!!}
+  where
+    
+reg (x ⁻¹) = {!!}
 {-
- y ≤ x ⇒ xₙ - yₙ ≥ -1/j
-       ⇒ -(xₙ - yₙ) ≤ --1/j
-       ⇔ xₙ - yₙ ≥ -1/j
+If ϕ(x) = ψ(x) for all x∈R for all rings R, then ϕ(x) = ψ(x) for all x∈ℝ."
 -}
-            left : seq x n ℚ.≤ seq y n -> ℚ.∣ seq x n ℚ.- seq y n ∣ ℚ.≤ + 1 / j
-            left hyp = begin
-              ℚ.∣ seq x n ℚ.- seq y n ∣       ≈⟨ {!!} ⟩
-              ℚ.∣ ℚ.- (seq x n ℚ.- seq y n) ∣ ≈⟨ {!!} ⟩
-              ℚ.- (seq x n ℚ.- seq y n)       ≤⟨ ℚP.≤-respʳ-≃ (ℚP.neg-involutive (+ 1 / j))
-                                                 (ℚP.neg-mono-≤ {!proj₂ (proj₂ (lemma2-8-2a (x - y) y≤x j))!}) ⟩
-              + 1 / j                          ∎
 
-            right : seq y n ℚ.≤ seq x n -> ℚ.∣ seq x n ℚ.- seq y n ∣ ℚ.≤ + 1 / j
-            right hyp = {!!}
-            -}
+{-
+open CommutativeRing {{...}} using (Carrier; 0#; 1#; _≈_)
+      renaming
+        ( _+_ to _R+_
+        ; _-_ to _R-_
+        ; _*_ to _R*_
+        ; -_  to R-_
+        )
+-}
+-- This function and its counterparts are probably useless since we'd have to prove the
+-- middle section anyway, which we could then directly apply in our proof instead of wasting our
+-- time with this function.
+{-solveMe : (ϕ ψ : (R : CommutativeRing 0ℓ 0ℓ) -> (x y z : Carrier) -> Carrier R) ->  
+        (∀ (R : CommutativeRing 0ℓ 0ℓ) -> ∀ (x y z : Carrier R) -> (_≈_ R) (ϕ R x y z) (ψ R x y z)) ->
+          ∀ (x y z : ℝ) -> ϕ +-*-commutativeRing x y z ≃ ψ +-*-commutativeRing x y z
+solveMe ϕ ψ hyp x y z = hyp +-*-commutativeRing x y z-}
+
+{-
+R-Solver : CommutativeRing 0ℓ 0ℓ -> {!!}
+R-Solver R = {!+-*-Solver!}
+  where
+    module +-*-Solver = Solver {!!} {!!} {!!} {!!}
+    open +-*-Solver
+
+-- How to write infix notation with general rings??
+test : ∀ {{R : CommutativeRing 0ℓ 0ℓ}} -> ∀ (x y : Carrier) -> x R+ y ≈ (y R+ x)
+test x y = {!!}
+  where
+    module +-*-Solver = Solver {!!} {!!} {!!} {!!}
+-}
