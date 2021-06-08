@@ -3393,10 +3393,103 @@ Thus x - y ≃ 0. Hence x ≃ y.                                    □
 _≄_ : Rel ℝ 0ℓ
 x ≄ y = x < y ⊎ y < x
 
-_⁻¹ : ℝ -> ℝ
-seq (x ⁻¹) = {!!}
+x≤∣x∣ : ∀ x -> x ≤ ∣ x ∣
+x≤∣x∣ x (suc k₁) = begin
+  ℚ.- (+ 1 / n)                           ≤⟨ ℚP.nonPositive⁻¹ _ ⟩
+  0ℚᵘ                                     ≈⟨ ℚP.≃-sym (ℚP.+-inverseʳ (seq x (2 ℕ.* n))) ⟩
+  seq x (2 ℕ.* n) ℚ.- seq x (2 ℕ.* n)     ≤⟨ ℚP.+-monoˡ-≤ (ℚ.- seq x (2 ℕ.* n)) (ℚP.p≤p⊔q (seq x (2 ℕ.* n)) (ℚ.- seq x (2 ℕ.* n))) ⟩
+  seq ∣ x ∣ (2 ℕ.* n) ℚ.- seq x (2 ℕ.* n)   ∎
   where
-    
+    open ℚP.≤-Reasoning
+    n : ℕ
+    n = suc k₁
+
+∣-x∣₂≃∣x∣₂ : ∀ x -> ∣ - x ∣₂ ≃ ∣ x ∣₂
+∣-x∣₂≃∣x∣₂ x (suc k₁) = begin
+  ℚ.∣ ℚ.∣ ℚ.- seq x n ∣ ℚ.- ℚ.∣ seq x n ∣ ∣ ≈⟨ ℚP.∣-∣-cong (ℚP.+-congˡ (ℚ.- ℚ.∣ seq x n ∣) (ℚP.∣-p∣≃∣p∣ (seq x n))) ⟩
+  ℚ.∣ ℚ.∣ seq x n ∣ ℚ.- ℚ.∣ seq x n ∣ ∣     ≈⟨ ℚP.∣-∣-cong (ℚP.+-inverseʳ ℚ.∣ seq x n ∣) ⟩
+  0ℚᵘ                                      ≤⟨ ℚP.nonNegative⁻¹ _ ⟩
+  + 2 / n                                   ∎
+  where
+    open ℚP.≤-Reasoning
+    n : ℕ
+    n = suc k₁
+
+    test : seq ∣ - x ∣₂ n ℚ.≃ ℚ.∣ ℚ.- seq x n ∣
+    test = ℚP.≃-refl
+
+∣-x∣≃∣x∣ : ∀ x -> ∣ - x ∣ ≃ ∣ x ∣
+∣-x∣≃∣x∣ x = begin
+  ∣ - x ∣  ≈⟨ ∣x∣≃∣x∣₂ (- x) ⟩
+  ∣ - x ∣₂ ≈⟨ ∣-x∣₂≃∣x∣₂ x ⟩
+  ∣ x ∣₂   ≈⟨ ≃-symm {∣ x ∣} {∣ x ∣₂} (∣x∣≃∣x∣₂ x) ⟩
+  ∣ x ∣     ∎
+  where
+    open ≃-Reasoning
+
+0<x⇒posx : ∀ x -> 0ℝ < x -> Positive x
+0<x⇒posx x 0<x = pos-cong (x - 0ℝ) x (+-identityʳ x) 0<x
+
+posx⇒0<x : ∀ x -> Positive x -> 0ℝ < x
+posx⇒0<x x posx = pos-cong x (x - 0ℝ) (≃-symm {x - 0ℝ} {x} (+-identityʳ x)) posx
+
+x≄0⇒0<∣x∣ : ∀ x -> x ≄ 0ℝ -> 0ℝ < ∣ x ∣
+x≄0⇒0<∣x∣ x x≄0 = [ left , right ]′ x≄0
+  where
+    open ≤-Reasoning
+    left : x < 0ℝ -> 0ℝ < ∣ x ∣
+    left hyp = begin-strict
+      0ℝ      <⟨ neg-mono-< {x} {0ℝ} hyp ⟩
+      - x     ≤⟨ x≤∣x∣ (- x) ⟩
+      ∣ - x ∣ ≈⟨ ∣-x∣≃∣x∣ x ⟩
+      ∣ x ∣    ∎
+
+    right : 0ℝ < x -> 0ℝ < ∣ x ∣
+    right hyp = begin-strict
+      0ℝ    <⟨ hyp ⟩
+      x     ≤⟨ x≤∣x∣ x ⟩
+      ∣ x ∣   ∎
+
+x≄0⇒pos∣x∣ : ∀ x -> x ≄ 0ℝ -> Positive ∣ x ∣
+x≄0⇒pos∣x∣ x x≄0 = 0<x⇒posx ∣ x ∣ (x≄0⇒0<∣x∣ x x≄0)
+
+abstract
+  fast-ℕ<?ℕ : Decidable ℕ._<_
+  fast-ℕ<?ℕ = ℕP._<?_
+
+  fast-2-8-1a : ∀ x -> Positive x -> ∃ λ (N : ℕ) -> ∀ (m : ℕ) -> m ℕ.≥ suc N ->
+                seq x m ℚ.≥ + 1 / (suc N)
+  fast-2-8-1a = lemma2-8-1a
+
+ℚ≠-helper : ∀ p -> p ℚ.> 0ℚᵘ ⊎ p ℚ.< 0ℚᵘ -> p ℚ.≠ 0ℚᵘ
+ℚ≠-helper = {!!}
+
+{-
+For the sake of performance, we define an alternative version of the inverse given
+by Bishop.
+-}
+_⁻¹ : (x : ℝ) -> {x≄0 : x ≄ 0ℝ} -> ℝ
+seq ((x ⁻¹) {x≄0}) n = (ℚ.1/ seq x (N ℕ.* N ℕ.* N))
+                       {ℚP.p≄0⇒∣↥p∣≢0 (seq x (N ℕ.* N ℕ.* N)) (ℚ≠-helper (seq x (N ℕ.* N ℕ.* N)) not0)}
+  where
+    open ℚP.≤-Reasoning
+    res : {!!}
+    res = fast-2-8-1a ∣ x ∣ (x≄0⇒pos∣x∣ x x≄0)
+
+    N : ℕ
+    N = suc (proj₁ res)
+
+    left : x < 0ℝ -> seq x (N ℕ.* N ℕ.* N) ℚ.> 0ℚᵘ ⊎ seq x (N ℕ.* N ℕ.* N) ℚ.< 0ℚᵘ
+    left hyp = {!!}
+
+    right : 0ℝ < x -> seq x (N ℕ.* N ℕ.* N) ℚ.> 0ℚᵘ ⊎ seq x (N ℕ.* N ℕ.* N) ℚ.< 0ℚᵘ
+    right hyp = inj₁ (begin-strict
+      0ℚᵘ                   <⟨ ℚP.positive⁻¹ _ ⟩
+      + 1 / N               ≤⟨ {!proj₂ res!} ⟩
+      seq x (N ℕ.* N ℕ.* N)  ∎)
+
+    not0 : seq x (N ℕ.* N ℕ.* N) ℚ.> 0ℚᵘ ⊎ seq x (N ℕ.* N ℕ.* N) ℚ.< 0ℚᵘ
+    not0 = [ left , right ]′ x≄0
 reg (x ⁻¹) = {!!}
 {-
 If ϕ(x) = ψ(x) for all x∈R for all rings R, then ϕ(x) = ψ(x) for all x∈ℝ."
