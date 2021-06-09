@@ -3453,44 +3453,213 @@ x≄0⇒0<∣x∣ x x≄0 = [ left , right ]′ x≄0
 x≄0⇒pos∣x∣ : ∀ x -> x ≄ 0ℝ -> Positive ∣ x ∣
 x≄0⇒pos∣x∣ x x≄0 = 0<x⇒posx ∣ x ∣ (x≄0⇒0<∣x∣ x x≄0)
 
-abstract
-  fast-ℕ<?ℕ : Decidable ℕ._<_
-  fast-ℕ<?ℕ = ℕP._<?_
+x≄0⇒pos∣x∣₂ : ∀ x -> x ≄ 0ℝ -> Positive ∣ x ∣₂
+x≄0⇒pos∣x∣₂ x x≄0 = pos-cong ∣ x ∣ ∣ x ∣₂ (∣x∣≃∣x∣₂ x) (x≄0⇒pos∣x∣ x x≄0)
 
-  fast-2-8-1a : ∀ x -> Positive x -> ∃ λ (N : ℕ) -> ∀ (m : ℕ) -> m ℕ.≥ suc N ->
+abstract
+  fastℕ<?ℕ : Decidable ℕ._<_
+  fastℕ<?ℕ = ℕP._<?_
+
+  fast2-8-1a : ∀ x -> Positive x -> ∃ λ (N : ℕ) -> ∀ (m : ℕ) -> m ℕ.≥ suc N ->
                 seq x m ℚ.≥ + 1 / (suc N)
-  fast-2-8-1a = lemma2-8-1a
+  fast2-8-1a = lemma2-8-1a
 
 ℚ≠-helper : ∀ p -> p ℚ.> 0ℚᵘ ⊎ p ℚ.< 0ℚᵘ -> p ℚ.≠ 0ℚᵘ
-ℚ≠-helper = {!!}
+ℚ≠-helper p hyp1 hyp2 = [ left , right ]′ hyp1
+  where
+    left : ¬ (p ℚ.> 0ℚᵘ)
+    left hyp = ℚP.<-irrefl (ℚP.≃-sym hyp2) hyp
+
+    right : ¬ (p ℚ.< 0ℚᵘ)
+    right hyp = ℚP.<-irrefl hyp2 hyp
 
 {-
 For the sake of performance, we define an alternative version of the inverse given
 by Bishop.
 -}
-_⁻¹ : (x : ℝ) -> {x≄0 : x ≄ 0ℝ} -> ℝ
-seq ((x ⁻¹) {x≄0}) n = (ℚ.1/ seq x (N ℕ.* N ℕ.* N))
-                       {ℚP.p≄0⇒∣↥p∣≢0 (seq x (N ℕ.* N ℕ.* N)) (ℚ≠-helper (seq x (N ℕ.* N ℕ.* N)) not0)}
+
+Nₐ : (x : ℝ) -> {x≄0 : x ≄ 0ℝ} ->  ℕ
+Nₐ x {x≄0} = suc (proj₁ (fast2-8-1a ∣ x ∣₂ (x≄0⇒pos∣x∣₂ x x≄0)))
+
+not0-helper : ∀ (x : ℝ) -> {x≄0 : x ≄ 0ℝ} -> ∀ (n : ℕ) ->
+               ℤ.∣ ↥ (seq x ((n ℕ.+ (Nₐ x {x≄0})) ℕ.* ((Nₐ x {x≄0}) ℕ.* (Nₐ x {x≄0})))) ∣ ≢0
+not0-helper x {x≄0} n = ℚP.p≄0⇒∣↥p∣≢0 xₛ (ℚ≠-helper xₛ ([ left , right ]′ (ℚP.∣p∣≡p∨∣p∣≡-p xₛ)))
   where
     open ℚP.≤-Reasoning
-    res : {!!}
-    res = fast-2-8-1a ∣ x ∣ (x≄0⇒pos∣x∣ x x≄0)
-
     N : ℕ
-    N = suc (proj₁ res)
+    N = Nₐ x {x≄0}
 
-    left : x < 0ℝ -> seq x (N ℕ.* N ℕ.* N) ℚ.> 0ℚᵘ ⊎ seq x (N ℕ.* N ℕ.* N) ℚ.< 0ℚᵘ
-    left hyp = {!!}
+    xₛ : ℚᵘ
+    xₛ = seq x ((n ℕ.+ N) ℕ.* (N ℕ.* N))
 
-    right : 0ℝ < x -> seq x (N ℕ.* N ℕ.* N) ℚ.> 0ℚᵘ ⊎ seq x (N ℕ.* N ℕ.* N) ℚ.< 0ℚᵘ
-    right hyp = inj₁ (begin-strict
-      0ℚᵘ                   <⟨ ℚP.positive⁻¹ _ ⟩
-      + 1 / N               ≤⟨ {!proj₂ res!} ⟩
-      seq x (N ℕ.* N ℕ.* N)  ∎)
+    0<∣xₛ∣ : 0ℚᵘ ℚ.< ℚ.∣ xₛ ∣
+    0<∣xₛ∣ = begin-strict
+      0ℚᵘ     <⟨ ℚP.positive⁻¹ _ ⟩
+      + 1 / N ≤⟨ proj₂ (fast2-8-1a ∣ x ∣₂ (x≄0⇒pos∣x∣₂ x x≄0)) ((n ℕ.+ N) ℕ.* (N ℕ.* N))
+                 (ℕP.≤-trans (ℕP.m≤n*m N {N} ℕP.0<1+n) (ℕP.m≤n*m (N ℕ.* N) {n ℕ.+ N} (subst (0 ℕ.<_) (ℕP.+-comm N n) ℕP.0<1+n))) ⟩
+      ℚ.∣ xₛ ∣  ∎
 
-    not0 : seq x (N ℕ.* N ℕ.* N) ℚ.> 0ℚᵘ ⊎ seq x (N ℕ.* N ℕ.* N) ℚ.< 0ℚᵘ
-    not0 = [ left , right ]′ x≄0
-reg (x ⁻¹) = {!!}
+    left : ℚ.∣ xₛ ∣ ≡ xₛ -> xₛ ℚ.> 0ℚᵘ ⊎ xₛ ℚ.< 0ℚᵘ
+    left hyp = inj₁ (begin-strict
+      0ℚᵘ      <⟨ 0<∣xₛ∣ ⟩
+      ℚ.∣ xₛ ∣ ≡⟨ hyp ⟩
+      xₛ        ∎)
+
+    right : ℚ.∣ xₛ ∣ ≡ ℚ.- xₛ -> xₛ ℚ.> 0ℚᵘ ⊎ xₛ ℚ.< 0ℚᵘ
+    right hyp = inj₂ (begin-strict
+      xₛ            ≈⟨ ℚP.≃-sym (ℚP.neg-involutive xₛ) ⟩
+      ℚ.- (ℚ.- xₛ)  ≡⟨ cong ℚ.-_ (sym hyp) ⟩
+      ℚ.- ℚ.∣ xₛ ∣  <⟨ ℚP.neg-mono-< 0<∣xₛ∣ ⟩
+      0ℚᵘ            ∎)
+
+{-
+∣xₛ∣ ≥ N⁻¹
+∣xₛ⁻¹∣ = ∣xₛ̂⁻¹∣ * N * N⁻¹
+       ≤ ∣xₛ⁻¹∣ * N * ∣xₛ∣
+       = N
+-}
+
+{-
+p/q ≤ N / 1 <-> p * 1 ≤ N * q
+∣xₛ∣ = p/q
+N/1 ≤ p/q <-> N*q ≤ p*1
+q/p ≤ N/1 <-> q*1 ≤ N*p
+∣xₛ⁻¹∣ ≤ N/1 <-> num∣xₛ⁻¹∣ * 1 ≤ N * den∣xₛ⁻¹∣
+-}
+{-
+abstract
+  inverse-helper : ∀ (x : ℝ) -> {x≄0 : x ≄ 0ℝ} -> ∀ (n : ℕ) -> {n≢0 : n ≢0} ->
+                   ℚ.∣ (ℚ.1/ seq x ((n ℕ.+ (Nₐ x {x≄0})) ℕ.* ((Nₐ x {x≄0}) ℕ.* (Nₐ x {x≄0})))) {not0-helper x {x≄0} n} ∣ ℚ.≤ + (Nₐ x {x≄0}) / 1
+  inverse-helper x {x≄0} (suc k₁) = begin
+    ℚ.∣ xₛ⁻¹ ∣ ≈⟨ {!ℚP.≃-trans (ℚP.≃-sym (ℚP.*-identityʳ ℚ.∣ xₛ⁻¹ ∣))
+                  (ℚP.*-congˡ {ℚ.∣ xₛ⁻¹ ∣} (ℚP.≃-sym (ℚP.*-inverseʳ (+ 1 / N))))!} ⟩
+    ℚ.∣ xₛ⁻¹ ∣ ℚ.* ((+ 1 / N) ℚ.* (+ N / 1)) ≤⟨ {!!} ⟩
+    + N / 1                                   ∎
+    where
+      open ℚP.≤-Reasoning
+      n : ℕ
+      n = suc k₁
+
+      N : ℕ
+      N = Nₐ x {x≄0}
+
+      xₛ : ℚᵘ
+      xₛ = seq x ((n ℕ.+ N) ℕ.* (N ℕ.* N))
+
+      xₛ≢0 : ℤ.∣ ↥ xₛ ∣ ≢0
+      xₛ≢0 = not0-helper x {x≄0} n
+
+      xₛ⁻¹ : ℚᵘ
+      xₛ⁻¹ = (ℚ.1/ seq x ((n ℕ.+ N) ℕ.* (N ℕ.* N))) {xₛ≢0}
+
+      helper : ℚ.∣ xₛ⁻¹ ∣ ℚ.* ℚ.∣ xₛ ∣ ℚ.≃ ℚ.1ℚᵘ
+      helper = begin-equality
+        ℚ.∣ xₛ⁻¹ ∣ ℚ.* ℚ.∣ xₛ ∣ ≈⟨ ℚP.≃-sym (ℚP.∣p*q∣≃∣p∣*∣q∣ xₛ⁻¹ xₛ) ⟩
+        ℚ.∣ xₛ⁻¹ ℚ.* xₛ ∣       ≈⟨ ℚP.∣-∣-cong (ℚP.*-inverseˡ xₛ {xₛ≢0}) ⟩
+        ℚ.1ℚᵘ                    ∎-}
+
+
+_⁻¹ : (x : ℝ) -> {x≄0 : x ≄ 0ℝ} -> ℝ
+seq ((x ⁻¹) {x≄0}) n = (ℚ.1/ xₛ) {not0-helper x {x≄0} n}
+  where
+    open ℚP.≤-Reasoning
+    N : ℕ
+    N = Nₐ x {x≄0}
+
+    xₛ : ℚᵘ
+    xₛ = seq x ((n ℕ.+ N) ℕ.* (N ℕ.* N))
+reg ((x ⁻¹) {x≄0}) (suc k₁) (suc k₂) = begin
+  ℚ.∣ yₘ ℚ.- yₙ ∣                                 ≈⟨ ℚP.∣-∣-cong (ℚP.+-cong
+                                                     (ℚP.≃-trans (ℚP.≃-sym (ℚP.*-identityʳ yₘ)) (ℚP.*-congˡ {yₘ} (ℚP.≃-sym (ℚP.*-inverseˡ xₙ {xₖ≢0 n}))))
+                                                     (ℚP.-‿cong (ℚP.≃-trans (ℚP.≃-sym (ℚP.*-identityʳ yₙ)) (ℚP.*-congˡ {yₙ} (ℚP.≃-sym (ℚP.*-inverseˡ xₘ {xₖ≢0 m})))))) ⟩
+  ℚ.∣ yₘ ℚ.* (yₙ ℚ.* xₙ) ℚ.- yₙ ℚ.* (yₘ ℚ.* xₘ) ∣ ≈⟨ ℚP.∣-∣-cong (ℚsolve 4 (λ xₘ xₙ yₘ yₙ ->
+                                                     yₘ ℚ:* (yₙ ℚ:* xₙ) ℚ:- yₙ ℚ:* (yₘ ℚ:* xₘ) ℚ:= yₘ ℚ:* yₙ ℚ:* (xₙ ℚ:- xₘ))
+                                                     ℚP.≃-refl xₘ xₙ yₘ yₙ) ⟩
+  ℚ.∣ yₘ ℚ.* yₙ ℚ.* (xₙ ℚ.- xₘ) ∣                 ≈⟨ ℚP.∣p*q∣≃∣p∣*∣q∣ (yₘ ℚ.* yₙ) (xₙ ℚ.- xₘ) ⟩
+  ℚ.∣ yₘ ℚ.* yₙ ∣ ℚ.* ℚ.∣ xₙ ℚ.- xₘ ∣             ≤⟨ ℚP.≤-trans
+                                                     (ℚP.*-monoʳ-≤-nonNeg {ℚ.∣ yₘ ℚ.* yₙ ∣} _ (reg x ((n ℕ.+ N) ℕ.* (N ℕ.* N)) ((m ℕ.+ N) ℕ.* (N ℕ.* N))))
+                                                     (ℚP.*-monoˡ-≤-nonNeg {+ 1 / ((n ℕ.+ N) ℕ.* (N ℕ.* N)) ℚ.+ + 1 / ((m ℕ.+ N) ℕ.* (N ℕ.* N))} _ ∣yₘ*yₙ∣≤N²) ⟩
+  (+ N / 1) ℚ.* (+ N / 1) ℚ.*
+  ((+ 1 / ((n ℕ.+ N) ℕ.* (N ℕ.* N))) ℚ.+
+   (+ 1 / ((m ℕ.+ N) ℕ.* (N ℕ.* N))))             ≈⟨ ℚ.*≡* (solve 3 (λ m n N ->
+
+  -- Function and details for solver
+  ((N :* N) :* ((con (+ 1) :* ((m :+ N) :* (N :* N))) :+ (con (+ 1) :* ((n :+ N) :* (N :* N))))) :* ((m :+ N) :* (n :+ N)) :=
+  (con (+ 1) :* (n :+ N) :+ con (+ 1) :* (m :+ N)) :* (con (+ 1) :* con (+ 1) :* (((n :+ N) :* (N :* N)) :* ((m :+ N) :* (N :* N)))))
+   _≡_.refl (+ m) (+ n) (+ N)) ⟩
+
+  (+ 1 / (m ℕ.+ N)) ℚ.+ (+ 1 / (n ℕ.+ N))         ≤⟨ ℚP.+-mono-≤ {+ 1 / (m ℕ.+ N)} {+ 1 / m} {+ 1 / (n ℕ.+ N)} {+ 1 / n}
+                                                     (*≤* (ℤP.*-monoˡ-≤-nonNeg 1 (+≤+ (ℕP.m≤m+n m N))))
+                                                     (*≤* (ℤP.*-monoˡ-≤-nonNeg 1 (+≤+ (ℕP.m≤m+n n N)))) ⟩
+  (+ 1 / m) ℚ.+ (+ 1 / n)                          ∎
+  where
+    open ℚP.≤-Reasoning
+    open import Data.Integer.Solver as ℤ-Solver
+    open ℤ-Solver.+-*-Solver
+    open import Data.Rational.Unnormalised.Solver as ℚ-Solver
+    open ℚ-Solver.+-*-Solver using ()
+      renaming
+        ( solve to ℚsolve
+        ; _:-_ to _ℚ:-_
+        ; _:*_ to _ℚ:*_
+        ; _:=_ to _ℚ:=_
+        )
+    N : ℕ
+    N = Nₐ x {x≄0}
+
+    m : ℕ
+    m = suc k₁
+
+    n : ℕ
+    n = suc k₂
+
+    testing : 0 ℕ.< m ℕ.+ N
+    testing = ℕP.0<1+n
+
+    xₘ : ℚᵘ
+    xₘ = seq x ((m ℕ.+ N) ℕ.* (N ℕ.* N))
+
+    xₙ : ℚᵘ
+    xₙ = seq x ((n ℕ.+ N) ℕ.* (N ℕ.* N))
+
+    xₖ≢0 : ∀ (k : ℕ) -> ℤ.∣ ↥ seq x ((k ℕ.+ N) ℕ.* (N ℕ.* N)) ∣ ≢0
+    xₖ≢0 k = not0-helper x {x≄0} k
+
+    yₘ : ℚᵘ
+    yₘ = (ℚ.1/ xₘ) {xₖ≢0 m}
+
+    yₙ : ℚᵘ
+    yₙ = (ℚ.1/ xₙ) {xₖ≢0 n}
+
+    ∣yₖ∣≤N : ∀ (k : ℕ) -> ℚ.∣ (ℚ.1/ (seq x ((k ℕ.+ N) ℕ.* (N ℕ.* N)))) {not0-helper x {x≄0} k} ∣ ℚ.≤ + N / 1
+    ∣yₖ∣≤N k = begin
+      ℚ.∣ yₖ ∣ ≈⟨ ℚP.≃-trans (ℚP.≃-sym (ℚP.*-identityʳ ℚ.∣ yₖ ∣)) (ℚP.*-congˡ {ℚ.∣ yₖ ∣} (ℚP.≃-sym (ℚP.*-inverseʳ (+ 1 / N)))) ⟩
+      ℚ.∣ yₖ ∣ ℚ.* ((+ 1 / N) ℚ.* (+ N / 1)) ≤⟨ ℚP.*-monoʳ-≤-nonNeg {ℚ.∣ yₖ ∣} _ (ℚP.*-monoˡ-≤-nonNeg {+ N / 1} _
+                                                (proj₂ (fast2-8-1a ∣ x ∣₂ (x≄0⇒pos∣x∣₂ x x≄0)) ((k ℕ.+ N) ℕ.* (N ℕ.* N))
+                                                (ℕP.≤-trans (ℕP.m≤m*n N {N} ℕP.0<1+n)
+                                                (ℕP.m≤n*m (N ℕ.* N) {k ℕ.+ N} (subst (0 ℕ.<_) (ℕP.+-comm N k) ℕP.0<1+n))))) ⟩
+      ℚ.∣ yₖ ∣ ℚ.* (ℚ.∣ xₖ ∣ ℚ.* (+ N / 1))  ≈⟨ ℚP.≃-trans
+                                                (ℚP.≃-sym (ℚP.*-assoc ℚ.∣ yₖ ∣ ℚ.∣ xₖ ∣ (+ N / 1)))
+                                                (ℚP.≃-sym (ℚP.*-congʳ {+ N / 1} (ℚP.∣p*q∣≃∣p∣*∣q∣ yₖ xₖ))) ⟩
+      ℚ.∣ yₖ ℚ.* xₖ ∣ ℚ.* (+ N / 1)          ≈⟨ ℚP.≃-trans
+                                                (ℚP.*-congʳ {+ N / 1} (ℚP.∣-∣-cong (ℚP.*-inverseˡ xₖ {xₖ≢0 k})))
+                                                (ℚP.*-identityˡ (+ N / 1)) ⟩
+      + N / 1                                 ∎
+      where
+        xₖ : ℚᵘ
+        xₖ = seq x ((k ℕ.+ N) ℕ.* (N ℕ.* N))
+
+        yₖ : ℚᵘ
+        yₖ = (ℚ.1/ xₖ) {not0-helper x {x≄0} k}
+
+    ∣yₘ*yₙ∣≤N² : ℚ.∣ yₘ ℚ.* yₙ ∣ ℚ.≤ (+ N / 1) ℚ.* (+ N / 1)
+    ∣yₘ*yₙ∣≤N² = begin
+      ℚ.∣ yₘ ℚ.* yₙ ∣          ≈⟨ ℚP.∣p*q∣≃∣p∣*∣q∣ yₘ yₙ ⟩
+      ℚ.∣ yₘ ∣ ℚ.* ℚ.∣ yₙ ∣    ≤⟨ ℚP.≤-trans
+                                  (ℚP.*-monoˡ-≤-nonNeg {ℚ.∣ yₙ ∣} _ (∣yₖ∣≤N m))
+                                  (ℚP.*-monoʳ-≤-nonNeg {+ N / 1} _ (∣yₖ∣≤N n)) ⟩
+      (+ N / 1) ℚ.* (+ N / 1)   ∎
+
 {-
 If ϕ(x) = ψ(x) for all x∈R for all rings R, then ϕ(x) = ψ(x) for all x∈ℝ."
 -}
@@ -3519,7 +3688,6 @@ R-Solver R = {!+-*-Solver!}
     module +-*-Solver = Solver {!!} {!!} {!!} {!!}
     open +-*-Solver
 
--- How to write infix notation with general rings??
 test : ∀ {{R : CommutativeRing 0ℓ 0ℓ}} -> ∀ (x y : Carrier) -> x R+ y ≈ (y R+ x)
 test x y = {!!}
   where
