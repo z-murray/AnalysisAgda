@@ -2915,6 +2915,9 @@ x > y = y < x
 _≤_ : Rel ℝ 0ℓ
 x ≤ y = NonNegative (y - x)
 
+--data _≤_ : Rel ℝ 0ℓ where
+--  ⋆≤⋆ : ∀ x y -> NonNegative (y - x) -> x ≤ y
+
 _≥_ : Rel ℝ 0ℓ
 x ≥ y = y ≤ x
 
@@ -2991,12 +2994,6 @@ nonNeg-refl x = nonNeg-cong 0ℝ (x - x) (≃-symm {x - x} {0ℝ} (+-inverseʳ x
 +-monoˡ-≤ : ∀ (x : ℝ) -> (_+ x) Preserves _≤_ ⟶ _≤_
 +-monoˡ-≤ x {y} {z} y≤z = +-mono-≤ {y} {z} {x} {x} y≤z (nonNeg-refl x)
 
-{-
-(z + t) - (x + y) positive
-(z + t) - (x + y) = (z - x) + (t - y)
-                  = pos + pos
-                  = pos
--}
 +-mono-< : _+_ Preserves₂ _<_ ⟶ _<_ ⟶ _<_
 +-mono-< {x} {z} {y} {t} x<z y<t = pos-cong ((z - x) + (t - y)) ((z + t) - (x + y)) lem (posx,y⇒posx+y (z - x) (t - y) x<z y<t)
   where
@@ -3011,134 +3008,6 @@ nonNeg-refl x = nonNeg-cong 0ℝ (x - x) (≃-symm {x - x} {0ℝ} (+-inverseʳ x
       z + (t + (- x + - y)) ≈⟨ ≃-symm {(z + t) + (- x + - y)} {z + (t + (- x + - y))} (+-assoc z t (- x + - y)) ⟩
       (z + t) + (- x + - y) ≈⟨ +-congʳ (z + t) { - x + - y} { - (x + y)} (≃-symm { - (x + y)} { - x + - y} (neg-distrib-+ x y)) ⟩
       (z + t) - (x + y)      ∎
-
--- x + y < x + z <-> (x + z) - (x + y) = z - y
-{-+-monoʳ-< : ∀ (x : ℝ) -> (_+_ x) Preserves _<_ ⟶ _<_
-+-monoʳ-< x {y} {z} y<z = pos-cong (z - y) ((x + z) - (x + y)) lem y<z
-  where
-    open ≃-Reasoning
-    lem : z - y ≃ (x + z) - (x + y)
-    lem = begin
-      z - y               ≈⟨ +-congˡ (- y) {z} {0ℝ + z} (≃-symm {0ℝ + z} {z} (+-identityˡ z)) ⟩
-      (0ℝ + z) - y        ≈⟨ +-congˡ (- y) {0ℝ + z} { - x + x + z} (+-congˡ z {0ℝ} { - x + x} (≃-symm { - x + x} {0ℝ} (+-inverseˡ x))) ⟩
-      (- x + x + z) - y   ≈⟨ {!+-assoc!} ⟩
-      (- x) + (x + z) - y ≈⟨ {!!} ⟩
-      (x + z) + (- x) - y ≈⟨ {!!} ⟩
-      {!!}                 ∎
-      {-(- x) + (x + z) - y ≈⟨ ? ⟩
-      (x + z) - x - y     ≈⟨ ? ⟩
-      (x + z) + (- x - y) ≈⟨ ? ⟩
-      (x + z) - (x + y)    ∎-}
--}
-
-{-
-DISCUSSION POINTS ON THE POSSIBILITY OF THE ℝ SOLVER
-----------------------------------------------------------------------------------------------------------------------------------------------------------------
-Obviously, we want the ring solver to work on ℝ. It would be extremely tedious to prove any interesting result later on without the ring
-solver. But there are some problems, at least right now, preventing it from working.
-
-First, note that the ring solvers generally use rings with decidable equality. But it actually CAN work without decidable equality. The
-equality can be so weak that it's not even slightly weakly decidable. As proof of concept, see the example below. 
--}
-
-{-
-sadDec : ∀ (x y : ℚᵘ) -> Maybe (x ℚ.≃ y)
-sadDec x y = nothing
-
-module ℚ-Sad-+-*-Solver =
-  Solver ℚP.+-*-rawRing (ACR.fromCommutativeRing ℚP.+-*-commutativeRing) (ACR.-raw-almostCommutative⟶ (ACR.fromCommutativeRing ℚP.+-*-commutativeRing)) sadDec
-
-testing₁ : ∀ (x y z : ℚᵘ) -> ℚ.1ℚᵘ ℚ.* (x ℚ.+ y ℚ.- z ℚ.+ 0ℚᵘ) ℚ.≃ y ℚ.- (ℚ.- x ℚ.+ z)
-testing₁ x y z = solve 3 (λ x y z -> con ℚ.1ℚᵘ :* (x :+ y :- z :+ con 0ℚᵘ) := y :- (:- x :+ z)) ℚP.≃-refl x y z
-  where
-    open ℚ-Sad-+-*-Solver
--}
-
-{- However, the same solution will NOT work on ℝ, at least for now, as shown below.-}
-{-
-≃-weaklyDec : ∀ x y -> Maybe (x ≃ y)
-≃-weaklyDec x y = nothing
-
-module ℝ-+-*-Solver =
-  Solver +-*-rawRing (ACR.fromCommutativeRing +-*-commutativeRing) (ACR.-raw-almostCommutative⟶ (ACR.fromCommutativeRing +-*-commutativeRing)) ≃-weaklyDec
-
-testing₂ : ∀ x y z -> 1ℝ * (x + y - z + 0ℝ) ≃ y - (- x + z)
-testing₂ x y z = ?
-  where
-    open ℝ-+-*-Solver
--}
-{-
-The problem is ≃-refl. For some reason, it's incapable of determining implicit arguments, even in trivial cases. For instance, 0ℝ ≃ 0ℝ must be proved using
-≃-refl {0ℝ}. Excluding the implicit argument results in a constraint error, as shown below.-}
-
-{-sad0ℝ₁ : 0ℝ ≃ 0ℝ
-sad0ℝ₁ = ≃-refl
-
-sad0ℝ₂ : 0ℝ ≃ 0ℝ
-sad0ℝ₂ = ≃-refl {0ℝ}
--}
-
-{- From the constraint error, I thought it was a problem with the definition of regularity in the definition of ℝ. In particular, the issue could be
-the implicit m ≢0 and n ≢0 arguments. But modifying the definition so that there are NO implicit arguments still doesn't work. I am unsure what the cause is.
-
-So, how do we let ℝ's solver work with reflexivity proofs? Here are some proposed attempts:
-
-(1) Prove the ring equality at the sequence level instead. This means, to prove that (x + y) - z ≃ y - (z - x), for instance, we prove it by definition of ≃
-instead of by using the various ring properties of ℝ. So our proof would need to be of the form 
-            ∣ (x₄ₘ + y₄ₘ - z₂ₘ) - (y₂ₘ - (z₄ₘ - x₄ₘ)) ∣ ≤ 2m⁻¹       (m∈ℤ⁺)
-and we would use the ℚ ring solver to assist with it. This could be shorter, in some instances, than applying a bunch of ring properties of ℝ. But it most likely
-becomes intractable when we get more difficult equalities and, for instance, when the ring equality includes multiplication (since the canonical bounds would
-interfere). 
-
-(2) Prove the ring equality for ALL rings and then apply it to ℝ. It seems to work, as shown below in testing₃, but it's very tedious and seems prone to fail.
-
-(3) The final option I've come up with is to wait for the next Agda release, which looks to be right around the corner. I've had this "constraints that seem
-trivial but Agda won't solve" issue a few times now, and it was solved by an update twice (the other time there was an easy function I could make to fix it. 
-That doesn't seem to be the case here).
--}
-{-
-testing₃ : ∀ x y z -> x + y + z ≃ y + (z + x)
-testing₃ = lem (+-*-commutativeRing)
-  where
-    open CommutativeRing using (Carrier; 0#; 1#; _≈_)
-      renaming
-        ( _+_ to _R+_
-        ; _-_ to _R-_
-        ; _*_ to _R*_
-        ; -_  to R-_
-        )
-    {-
-      The notation is a bit ugly, but this says
-      x + y - z + 0 = 1 * (y - (z - x)).
-    -}
-    lem : ∀ (R : CommutativeRing 0ℓ 0ℓ) -> ∀ (x y z : Carrier R) ->
-          (_≈_ R) ((_R+_ R) ((_R+_ R) x y) z)
-                  ((_R+_ R) y ((_R+_ R) z x))
-    lem R x y z = solve 3 (λ x y z ->
-                  x :+ y :+ z := y :+ (z :+ x))
-                  R-refl x y z
-      where
-        R-weaklyDec : ∀ x y -> Maybe ((R ≈ x) y)
-        R-weaklyDec x y = nothing
-
-        rawRing : RawRing 0ℓ 0ℓ
-        rawRing = {!!}
-
-        R-refl : Reflexive (_≈_ R)
-        R-refl = {!!}
-
-        module R-Solver =
-          Solver rawRing (ACR.fromCommutativeRing R) (ACR.-raw-almostCommutative⟶ (ACR.fromCommutativeRing R)) R-weaklyDec
-
-        open R-Solver
-
-UPDATE
-It seems (3) won't fix the problem. I tried the newest developmental release as of June 7th, 2021, and it didn't work.
-Solution (2) might be promising if I can make some sort of function that says something for general rings R like
-"If ϕᴿ(x₁,...,xₙ) = ψᴿ(x₁,...,xₙ) for all xᵢ∈R and for all rings R, then ϕ̂(x₁,...,xₙ) = ψ(x₁,...,xₙ) for all xᵢ∈ℝ.
-That might save me the trouble of declaring a general ring solver and whatnot over and over again. Not sure if this
-is possible, though.
--}
 
 neg-distribˡ-* : ∀ x y -> - (x * y) ≃ - x * y
 neg-distribˡ-* x y = begin
@@ -3183,6 +3052,11 @@ IsPreorder.trans ≤-isPreorder {x} {y} {z} = ≤-trans {x} {y} {z}
 
 <-resp-≃ : _<_ Respects₂ _≃_
 <-resp-≃ = (λ {x} {y} {z} -> <-respʳ-≃ {x} {y} {z}) , λ {x} {y} {z} -> <-respˡ-≃ {x} {y} {z}
+
+{-
+Same issue as with ≃-refl. I need to specify the arguments in order to avoid the constraint error,
+hence the lambdas.
+-}
 
 module ≤-Reasoning where
   open import Relation.Binary.Reasoning.Base.Triple
@@ -3456,6 +3330,10 @@ x≄0⇒pos∣x∣ x x≄0 = 0<x⇒posx ∣ x ∣ (x≄0⇒0<∣x∣ x x≄0)
 x≄0⇒pos∣x∣₂ : ∀ x -> x ≄ 0ℝ -> Positive ∣ x ∣₂
 x≄0⇒pos∣x∣₂ x x≄0 = pos-cong ∣ x ∣ ∣ x ∣₂ (∣x∣≃∣x∣₂ x) (x≄0⇒pos∣x∣ x x≄0)
 
+{-
+Using abstract versions of previous results for better performance.
+For instance, using lemma2-8-1a directly can be very slow.
+-}
 abstract
   fastℕ<?ℕ : Decidable ℕ._<_
   fastℕ<?ℕ = ℕP._<?_
@@ -3513,26 +3391,18 @@ not0-helper x {x≄0} n = ℚP.p≄0⇒∣↥p∣≢0 xₛ (ℚ≠-helper xₛ (
       0ℚᵘ            ∎)
 
 {-
-∣xₛ∣ ≥ N⁻¹
-∣xₛ⁻¹∣ = ∣xₛ̂⁻¹∣ * N * N⁻¹
-       ≤ ∣xₛ⁻¹∣ * N * ∣xₛ∣
-       = N
+Strangely enough, this function is EXTREMELY slow. It pretty much does not compute. But proving an instance of it in
+the definition of multiplicative inverse is very fast. Not sure why.
 -}
 
-{-
-p/q ≤ N / 1 <-> p * 1 ≤ N * q
-∣xₛ∣ = p/q
-N/1 ≤ p/q <-> N*q ≤ p*1
-q/p ≤ N/1 <-> q*1 ≤ N*p
-∣xₛ⁻¹∣ ≤ N/1 <-> num∣xₛ⁻¹∣ * 1 ≤ N * den∣xₛ⁻¹∣
--}
+-- ∣xₘ∣ ≥ N⁻¹
 {-
 abstract
   inverse-helper : ∀ (x : ℝ) -> {x≄0 : x ≄ 0ℝ} -> ∀ (n : ℕ) -> {n≢0 : n ≢0} ->
                    ℚ.∣ (ℚ.1/ seq x ((n ℕ.+ (Nₐ x {x≄0})) ℕ.* ((Nₐ x {x≄0}) ℕ.* (Nₐ x {x≄0})))) {not0-helper x {x≄0} n} ∣ ℚ.≤ + (Nₐ x {x≄0}) / 1
   inverse-helper x {x≄0} (suc k₁) = begin
-    ℚ.∣ xₛ⁻¹ ∣ ≈⟨ {!ℚP.≃-trans (ℚP.≃-sym (ℚP.*-identityʳ ℚ.∣ xₛ⁻¹ ∣))
-                  (ℚP.*-congˡ {ℚ.∣ xₛ⁻¹ ∣} (ℚP.≃-sym (ℚP.*-inverseʳ (+ 1 / N))))!} ⟩
+    ℚ.∣ xₛ⁻¹ ∣ ≈⟨ {!N!} {-{!ℚP.≃-trans (ℚP.≃-sym (ℚP.*-identityʳ ℚ.∣ xₛ⁻¹ ∣))
+                  (ℚP.*-congˡ {ℚ.∣ xₛ⁻¹ ∣} (ℚP.≃-sym (ℚP.*-inverseʳ (+ 1 / N))))!}-} ⟩
     ℚ.∣ xₛ⁻¹ ∣ ℚ.* ((+ 1 / N) ℚ.* (+ N / 1)) ≤⟨ {!!} ⟩
     + N / 1                                   ∎
     where
@@ -3559,6 +3429,18 @@ abstract
         ℚ.1ℚᵘ                    ∎-}
 
 
+{-
+∣x∣ > 0 
+∣xₘ∣ ≥ N⁻¹  (m ≥ N)
+x ≄ 0
+x⁻¹ = (x (N³))⁻¹     if n < N
+      (x (n * N²))⁻¹ else
+
+x⁻¹ = (x ((n + N) * N²))⁻¹
+
+x⁻¹ n with n <? N
+
+-}
 _⁻¹ : (x : ℝ) -> {x≄0 : x ≄ 0ℝ} -> ℝ
 seq ((x ⁻¹) {x≄0}) n = (ℚ.1/ xₛ) {not0-helper x {x≄0} n}
   where
@@ -3613,9 +3495,6 @@ reg ((x ⁻¹) {x≄0}) (suc k₁) (suc k₂) = begin
     n : ℕ
     n = suc k₂
 
-    testing : 0 ℕ.< m ℕ.+ N
-    testing = ℕP.0<1+n
-
     xₘ : ℚᵘ
     xₘ = seq x ((m ℕ.+ N) ℕ.* (N ℕ.* N))
 
@@ -3631,6 +3510,7 @@ reg ((x ⁻¹) {x≄0}) (suc k₁) (suc k₂) = begin
     yₙ : ℚᵘ
     yₙ = (ℚ.1/ xₙ) {xₖ≢0 n}
 
+    
     ∣yₖ∣≤N : ∀ (k : ℕ) -> ℚ.∣ (ℚ.1/ (seq x ((k ℕ.+ N) ℕ.* (N ℕ.* N)))) {not0-helper x {x≄0} k} ∣ ℚ.≤ + N / 1
     ∣yₖ∣≤N k = begin
       ℚ.∣ yₖ ∣ ≈⟨ ℚP.≃-trans (ℚP.≃-sym (ℚP.*-identityʳ ℚ.∣ yₖ ∣)) (ℚP.*-congˡ {ℚ.∣ yₖ ∣} (ℚP.≃-sym (ℚP.*-inverseʳ (+ 1 / N)))) ⟩
@@ -3659,6 +3539,116 @@ reg ((x ⁻¹) {x≄0}) (suc k₁) (suc k₂) = begin
                                   (ℚP.*-monoˡ-≤-nonNeg {ℚ.∣ yₙ ∣} _ (∣yₖ∣≤N m))
                                   (ℚP.*-monoʳ-≤-nonNeg {+ N / 1} _ (∣yₖ∣≤N n)) ⟩
       (+ N / 1) ℚ.* (+ N / 1)   ∎
+
+
+{-
+DISCUSSION POINTS ON THE POSSIBILITY OF THE ℝ SOLVER
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+Obviously, we want the ring solver to work on ℝ. It would be extremely tedious to prove any interesting result later on without the ring
+solver. But there are some problems, at least right now, preventing it from working.
+
+First, note that the ring solvers generally use rings with decidable equality. But it actually CAN work without decidable equality. The
+equality can be so weak that it's not even slightly weakly decidable. As proof of concept, see the example below. 
+-}
+
+{-
+sadDec : ∀ (x y : ℚᵘ) -> Maybe (x ℚ.≃ y)
+sadDec x y = nothing
+
+module ℚ-Sad-+-*-Solver =
+  Solver ℚP.+-*-rawRing (ACR.fromCommutativeRing ℚP.+-*-commutativeRing) (ACR.-raw-almostCommutative⟶ (ACR.fromCommutativeRing ℚP.+-*-commutativeRing)) sadDec
+
+testing₁ : ∀ (x y z : ℚᵘ) -> ℚ.1ℚᵘ ℚ.* (x ℚ.+ y ℚ.- z ℚ.+ 0ℚᵘ) ℚ.≃ y ℚ.- (ℚ.- x ℚ.+ z)
+testing₁ x y z = solve 3 (λ x y z -> con ℚ.1ℚᵘ :* (x :+ y :- z :+ con 0ℚᵘ) := y :- (:- x :+ z)) ℚP.≃-refl x y z
+  where
+    open ℚ-Sad-+-*-Solver
+-}
+
+{- However, the same solution will NOT work on ℝ, at least for now, as shown below.-}
+{-
+≃-weaklyDec : ∀ x y -> Maybe (x ≃ y)
+≃-weaklyDec x y = nothing
+
+module ℝ-+-*-Solver =
+  Solver +-*-rawRing (ACR.fromCommutativeRing +-*-commutativeRing) (ACR.-raw-almostCommutative⟶ (ACR.fromCommutativeRing +-*-commutativeRing)) ≃-weaklyDec
+
+testing₂ : ∀ x y z -> 1ℝ * (x + y - z + 0ℝ) ≃ y - (- x + z)
+testing₂ x y z = ?
+  where
+    open ℝ-+-*-Solver
+-}
+{-
+The problem is ≃-refl. For some reason, it's incapable of determining implicit arguments, even in trivial cases. For instance, 0ℝ ≃ 0ℝ must be proved using
+≃-refl {0ℝ}. Excluding the implicit argument results in a constraint error, as shown below.-}
+
+{-sad0ℝ₁ : 0ℝ ≃ 0ℝ
+sad0ℝ₁ = ≃-refl
+
+sad0ℝ₂ : 0ℝ ≃ 0ℝ
+sad0ℝ₂ = ≃-refl {0ℝ}
+-}
+
+{- From the constraint error, I thought it was a problem with the definition of regularity in the definition of ℝ. In particular, the issue could be
+the implicit m ≢0 and n ≢0 arguments. But modifying the definition so that there are NO implicit arguments still doesn't work. I am unsure what the cause is.
+
+So, how do we let ℝ's solver work with reflexivity proofs? Here are some proposed attempts:
+
+(1) Prove the ring equality at the sequence level instead. This means, to prove that (x + y) - z ≃ y - (z - x), for instance, we prove it by definition of ≃
+instead of by using the various ring properties of ℝ. So our proof would need to be of the form 
+            ∣ (x₄ₘ + y₄ₘ - z₂ₘ) - (y₂ₘ - (z₄ₘ - x₄ₘ)) ∣ ≤ 2m⁻¹       (m∈ℤ⁺)
+and we would use the ℚ ring solver to assist with it. This could be shorter, in some instances, than applying a bunch of ring properties of ℝ. But it most likely
+becomes intractable when we get more difficult equalities and, for instance, when the ring equality includes multiplication (since the canonical bounds would
+interfere). 
+
+(2) Prove the ring equality for ALL rings and then apply it to ℝ. It seems to work, as shown below in testing₃, but it's very tedious and seems prone to fail.
+
+(3) The final option I've come up with is to wait for the next Agda release, which looks to be right around the corner. I've had this "constraints that seem
+trivial but Agda won't solve" issue a few times now, and it was solved by an update twice (the other time there was an easy function I could make to fix it. 
+That doesn't seem to be the case here).
+-}
+{-
+testing₃ : ∀ x y z -> x + y + z ≃ y + (z + x)
+testing₃ = lem (+-*-commutativeRing)
+  where
+    open CommutativeRing using (Carrier; 0#; 1#; _≈_)
+      renaming
+        ( _+_ to _R+_
+        ; _-_ to _R-_
+        ; _*_ to _R*_
+        ; -_  to R-_
+        )
+    {-
+      The notation is a bit ugly, but this says
+      x + y - z + 0 = 1 * (y - (z - x)).
+    -}
+    lem : ∀ (R : CommutativeRing 0ℓ 0ℓ) -> ∀ (x y z : Carrier R) ->
+          (_≈_ R) ((_R+_ R) ((_R+_ R) x y) z)
+                  ((_R+_ R) y ((_R+_ R) z x))
+    lem R x y z = solve 3 (λ x y z ->
+                  x :+ y :+ z := y :+ (z :+ x))
+                  R-refl x y z
+      where
+        R-weaklyDec : ∀ x y -> Maybe ((R ≈ x) y)
+        R-weaklyDec x y = nothing
+
+        rawRing : RawRing 0ℓ 0ℓ
+        rawRing = {!!}
+
+        R-refl : Reflexive (_≈_ R)
+        R-refl = {!!}
+
+        module R-Solver =
+          Solver rawRing (ACR.fromCommutativeRing R) (ACR.-raw-almostCommutative⟶ (ACR.fromCommutativeRing R)) R-weaklyDec
+
+        open R-Solver
+
+UPDATE
+It seems (3) won't fix the problem. I tried the newest developmental release as of June 7th, 2021, and it didn't work.
+Solution (2) might be promising if I can make some sort of function that says something for general rings R like
+"If ϕᴿ(x₁,...,xₙ) = ψᴿ(x₁,...,xₙ) for all xᵢ∈R and for all rings R, then ϕ̂(x₁,...,xₙ) = ψ(x₁,...,xₙ) for all xᵢ∈ℝ.
+That might save me the trouble of declaring a general ring solver and whatnot over and over again. Not sure if this
+is possible, though.
+-}
 
 {-
 If ϕ(x) = ψ(x) for all x∈R for all rings R, then ϕ(x) = ψ(x) for all x∈ℝ."
@@ -3693,3 +3683,4 @@ test x y = {!!}
   where
     module +-*-Solver = Solver {!!} {!!} {!!} {!!}
 -}
+
