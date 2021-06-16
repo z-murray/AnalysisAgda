@@ -3684,3 +3684,5 @@ test x y = {!!}
     module +-*-Solver = Solver {!!} {!!} {!!} {!!}
 -}
 
+0test : 0ℝ ≃ - 0ℝ
+0test = ≃-refl {0ℝ}
