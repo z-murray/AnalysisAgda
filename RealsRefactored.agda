@@ -2547,6 +2547,35 @@ reg ((x ⁻¹) {x≄0}) (suc k₁) (suc k₂) = begin
                                  (inverse-helper x x≄0 m) (inverse-helper x x≄0 n) ⟩
       (+ N / 1) ℚ.* (+ N / 1)   ∎
 
+{-
+Proposition:
+  If x is positive, then so is x⁻¹.
+Proof:
+  Recall that
+        x is positive ⇔ There is N∈ℕ such that m ≥ N implies xₘ ≥ N⁻¹ (Lemma 2.8.1).
+Then, since x is positive, we get, for n ≥ max{Kₓ, N},
+                                 0 < N⁻¹ < xₛₙ = ∣xₛₙ∣ < Kₓ                       (1).
+Thus
+                              0 < (max{Kₓ, N})⁻¹ ≤ Kₓ⁻¹ < yₙ
+for n ≥ max{Kₓ, N}. By Lemma 2.8.1, x⁻¹ ≡ (yₙ) is positive.                          □                    
+-}
+posx⇒posx⁻¹ : ∀ {x} -> {x≄0 : x ≄0} -> Positive x -> Positive ((x ⁻¹) {x≄0})
+posx⇒posx⁻¹ {x} {x≄0} posx = lemma-2-8-1-onlyif (ℕ.pred Kₓ⊔N , λ {(suc k₁) m≥Kₓ⊔N ->
+                             let m = suc k₁ in {!!}})
+  where
+    fromPosx = lemma-2-8-1-if posx
+    N = suc (proj₁ fromPosx)
+    Kₓ⊔N = K x ℕ.⊔ N
+
+0<x⇒0<x⁻¹ : ∀ {x} -> {x≄0 : x ≄0} -> 0ℝ < x -> 0ℝ < (x ⁻¹) {x≄0}
+0<x⇒0<x⁻¹ {x} {x≄0} 0<x = posx⇒0<x {(x ⁻¹) {x≄0}} (posx⇒posx⁻¹ {x} {x≄0} (0<x⇒posx 0<x))
+
+negx⇒negx⁻¹ : ∀ {x} -> {x≄0 : x ≄0} -> Negative x -> Negative ((x ⁻¹) {x≄0})
+negx⇒negx⁻¹ = {!!}
+
+x<0⇒x⁻¹<0 : ∀ {x} -> {x≄0 : x ≄0} -> x < 0ℝ -> (x ⁻¹) {x≄0} < 0ℝ
+x<0⇒x⁻¹<0 x<0 = {!!}
+
 *-inverseʳ : ∀ x -> {x≄0 : x ≄0} -> x * ((x ⁻¹) {x≄0}) ≃ 1ℝ
 *-inverseʳ x {x≄0} = {!!}
 
@@ -2559,18 +2588,6 @@ reg ((x ⁻¹) {x≄0}) (suc k₁) (suc k₂) = begin
 
 ⁻¹-unique : ∀ t x -> {x≄0 : x ≄0} -> t * x ≃ 1ℝ -> t ≃ (x ⁻¹) {x≄0}
 ⁻¹-unique = {!!}
-
-posx⇒posx⁻¹ : ∀ {x} -> {x≄0 : x ≄0} -> Positive x -> Positive ((x ⁻¹) {x≄0})
-posx⇒posx⁻¹ {x} {x≄0} = {!!}
-
-0<x⇒0<x⁻¹ : ∀ {x} -> {x≄0 : x ≄0} -> 0ℝ < x -> 0ℝ < (x ⁻¹) {x≄0}
-0<x⇒0<x⁻¹ {x} {x≄0} 0<x = posx⇒0<x {(x ⁻¹) {x≄0}} (posx⇒posx⁻¹ {x} {x≄0} (0<x⇒posx 0<x))
-
-negx⇒negx⁻¹ : ∀ {x} -> {x≄0 : x ≄0} -> Negative x -> Negative ((x ⁻¹) {x≄0})
-negx⇒negx⁻¹ = {!!}
-
-x<0⇒x⁻¹<0 : ∀ {x} -> {x≄0 : x ≄0} -> x < 0ℝ -> (x ⁻¹) {x≄0} < 0ℝ
-x<0⇒x⁻¹<0 x<0 = {!!}
 
 ⋆-distrib-⁻¹ : ∀ p -> (p ⋆) ⁻¹ ≃ ((ℚ.1/ p) ⋆) ⁻¹
 ⋆-distrib-⁻¹ = {!!}
