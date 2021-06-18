@@ -3687,8 +3687,5 @@ test x y = {!!}
 0test : 0ℝ ≃ - 0ℝ
 0test = ≃-refl {0ℝ}
 
-testing∣∣ : ∀ p -> ℚ.NonNegative ℚ.∣ p ∣
-testing∣∣ p = _
-
-test2 : ∀ p q -> ℚ.NonNegative (ℚ.∣ p ∣ ℚ.* ℚ.∣ q ∣)
-test2 p q = _
+test0 : 0ℝ ≃ - 0ℝ
+test0 = {!!}
