@@ -29,6 +29,7 @@ import Algebra.Solver.Ring as Solver
 import Algebra.Solver.Ring.AlmostCommutativeRing as ACR
 import Data.Rational.Unnormalised.Solver as ℚ-Solver
 import Data.Integer.Solver as ℤ-Solver
+open import Data.List
 
 open ℚᵘ
 
@@ -2871,3 +2872,33 @@ corollary-2-15 x r posr = α , <-respˡ-≃ (∣x-y∣≃∣y-x∣ (α ⋆) x) (
       r + (x - x) ≈⟨ ≃-trans (+-congʳ r (+-inverseʳ x)) (+-identityʳ r) ⟩
       r            ∎
 
+open import Data.List.Membership.Setoid ≃-setoid
+
+{-
+Probably going to need the following:
+·Some sort of equality relation on lists of reals. Need to be able to
+ split sums into multiple sums and prove equality. Pointwise setoid equality
+ should be enough.
+·Properties of sums (including order relations). Easy to prove by induction.
+
+Thoughts
+·Possible to achieve more typical notation for sums?
+·Should lists start with a 0 so they are never empty? See proposition-2-16 below.
+ The length of the list is computed so that a case split can be done on the list
+ to get a list of at least length 1. The proposition obviously doesn't work if the
+ list is empty. Might be more convenient to start real lists with 0 instead of 
+ computing list length?
+ -Possible problem: Might still need to do induction on the list to get outside of the
+  first 0 element. Would be nice if case-splitting on the list xs when a hypothesis is
+  ∑ xs > 0ℝ gives a list of at least length 1 since length 0 lists give a 0 sum automatically.
+  Adding a ∑ xs ≠ 0ℝ hypothesis might work, but that's probably worse than keeping the 
+  length xs ≢0 hypothesis.
+-}
+
+∑ : List ℝ -> ℝ
+∑ [] = 0ℝ
+∑ (x ∷ xs) = x + ∑ xs
+
+proposition-2-16 : ∀ (xs : List ℝ) -> {length xs ≢0} -> ∑ xs > 0ℝ ->
+                   ∃ λ (x : ℝ) -> x ∈ xs × x > 0ℝ
+proposition-2-16 (x ∷ xs) hyp = {!!}
