@@ -92,8 +92,9 @@ archimedean-ℚ (mkℚᵘ +[1+ g ] q-1) (mkℚᵘ u v-1) posp = let p = suc g; q
 q≤r⇒+p/r≤+p/q : ∀ p q r -> {q≢0 : q ≢0} -> {r≢0 : r ≢0} -> q ℕ.≤ r -> (+ p / r) {r≢0} ℚ.≤ (+ p / q) {q≢0}
 q≤r⇒+p/r≤+p/q p (suc k₁) (suc k₂) q≤r = ℚ.*≤* (ℤP.*-monoˡ-≤-nonNeg p (ℤ.+≤+ q≤r))
 
-q<r⇒+p/r<+p/q : ∀ p q r -> {q≢0 : q ≢0} -> {r≢0 : r ≢0} -> q ℕ.< r -> (+ p / r) {r≢0} ℚ.< (+ p / q) {q≢0}
-q<r⇒+p/r<+p/q p (suc k₁) (suc k₂) q<r = {!!}
+
+q<r⇒+p/r<+p/q : ∀ p q r -> {p ≢0} -> {q≢0 : q ≢0} -> {r≢0 : r ≢0} -> q ℕ.< r -> (+ p / r) {r≢0} ℚ.< (+ p / q) {q≢0}
+q<r⇒+p/r<+p/q (suc k₁) (suc k₂) (suc k₃) q<r = ℚ.*<* (ℤP.*-monoˡ-<-pos k₁ (ℤ.+<+ q<r))
 
 p≤q⇒p/r≤q/r : ∀ (p q : ℤ) -> ∀ (r : ℕ) -> {r≢0 : r ≢0} -> p ℤ.≤ q -> (p / r) {r≢0} ℚ.≤ (q / r) {r≢0}
 p≤q⇒p/r≤q/r p q (suc k₁) p≤q = ℚ.*≤* (ℤP.*-monoʳ-≤-nonNeg (suc k₁) p≤q)
@@ -248,8 +249,7 @@ p≤∣p∣ (mkℚᵘ (-[1+_] n) denominator-2) = ℚ.*≤* ℤ.-≤+
 
 infixl 6 _+_ _-_ _⊔_ _⊓_ _⊓₂_
 infixl 7 _*_
-infix 8 -_ _⋆
---_⁻¹
+infix 8 -_ _⋆ _⁻¹
 
 _+_ : ℝ -> ℝ -> ℝ
 seq (x + y) n = seq x (2 ℕ.* n) ℚ.+ seq y (2 ℕ.* n)
@@ -461,13 +461,12 @@ private
 abstract
   canonical-well-defined : ∀ (x : ℝ) -> ℚ.∣ seq x 1 ∣ ℚ.+ 2ℚᵘ ℚ.< + K x / 1 ×
                            ∀ (n : ℤ) -> ℚ.∣ seq x 1 ∣ ℚ.+ 2ℚᵘ ℚ.< n / 1 -> + K x ℤ.≤ n
-  canonical-well-defined x = {!!}
-  {-left , right
+  canonical-well-defined x = left , right
     where
       left : ℚ.∣ seq x 1 ∣ ℚ.+ 2ℚᵘ ℚ.< + K x / 1
       left = let t = ↥ (ℚ.∣ seq x 1 ∣ ℚ.+ 2ℚᵘ) divℕ ↧ₙ (ℚ.∣ seq x 1 ∣ ℚ.+ 2ℚᵘ) in begin-strict
         ℚ.∣ seq x 1 ∣ ℚ.+ 2ℚᵘ <⟨ proj₁ (proj₂ (least-ℤ>ℚ (ℚ.∣ seq x 1 ∣ ℚ.+ 2ℚᵘ))) ⟩
-        (+ 1 ℤ.+ t) / 1                     ≈⟨ ℚP.≃-reflexive (ℚP./-cong (sym (Kx=1+t x)) _≡_.refl _ _) ⟩
+        (+ 1 ℤ.+ t) / 1       ≈⟨ ℚP.≃-reflexive (ℚP./-cong (sym (Kx=1+t x)) _≡_.refl _ _) ⟩
         + K x / 1              ∎
         where open ℚP.≤-Reasoning
 
@@ -477,7 +476,7 @@ abstract
         + 1 ℤ.+ t ≤⟨ proj₂ (proj₂ (least-ℤ>ℚ (ℚ.∣ seq x 1 ∣ ℚ.+ 2ℚᵘ))) n hyp ⟩
         n          ∎
       
-        where open ℤP.≤-Reasoning-}
+        where open ℤP.≤-Reasoning
 
 1/n≤1 : ∀ (n : ℕ) -> {n≢0 : n ≢0} -> (+ 1 / n) {n≢0} ℚ.≤ 1ℚᵘ
 1/n≤1 (suc k₁) = let n = suc k₁ in ℚ.*≤* (ℤP.*-monoˡ-≤-nonNeg 1 {+ 1} {+ n} (ℤ.+≤+ (ℕ.s≤s ℕ.z≤n)))
@@ -681,7 +680,11 @@ reg (p ⋆) (suc k₁) (suc k₂) = let m = suc k₁; n = suc k₂ in begin
 
 -- Properties of _⋆
 ⋆-cong : ∀ {p} {q} -> p ℚ.≃ q -> p ⋆ ≃ q ⋆
-⋆-cong {p} {q} p≃q = {!!}
+⋆-cong {p} {q} p≃q = *≃* (λ {(suc k₁) -> let n = suc k₁ in begin
+  ℚ.∣ p ℚ.- q ∣ ≈⟨ ℚP.∣-∣-cong (ℚP.p≃q⇒p-q≃0 p q p≃q) ⟩
+  0ℚᵘ           ≤⟨ ℚP.nonNegative⁻¹ _ ⟩
+  + 2 / n        ∎})
+  where open ℚP.≤-Reasoning
 
 ⋆-distrib-+ : ∀ (p r : ℚᵘ) -> (p ℚ.+ r) ⋆ ≃ p ⋆ + r ⋆
 ⋆-distrib-+ x y = *≃* (λ { (suc k₁) -> let n = suc k₁; p = ↥ x; q = ↧ₙ x; u = ↥ y; v = ↧ₙ y in begin
@@ -2092,10 +2095,10 @@ neg-distribʳ-* x y = begin
   }
 
 ≤-respʳ-≃ : _≤_ Respectsʳ _≃_
-≤-respʳ-≃ = {!!}
+≤-respʳ-≃ {x} {y} {z} y≃z x≤y = nonNeg-cong (+-congˡ (- x) y≃z) x≤y
 
 ≤-respˡ-≃ : _≤_ Respectsˡ _≃_
-≤-respˡ-≃ = {!!}
+≤-respˡ-≃ {x} {y} {z} y≃z y≤x = nonNeg-cong (+-congʳ x (-‿cong y≃z)) y≤x
 
 <-respʳ-≃ : _<_ Respectsʳ _≃_
 <-respʳ-≃ y≃z x<y = <-≤-trans x<y (≤-reflexive y≃z)
@@ -2250,22 +2253,10 @@ x⊓y≤y x y = begin
 0≃-0 : 0ℝ ≃ - 0ℝ
 0≃-0 = ⋆-distrib-neg 0ℚᵘ
 
-{-0test : 0ℝ ≃ - 0ℝ
-0test = {!≃-refl!}
--}
-
 private
   -- Helper for the next few proofs
   x-0≃x : ∀ {x} -> x - 0ℝ ≃ x
   x-0≃x {x} = ≃-trans (+-congʳ x (≃-symm 0≃-0)) (+-identityʳ x)
-
-{- Some solver testing
-  0≡-0 : 0ℝ ≡ - 0ℝ
-  0≡-0 = {!!}
-
-  testx-0≃x : ∀ {x} -> x - 0ℝ ≃ x
-  testx-0≃x {x} rewrite (sym 0≡-0) = solve 1 (λ x -> x :+ con 0ℝ := x) {!!} {!!}
-    where open ℝ-+-*-Solver-}
 
 0<x⇒posx : ∀ {x} -> 0ℝ < x -> Positive x
 0<x⇒posx {x} 0<x = pos-cong x-0≃x 0<x
@@ -2334,104 +2325,6 @@ x≄0⇒0<∣x∣ {x} (inj₂ 0<x) = <-≤-trans 0<x x≤∣x∣
 
 x≄0⇒pos∣x∣ : ∀ {x} -> x ≄0 -> Positive ∣ x ∣
 x≄0⇒pos∣x∣ {x} x≄0 = 0<x⇒posx (x≄0⇒0<∣x∣ x≄0)
-{-
-private
-  Nₐ : {x : ℝ} -> {x ≄0} -> ℕ
-  Nₐ {x} {x≄0} = suc (proj₁ (lemma-2-8-1-if (x≄0⇒pos∣x∣ x≄0)))
-
-
-yₙ = xₖ⁻¹, where k = max{n, N} * N²
-seq x ((n ℕ.⊔ N) ℕ.* (N ℕ.* N))
-
-abstract
-  fast-2-8-1-if : {!!}
-  fast-2-8-1-if = lemma-2-8-1-if
-
-private
-  ℚ≠-helper : ∀ p -> p ℚ.> 0ℚᵘ ⊎ p ℚ.< 0ℚᵘ -> p ℚ.≠ 0ℚᵘ
-  ℚ≠-helper p hyp1 hyp2 = [ (λ hyp -> ℚP.<-irrefl (ℚP.≃-sym hyp2) hyp) , (λ hyp -> ℚP.<-irrefl hyp2 hyp) ]′ hyp1
-
-  not0 : ∀ x -> (x≄0 : x ≄0) -> ∀ (n : ℕ) -> {n ≢0} -> ℤ.∣ ↥ seq x ((n ℕ.⊔ Nₐ {x} {x≄0}) ℕ.* (Nₐ {x} {x≄0} ℕ.* Nₐ {x} {x≄0})) ∣ ≢0
-  not0 x x≄0 (suc k₁) = ℚP.p≄0⇒∣↥p∣≢0 xₛ (ℚ≠-helper xₛ ([ left , right ]′ (ℚP.∣p∣≡p∨∣p∣≡-p xₛ)))
-    where
-      open ℚP.≤-Reasoning
-      n = suc k₁
-      N = Nₐ {x} {x≄0}
-      xₛ = seq x ((n ℕ.⊔ N) ℕ.* (N ℕ.* N))
-
-      0<∣xₛ∣ : 0ℚᵘ ℚ.< ℚ.∣ xₛ ∣
-      0<∣xₛ∣ = begin-strict
-        0ℚᵘ     <⟨ ℚP.positive⁻¹ _ ⟩
-        + 1 / N ≤⟨ proj₂ (lemma-2-8-1-if (x≄0⇒pos∣x∣ x≄0)) ((n ℕ.⊔ N) ℕ.* (N ℕ.* N))
-                   (ℕP.≤-trans (ℕP.m≤n⊔m n N) (ℕP.m≤m*n (n ℕ.⊔ N) {N ℕ.* N} ℕP.0<1+n)) ⟩
-        ℚ.∣ xₛ ∣  ∎
-
-      left : ℚ.∣ xₛ ∣ ≡ xₛ -> xₛ ℚ.> 0ℚᵘ ⊎ xₛ ℚ.< 0ℚᵘ
-      left hyp = inj₁ (begin-strict
-        0ℚᵘ      <⟨ 0<∣xₛ∣ ⟩
-        ℚ.∣ xₛ ∣ ≡⟨ hyp ⟩
-        xₛ        ∎)
-
-      right : ℚ.∣ xₛ ∣ ≡ ℚ.- xₛ -> xₛ ℚ.> 0ℚᵘ ⊎ xₛ ℚ.< 0ℚᵘ
-      right hyp = inj₂ (begin-strict
-        xₛ            ≈⟨ ℚP.≃-sym (ℚP.neg-involutive xₛ) ⟩
-        ℚ.- (ℚ.- xₛ)  ≡⟨ cong ℚ.-_ (sym hyp) ⟩
-        ℚ.- ℚ.∣ xₛ ∣  <⟨ ℚP.neg-mono-< 0<∣xₛ∣ ⟩
-        0ℚᵘ            ∎)
-
-  inverse-helper : ∀ x -> (x≄0 : x ≄0) -> ∀ (n : ℕ) -> {n≢0 : n ≢0} ->
-                   ℚ.∣ (ℚ.1/ seq x ((n ℕ.⊔ Nₐ {x} {x≄0}) ℕ.* (Nₐ {x} {x≄0} ℕ.* Nₐ {x} {x≄0}))) {not0 x x≄0 n {n≢0}} ∣ ℚ.≤ + (Nₐ {x} {x≄0}) / 1
-  inverse-helper = {!!}
-
-_⁻¹ : (x : ℝ) -> {x ≄0} -> ℝ
-seq ((x ⁻¹) {x≄0}) 0 = 1ℚᵘ
-seq ((x ⁻¹) {x≄0}) (suc k₁) = let n = suc k₁; N = Nₐ {x} {x≄0} in
-                              (ℚ.1/ seq x ((n ℕ.⊔ N) ℕ.* (N ℕ.* N))) {not0 x x≄0 n}
-reg ((x ⁻¹) {x≄0}) (suc k₁) (suc k₂) = begin
-  ℚ.∣ yₘ ℚ.- yₙ ∣                                   ≈⟨ ℚP.∣-∣-cong (ℚP.+-cong
-                                                       (ℚP.≃-trans (ℚP.≃-sym (ℚP.*-identityʳ yₘ)) (ℚP.*-congˡ {yₘ} (ℚP.≃-sym (ℚP.*-inverseˡ xₛₙ {xₛₙ≢0}))))
-                                                       (ℚP.-‿cong (ℚP.≃-trans (ℚP.≃-sym (ℚP.*-identityʳ yₙ)) (ℚP.*-congˡ {yₙ} (ℚP.≃-sym (ℚP.*-inverseˡ xₛₘ {xₛₘ≢0})))))) ⟩
-  ℚ.∣ yₘ ℚ.* (yₙ ℚ.* xₛₙ) ℚ.- yₙ ℚ.* (yₘ ℚ.* xₛₘ) ∣ ≈⟨ ℚP.∣-∣-cong (ℚsolve 4 (λ xₛₘ xₛₙ yₘ yₙ ->
-                                                       yₘ *: (yₙ *: xₛₙ) -: yₙ *: (yₘ *: xₛₘ) =: yₘ *: yₙ *: (xₛₙ -: xₛₘ))
-                                                       ℚP.≃-refl xₛₘ xₛₙ yₘ yₙ) ⟩
-  ℚ.∣ yₘ ℚ.* yₙ ℚ.* (xₛₙ ℚ.- xₛₘ) ∣                 ≈⟨ ℚP.∣p*q∣≃∣p∣*∣q∣ (yₘ ℚ.* yₙ) (xₛₙ ℚ.- xₛₘ) ⟩
-  ℚ.∣ yₘ ℚ.* yₙ ∣ ℚ.* ℚ.∣ xₛₙ ℚ.- xₛₘ ∣             ≤⟨ ℚ-*-mono-≤ _ _ ∣yₘyₙ∣≤N² (reg x sn sm) ⟩
-  + N / 1 ℚ.* (+ N / 1) ℚ.* (+ 1 / sn ℚ.+ + 1 / sm) ≈⟨ ℚ.*≡* (solve 3 (λ N m⊔N n⊔N ->
-                                                       (N :* N :* (con (+ 1) :* (m⊔N :* (N :* N)) :+ con (+ 1) :* (n⊔N :* (N :* N)))) :* (m⊔N :* n⊔N) :=
-                                                       (con (+ 1) :* n⊔N :+ con (+ 1) :* m⊔N) :* (con (+ 1) :* (n⊔N :* (N :* N) :* (m⊔N :* (N :* N)))))
-                                                       _≡_.refl (+ N) (+ (m ℕ.⊔ N)) (+ (n ℕ.⊔ N))) ⟩
-  + 1 / (m ℕ.⊔ N) ℚ.+ + 1 / (n ℕ.⊔ N)               ≤⟨ ℚP.+-mono-≤
-                                                       (q≤r⇒+p/r≤+p/q 1 m (m ℕ.⊔ N) (ℕP.m≤m⊔n m N))
-                                                       (q≤r⇒+p/r≤+p/q 1 n (n ℕ.⊔ N) (ℕP.m≤m⊔n n N)) ⟩
-  + 1 / m ℚ.+ + 1 / n                                ∎
-  where
-    open ℚP.≤-Reasoning
-    open ℚ-Solver.+-*-Solver using ()
-      renaming
-        ( solve to ℚsolve
-        ; _:+_ to _+:_
-        ; _:-_ to _-:_
-        ; _:*_ to _*:_
-        ; _:=_ to _=:_
-        )
-    open ℤ-Solver.+-*-Solver
-    m = suc k₁
-    n = suc k₂
-    N = Nₐ {x} {x≄0}
-    sm = (m ℕ.⊔ N) ℕ.* (N ℕ.* N)
-    xₛₘ = seq x sm
-    xₛₘ≢0 = not0 x x≄0 m
-    sn = (n ℕ.⊔ N) ℕ.* (N ℕ.* N)
-    xₛₙ = seq x sn
-    xₛₙ≢0 = not0 x x≄0 n
-    yₘ = (ℚ.1/ xₛₘ) {xₛₘ≢0}
-    yₙ = (ℚ.1/ xₛₙ) {xₛₙ≢0}
-    ∣yₘyₙ∣≤N² : ℚ.∣ yₘ ℚ.* yₙ ∣ ℚ.≤ + N / 1 ℚ.* (+ N / 1)
-    ∣yₘyₙ∣≤N² = begin
-      ℚ.∣ yₘ ℚ.* yₙ ∣       ≈⟨ ℚP.∣p*q∣≃∣p∣*∣q∣ yₘ yₙ ⟩
-      ℚ.∣ yₘ ∣ ℚ.* ℚ.∣ yₙ ∣ ≤⟨ ℚ-*-mono-≤ _ _ (inverse-helper x x≄0 m) (inverse-helper x x≄0 n) ⟩
-      + N / 1 ℚ.* (+ N / 1)  ∎
--}
 
 ℚ≠-helper : ∀ p -> p ℚ.> 0ℚᵘ ⊎ p ℚ.< 0ℚᵘ -> p ℚ.≠ 0ℚᵘ
 ℚ≠-helper p hyp1 = [ (λ p>0 p≃0 -> ℚP.<-irrefl (ℚP.≃-sym p≃0) p>0) , (λ p<0 p≃0 -> ℚP.<-irrefl p≃0 p<0) ]′ hyp1
@@ -2751,7 +2644,11 @@ x<y⇒0<y-x : ∀ x y -> x < y -> 0ℝ < y - x
 x<y⇒0<y-x x y x<y = pos-cong (≃-trans (≃-symm (+-identityʳ (y - x))) (+-congʳ (y - x) 0≃-0)) x<y
 
 ⋆-distrib-to-p⋆-q⋆ : ∀ p q -> (p ℚ.- q) ⋆ ≃ p ⋆ - (q ⋆)
-⋆-distrib-to-p⋆-q⋆ p q = {!!}
+⋆-distrib-to-p⋆-q⋆ p q = begin
+  (p ℚ.- q) ⋆     ≈⟨ ⋆-distrib-+ p (ℚ.- q) ⟩
+  p ⋆ + (ℚ.- q) ⋆ ≈⟨ +-congʳ (p ⋆) (⋆-distrib-neg q) ⟩
+  p ⋆ - q ⋆        ∎
+  where open ≃-Reasoning
 
 0<p⇒0<p⋆ : ∀ p -> ℚ.Positive p -> Positive (p ⋆)
 0<p⇒0<p⋆ (mkℚᵘ +[1+ p ] q-1) posp/q = let q = suc q-1 in pos* (q , ℚ.*<* (begin-strict
@@ -2765,7 +2662,13 @@ p<q⇒p⋆<q⋆ : ∀ p q -> p ℚ.< q -> p ⋆ < q ⋆
 p<q⇒p⋆<q⋆ p q p<q = pos-cong (⋆-distrib-to-p⋆-q⋆ q p) (0<p⇒0<p⋆ (q ℚ.- p) (ℚ.positive (p<q⇒0<q-p p q p<q)))
 
 ∣x-y∣≃∣y-x∣ : ∀ x y -> ∣ x - y ∣ ≃ ∣ y - x ∣
-∣x-y∣≃∣y-x∣ x y = {!!}
+∣x-y∣≃∣y-x∣ x y = begin
+  ∣ x - y ∣       ≈⟨ ≃-symm ∣-x∣≃∣x∣ ⟩
+  ∣ - (x - y) ∣   ≈⟨ ∣-∣-cong (neg-distrib-+ x (- y)) ⟩
+  ∣ - x - (- y) ∣ ≈⟨ ∣-∣-cong (+-congʳ (- x) (neg-involutive y)) ⟩
+  ∣ - x + y ∣     ≈⟨ ∣-∣-cong (+-comm (- x) y) ⟩
+  ∣ y - x ∣        ∎
+  where open ≃-Reasoning
 
 density-of-ℚ : ∀ x y -> x < y -> ∃ λ (α : ℚᵘ) -> x < α ⋆ < y
 density-of-ℚ x y (pos* (n-1 , y₂ₙ-x₂ₙ>n⁻¹)) = α , 0<y-x⇒x<y x (α ⋆) (begin-strict
@@ -2830,4 +2733,97 @@ density-of-ℚ x y (pos* (n-1 , y₂ₙ-x₂ₙ>n⁻¹)) = α , 0<y-x⇒x<y x (�
                    ((con (+ 1) :* (p :* v :+ (:- u) :* q)) :* q :+ (:- p) :* (con (+ 2) :* (q :* v))) :* (con (+ 2) :* (v :* q)) :=
                    (:- (con (+ 1) :* (u :* q :+ p :* v))) :* ((con (+ 2) :* (q :* v)) :* q))
                    _≡_.refl p q u v)
+
+∣x∣<y⇒-y<x<y : ∀ x y -> ∣ x ∣ < y -> (- y) < x < y
+∣x∣<y⇒-y<x<y x y ∣x∣<y = (begin-strict
+  - y       <⟨ neg-mono-< ∣x∣<y ⟩
+  - ∣ x ∣   ≈⟨ -‿cong (≃-symm ∣-x∣≃∣x∣) ⟩
+  - ∣ - x ∣ ≤⟨ neg-mono-≤ x≤∣x∣ ⟩
+  - (- x)   ≈⟨ neg-involutive x ⟩
+  x          ∎) , (begin-strict
+  x     ≤⟨ x≤∣x∣ ⟩
+  ∣ x ∣ <⟨ ∣x∣<y ⟩
+  y      ∎)
+  where open ≤-Reasoning
+
+x<z∧y<z⇒x⊔y<z : ∀ x y z -> x < z -> y < z -> x ⊔ y < z
+x<z∧y<z⇒x⊔y<z x y z x<z y<z = lemma-2-8-1-onlyif (ℕ.pred N , lem)
+  where
+    open ℚP.≤-Reasoning
+    fromx<z = lemma-2-8-1-if x<z
+    N₁ = suc (proj₁ fromx<z)
+    fromy<z = lemma-2-8-1-if y<z
+    N₂ = suc (proj₁ fromy<z)
+    N = N₁ ℕ.⊔ N₂
+
+    lem : ∀ (m : ℕ) -> m ℕ.≥ N -> seq (z - (x ⊔ y)) m ℚ.≥ + 1 / N
+    lem m m≥N = [ left , right ]′ (ℚP.≤-total (seq y (2 ℕ.* m)) (seq x (2 ℕ.* m)))
+      where
+        left : seq x (2 ℕ.* m) ℚ.≥ seq y (2 ℕ.* m) -> seq (z - (x ⊔ y)) m ℚ.≥ + 1 / N
+        left x₂ₘ≥y₂ₘ = begin
+          + 1 / N                                                   ≤⟨ q≤r⇒+p/r≤+p/q 1 N₁ N (ℕP.m≤m⊔n N₁ N₂) ⟩
+          + 1 / N₁                                                  ≤⟨ proj₂ fromx<z m
+                                                                       (ℕP.≤-trans (ℕP.m≤m⊔n N₁ N₂) m≥N) ⟩
+          seq z (2 ℕ.* m) ℚ.- seq x (2 ℕ.* m)                       ≈⟨ ℚP.+-congʳ (seq z (2 ℕ.* m))
+                                                                       (ℚP.-‿cong (ℚP.≃-sym (ℚP.p≥q⇒p⊔q≃p x₂ₘ≥y₂ₘ))) ⟩
+          seq z (2 ℕ.* m) ℚ.- (seq x (2 ℕ.* m) ℚ.⊔ seq y (2 ℕ.* m))  ∎
+
+        right : seq y (2 ℕ.* m) ℚ.≥ seq x (2 ℕ.* m) -> seq (z - (x ⊔ y)) m ℚ.≥ + 1 / N
+        right y₂ₘ≥x₂ₘ = begin 
+          + 1 / N                                                   ≤⟨ q≤r⇒+p/r≤+p/q 1 N₂ N (ℕP.m≤n⊔m N₁ N₂) ⟩
+          + 1 / N₂                                                  ≤⟨ proj₂ fromy<z m
+                                                                       (ℕP.≤-trans (ℕP.m≤n⊔m N₁ N₂) m≥N) ⟩
+          seq z (2 ℕ.* m) ℚ.- seq y (2 ℕ.* m)                       ≈⟨ ℚP.+-congʳ (seq z (2 ℕ.* m))
+                                                                       (ℚP.-‿cong (ℚP.≃-sym (ℚP.p≤q⇒p⊔q≃q y₂ₘ≥x₂ₘ))) ⟩
+          seq z (2 ℕ.* m) ℚ.- (seq x (2 ℕ.* m) ℚ.⊔ seq y (2 ℕ.* m))  ∎
+
+∣p∣≃p⊔-p : ∀ p -> ℚ.∣ p ∣ ℚ.≃ p ℚ.⊔ (ℚ.- p)
+∣p∣≃p⊔-p p = [ left , right ]′ (ℚP.≤-total 0ℚᵘ p)
+  where
+    open ℚP.≤-Reasoning
+    left : 0ℚᵘ ℚ.≤ p -> ℚ.∣ p ∣ ℚ.≃ p ℚ.⊔ ℚ.- p
+    left 0≤p = let ∣p∣≃p = ℚP.0≤p⇒∣p∣≃p 0≤p in begin-equality
+      ℚ.∣ p ∣     ≈⟨ ∣p∣≃p ⟩
+      p           ≈⟨ ℚP.≃-sym (ℚP.p≥q⇒p⊔q≃p
+                     (ℚP.≤-respʳ-≃ ∣p∣≃p (ℚP.≤-respʳ-≃ (ℚP.∣-p∣≃∣p∣ p) (p≤∣p∣ (ℚ.- p))))) ⟩
+      p ℚ.⊔ ℚ.- p  ∎
+
+    right : p ℚ.≤ 0ℚᵘ -> ℚ.∣ p ∣ ℚ.≃ p ℚ.⊔ ℚ.- p
+    right p≤0 = let ∣p∣≃-p = ℚP.≃-trans (ℚP.≃-sym (ℚP.∣-p∣≃∣p∣ p)) (ℚP.0≤p⇒∣p∣≃p (ℚP.neg-mono-≤ p≤0)) in begin-equality
+      ℚ.∣ p ∣     ≈⟨ ∣p∣≃-p ⟩
+      ℚ.- p       ≈⟨ ℚP.≃-sym (ℚP.p≤q⇒p⊔q≃q (ℚP.≤-respʳ-≃ ∣p∣≃-p (p≤∣p∣ p))) ⟩
+      p ℚ.⊔ ℚ.- p  ∎
+      
+∣x∣≃x⊔-x : ∀ x -> ∣ x ∣ ≃ x ⊔ (- x)
+∣x∣≃x⊔-x x = *≃* λ {(suc k₁) -> let n = suc k₁ in begin
+  ℚ.∣ ℚ.∣ seq x n ∣ ℚ.- (seq x n ℚ.⊔ ℚ.- seq x n) ∣ ≈⟨ ℚP.∣-∣-cong (ℚP.+-congʳ ℚ.∣ seq x n ∣
+                                                       (ℚP.-‿cong (ℚP.≃-sym (∣p∣≃p⊔-p (seq x n))))) ⟩
+  ℚ.∣ ℚ.∣ seq x n ∣ ℚ.- ℚ.∣ seq x n ∣ ∣             ≈⟨ ℚP.∣-∣-cong (ℚP.+-inverseʳ ℚ.∣ seq x n ∣) ⟩
+  0ℚᵘ                                              ≤⟨ ℚP.nonNegative⁻¹ _ ⟩
+  + 2 / n                                           ∎}
+  where
+    open ℚP.≤-Reasoning
+
+-y<x<y⇒∣x∣<y : ∀ x y -> (- y) < x < y -> ∣ x ∣ < y
+-y<x<y⇒∣x∣<y x y -y<x<y = begin-strict
+  ∣ x ∣     ≈⟨ ∣x∣≃x⊔-x x ⟩
+  x ⊔ (- x) <⟨ x<z∧y<z⇒x⊔y<z x (- x) y
+               (proj₂ -y<x<y)
+               (<-respʳ-≃ (neg-involutive y) (neg-mono-< (proj₁ -y<x<y))) ⟩
+  y          ∎
+  where open ≤-Reasoning
+
+{-
+Corollary:
+  If x and r are real numbers such that r is positive, then there is α∈ℚᵘ such that
+                                      ∣x - α∣ < r.
+Proof:
+  By density of ℚ, there is α₁∈ℚᵘ such that -r - x < α₁ < r - x. Either α₁ ≤ 0 or 0 < α₁.
+Case 1:
+  -r - x < α₁ < r - x
+  - r < α₁ + x < r
+  - r < 
+-}
+corollary-2-15 : ∀ (x r : ℝ) -> Positive r -> ∃ λ (α : ℚᵘ) -> ∣ x - α ⋆ ∣ < r
+corollary-2-15 x r posr = {!!}
 
