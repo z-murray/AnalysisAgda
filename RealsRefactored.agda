@@ -249,7 +249,8 @@ p≤∣p∣ (mkℚᵘ (-[1+_] n) denominator-2) = ℚ.*≤* ℤ.-≤+
 
 infixl 6 _+_ _-_ _⊔_ _⊓_ _⊓₂_
 infixl 7 _*_
-infix 8 -_ _⋆ _⁻¹
+infix 8 -_ _⋆
+--_⁻¹
 
 _+_ : ℝ -> ℝ -> ℝ
 seq (x + y) n = seq x (2 ℕ.* n) ℚ.+ seq y (2 ℕ.* n)
@@ -447,8 +448,8 @@ K x = let p = ↥ (ℚ.∣ seq x 1 ∣ ℚ.+ 2ℚᵘ); q = ↧ₙ (ℚ.∣ seq x
 
 private
   abstract
-    Kx=1+t : ∀ x -> + K x ≡ + 1 ℤ.+ (↥ (ℚ.∣ seq x 1 ∣ ℚ.+ 2ℚᵘ) divℕ ↧ₙ (ℚ.∣ seq x 1 ∣ ℚ.+ 2ℚᵘ))
-    Kx=1+t x = let t = ↥ (ℚ.∣ seq x 1 ∣ ℚ.+ 2ℚᵘ) divℕ ↧ₙ (ℚ.∣ seq x 1 ∣ ℚ.+ 2ℚᵘ) in begin-equality
+    Kx=1+t : ∀ x -> + K x ≡ + 1 ℤ.+ ((↥ (ℚ.∣ seq x 1 ∣ ℚ.+ 2ℚᵘ) divℕ ↧ₙ (ℚ.∣ seq x 1 ∣ ℚ.+ 2ℚᵘ)))
+    Kx=1+t x = let t = (↥ (ℚ.∣ seq x 1 ∣ ℚ.+ 2ℚᵘ) divℕ ↧ₙ (ℚ.∣ seq x 1 ∣ ℚ.+ 2ℚᵘ)) in begin-equality
       + K x             ≡⟨ _≡_.refl ⟩
       + 1 ℤ.+ + ℤ.∣ t ∣ ≡⟨ cong (λ x -> + 1 ℤ.+ x) (ℤP.0≤n⇒+∣n∣≡n (0≤n⇒0≤n/ℕd (↥ (ℚ.∣ seq x 1 ∣ ℚ.+ 2ℚᵘ)) (↧ₙ (ℚ.∣ seq x 1 ∣ ℚ.+ 2ℚᵘ))
                                 (ℚP.≥0⇒↥≥0 (ℚP.≤-trans (ℚP.0≤∣p∣ (seq x 1)) (ℚP.p≤p+q {ℚ.∣ seq x 1 ∣} {2ℚᵘ} _))))) ⟩
@@ -549,7 +550,7 @@ reg (x * y) (suc k₁) (suc k₂) = let m = suc k₁; n = suc k₂; k = K x ℕ.
         ; _:=_ to _=:_
         )
     open ℤ-Solver.+-*-Solver
-    
+
 _⋆ : ℚᵘ -> ℝ
 seq (p ⋆) n = p
 reg (p ⋆) (suc k₁) (suc k₂) = let m = suc k₁; n = suc k₂ in begin
@@ -1606,6 +1607,7 @@ reg ∣ x ∣ (suc k₁) (suc k₂) = let m = suc k₁; n = suc k₂ in begin
   + 2 / n ∎})
   where open ℚP.≤-Reasoning
 
+
 -- Sign predicates
 data Positive : Pred ℝ 0ℓ where
   pos* : ∀ {x} -> (∃ λ (n-1 : ℕ) -> seq x (suc n-1) ℚ.> + 1 / (suc n-1)) -> Positive x
@@ -1707,7 +1709,7 @@ lemma-2-8-2-onlyif {x} hyp = nonNeg* (λ { (suc k₁) -> let n = suc k₁ in p-j
         ; _:=_ to _=:_
         )
     open ℤ-Solver.+-*-Solver
-  
+
 pos-cong : ∀ {x y} -> x ≃ y -> Positive x -> Positive y
 pos-cong {x} {y} x≃y posx = let fromPosx = lemma-2-8-1-if posx; N₁ = suc (proj₁ fromPosx); fromx≃y = equality-lemma-if x y x≃y (2 ℕ.* N₁)
                                      ; N₂ = suc (proj₁ fromx≃y); N = N₁ ℕ.⊔ N₂ in
@@ -2057,6 +2059,25 @@ nonNeg-refl {x} = nonNeg-cong (≃-symm (+-inverseʳ x)) nonNeg0
 
 +-mono-< : _+_ Preserves₂ _<_ ⟶ _<_ ⟶ _<_
 +-mono-< x<z y<t = pos-cong z-x+t-y≃z+t-x+y (posx,y⇒posx+y x<z y<t)
+
++-monoʳ-< : ∀ x -> (_+_ x) Preserves _<_ ⟶ _<_
++-monoʳ-< x {y} {z} y<z = pos-cong lem y<z
+  where
+    open ≃-Reasoning
+    lem : z - y ≃ x + z - (x + y)
+    lem = begin
+      z - y             ≈⟨ +-congˡ (- y) (≃-symm (+-identityʳ z)) ⟩
+      z + 0ℝ - y        ≈⟨ +-congˡ (- y) (+-congʳ z (≃-symm (+-inverseʳ x))) ⟩
+      z + (x - x) - y   ≈⟨ +-congˡ (- y) (≃-symm (+-assoc z x (- x))) ⟩
+      z + x - x - y     ≈⟨ +-assoc (z + x) (- x) (- y) ⟩
+      z + x + (- x - y) ≈⟨ +-cong (+-comm z x) (≃-symm (neg-distrib-+ x y)) ⟩
+      x + z - (x + y)    ∎
+
+{-
+y + x < z + x
+-}
++-monoˡ-< : ∀ x → (_+ x) Preserves _<_ ⟶ _<_
++-monoˡ-< x {y} {z} y<z = pos-cong (+-cong (+-comm x z) (-‿cong (+-comm x y))) (+-monoʳ-< x y<z)
 
 neg-distribˡ-* : ∀ x y -> - (x * y) ≃ - x * y
 neg-distribˡ-* x y = begin
@@ -2670,6 +2691,9 @@ p<q⇒p⋆<q⋆ p q p<q = pos-cong (⋆-distrib-to-p⋆-q⋆ q p) (0<p⇒0<p⋆ 
   ∣ y - x ∣        ∎
   where open ≃-Reasoning
 
+{-
+density-of-ℚ is very slow. It's typically much more convenient to use fast-density-of-ℚ, which is its abstract version.
+-}
 density-of-ℚ : ∀ x y -> x < y -> ∃ λ (α : ℚᵘ) -> x < α ⋆ < y
 density-of-ℚ x y (pos* (n-1 , y₂ₙ-x₂ₙ>n⁻¹)) = α , 0<y-x⇒x<y x (α ⋆) (begin-strict
   0ℝ                                                          <⟨ lemA ⟩
@@ -2777,6 +2801,7 @@ x<z∧y<z⇒x⊔y<z x y z x<z y<z = lemma-2-8-1-onlyif (ℕ.pred N , lem)
                                                                        (ℚP.-‿cong (ℚP.≃-sym (ℚP.p≤q⇒p⊔q≃q y₂ₘ≥x₂ₘ))) ⟩
           seq z (2 ℕ.* m) ℚ.- (seq x (2 ℕ.* m) ℚ.⊔ seq y (2 ℕ.* m))  ∎
 
+
 ∣p∣≃p⊔-p : ∀ p -> ℚ.∣ p ∣ ℚ.≃ p ℚ.⊔ (ℚ.- p)
 ∣p∣≃p⊔-p p = [ left , right ]′ (ℚP.≤-total 0ℚᵘ p)
   where
@@ -2813,17 +2838,36 @@ x<z∧y<z⇒x⊔y<z x y z x<z y<z = lemma-2-8-1-onlyif (ℕ.pred N , lem)
   y          ∎
   where open ≤-Reasoning
 
-{-
-Corollary:
-  If x and r are real numbers such that r is positive, then there is α∈ℚᵘ such that
-                                      ∣x - α∣ < r.
-Proof:
-  By density of ℚ, there is α₁∈ℚᵘ such that -r - x < α₁ < r - x. Either α₁ ≤ 0 or 0 < α₁.
-Case 1:
-  -r - x < α₁ < r - x
-  - r < α₁ + x < r
-  - r < 
--}
+abstract
+  fast-density-of-ℚ : ∀ x y -> x < y -> ∃ λ (α : ℚᵘ) -> x < α ⋆ < y
+  fast-density-of-ℚ = density-of-ℚ
+
 corollary-2-15 : ∀ (x r : ℝ) -> Positive r -> ∃ λ (α : ℚᵘ) -> ∣ x - α ⋆ ∣ < r
-corollary-2-15 x r posr = {!!}
+corollary-2-15 x r posr = α , <-respˡ-≃ (∣x-y∣≃∣y-x∣ (α ⋆) x) (-y<x<y⇒∣x∣<y (α ⋆ - x) r (-r<α-x , α-x<r))
+  where
+    open ≤-Reasoning
+    -r+x<r+x : - r + x < r + x
+    -r+x<r+x = +-monoˡ-< x (begin-strict
+      - r   <⟨ neg-mono-< (posx⇒0<x posr) ⟩
+      - 0ℝ  ≈⟨ ≃-symm 0≃-0 ⟩
+      0ℝ    <⟨ posx⇒0<x posr ⟩
+      r      ∎)
+    
+    αp = fast-density-of-ℚ (- r + x) (r + x) -r+x<r+x
+    α = proj₁ αp
+
+    -r<α-x : - r < α ⋆ - x
+    -r<α-x = begin-strict
+      - r           ≈⟨ ≃-symm (+-identityʳ (- r)) ⟩
+      - r + 0ℝ      ≈⟨ +-congʳ (- r) (≃-symm (+-inverseʳ x)) ⟩
+      - r + (x - x) ≈⟨ ≃-symm (+-assoc (- r) x (- x)) ⟩
+      - r + x - x   <⟨ +-monoˡ-< (- x) (proj₁ (proj₂ αp)) ⟩
+      α ⋆ - x        ∎
+
+    α-x<r : α ⋆ - x < r
+    α-x<r = begin-strict
+      α ⋆ - x     <⟨ +-monoˡ-< (- x) (proj₂ (proj₂ αp)) ⟩
+      r + x - x   ≈⟨ +-assoc r x (- x) ⟩
+      r + (x - x) ≈⟨ ≃-trans (+-congʳ r (+-inverseʳ x)) (+-identityʳ r) ⟩
+      r            ∎
 
