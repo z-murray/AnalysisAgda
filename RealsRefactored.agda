@@ -2656,7 +2656,7 @@ lemma-2-14 x (suc k₁) = nonNeg* (λ {(suc k₂) -> let n = suc k₁; m = suc k
     open ℚP.≤-Reasoning
     open ℚ-Solver.+-*-Solver
 
-_<_<_ : ℝ -> ℝ -> ℝ -> Set
+_<_<_ : (x y z : ℝ) -> Set
 x < y < z = (x < y) × (y < z)
 
 0<y-x⇒x<y : ∀ x y -> 0ℝ < y - x -> x < y
@@ -2872,33 +2872,301 @@ corollary-2-15 x r posr = α , <-respˡ-≃ (∣x-y∣≃∣y-x∣ (α ⋆) x) (
       r + (x - x) ≈⟨ ≃-trans (+-congʳ r (+-inverseʳ x)) (+-identityʳ r) ⟩
       r            ∎
 
-open import Data.List.Membership.Setoid ≃-setoid
+abstract
+  fast-corollary-2-15 : ∀ (x r : ℝ) -> Positive r -> ∃ λ (α : ℚᵘ) -> ∣ x - α ⋆ ∣ < r
+  fast-corollary-2-15 = corollary-2-15
 
 {-
-Probably going to need the following:
-·Some sort of equality relation on lists of reals. Need to be able to
- split sums into multiple sums and prove equality. Pointwise setoid equality
- should be enough.
-·Properties of sums (including order relations). Easy to prove by induction.
-
-Thoughts
-·Possible to achieve more typical notation for sums?
-·Should lists start with a 0 so they are never empty? See proposition-2-16 below.
- The length of the list is computed so that a case split can be done on the list
- to get a list of at least length 1. The proposition obviously doesn't work if the
- list is empty. Might be more convenient to start real lists with 0 instead of 
- computing list length?
- -Possible problem: Might still need to do induction on the list to get outside of the
-  first 0 element. Would be nice if case-splitting on the list xs when a hypothesis is
-  ∑ xs > 0ℝ gives a list of at least length 1 since length 0 lists give a 0 sum automatically.
-  Adding a ∑ xs ≠ 0ℝ hypothesis might work, but that's probably worse than keeping the 
-  length xs ≢0 hypothesis.
+open import Data.List.Membership.Setoid ≃-setoid
+open import Data.List.Relation.Binary.Permutation.Setoid ≃-setoid
+open import Data.List.Relation.Binary.Permutation.Homogeneous as ℍ using ()
 -}
-
+{-
+Lists of reals won't work well here. When we need to extend sums to infinite series later on, using lists would make
+in the current sum implementation would make it very difficult. For finite sums, it looks better to use a sequence with
+a tail of 0s and sum over that (see upcoming implementation).
+-}
+{-
 ∑ : List ℝ -> ℝ
 ∑ [] = 0ℝ
 ∑ (x ∷ xs) = x + ∑ xs
 
+equality-of-sums : ∀ xs ys -> xs ↭ ys -> ∑ xs ≃ ∑ ys
+equality-of-sums xs ys (ℍ.refl x) = {!!}
+equality-of-sums .(_ ∷ _) .(_ ∷ _) (ℍ.prep eq xs↭ys) = {!!}
+equality-of-sums .(_ ∷ _ ∷ _) .(_ ∷ _ ∷ _) (ℍ.swap eq₁ eq₂ xs↭ys) = {!!}
+equality-of-sums xs ys (ℍ.trans xs↭ys xs↭ys₁) = {!!}
+
 proposition-2-16 : ∀ (xs : List ℝ) -> {length xs ≢0} -> ∑ xs > 0ℝ ->
                    ∃ λ (x : ℝ) -> x ∈ xs × x > 0ℝ
-proposition-2-16 (x ∷ xs) hyp = {!!}
+proposition-2-16 (x ∷ xs) hyp = let αp = fast-density-of-ℚ 0ℝ (x + ∑ xs) hyp; α = proj₁ αp in {!!}
+
+_≤_≤_ : (x y z : ℝ) -> Set
+x ≤ y ≤ z = (x ≤ y) × (y ≤ z)
+
+uncountability-of-ℝ : ∀ (a : ℕ -> ℝ) -> ∀ (x₀ y₀ : ℝ) -> x₀ < y₀ ->
+                      ∃ λ (x : ℝ) -> x₀ ≤ x ≤ y₀ × (∀ n -> {n ≢0} -> x ≄ a n)
+uncountability-of-ℝ a x₀ y₀ (pos* x₀<y₀) = {!!}
+-}
+
+{-
+This implementation is a bit better since it uses sequences of reals. However, due to the presence of possibly empty sums,
+the case split on a sum becomes very unruly. Maybe better to sacrifice empty sums for more well-behaved sums, as done in
+the next version.
+
+∑ : ℝ-Sequence -> (i n : ℕ) -> ℝ
+∑ a i n with ℕP.<-cmp i n
+∑ a i (suc n) | tri< i<n ¬b ¬c = ∑ a i n + a (suc n)
+∑ a i zero | tri≈ ¬a i≡n ¬c = a i
+∑ a i (suc n) | tri≈ ¬a i≡n ¬c = a i
+∑ a i zero | tri> ¬a ¬b i>n = 0ℝ
+∑ a i (suc n) | tri> ¬a ¬b i>n = 0ℝ
+
+∑x+∑y≃∑x+y : ∀ x y -> ∀ i n -> ∑ x i n + ∑ y i n ≃ ∑ (λ j -> x j + y j) i n
+∑x+∑y≃∑x+y x y i n with ℕP.<-cmp i n
+... | tri< a ¬b ¬c = {!!}
+... | tri≈ ¬a b ¬c = {!!}
+... | tri> ¬a ¬b c = {!≃-refl!}
+
+proposition-2-16 : ∀ (x : ℝ-Sequence) -> (i n : ℕ) -> {n≢0 : n ≢0} -> {i ℕ.≤ n} ->
+                   ∑ x i n > 0ℝ -> ∃ λ (j : ℕ) -> i ℕ.≤ j × j ℕ.≤ n × x j > 0ℝ
+proposition-2-16 x i (suc k₁) {i≤n} ∑xᵢ>0 = {!!}
+  where
+    open ≤-Reasoning
+    n = suc k₁
+    αp = fast-density-of-ℚ 0ℝ (∑ x i n) ∑xᵢ>0
+    α = proj₁ αp
+
+    posα/2n : Positive (((+ 1 / (2 ℕ.* n)) ℚ.* α) ⋆)
+    posα/2n = {!!}
+
+    a-generator : (r : ℕ) -> ∃ λ (a : ℚᵘ) -> ∣ x r - a ⋆ ∣ < ((+ 1 / (2 ℕ.* n)) ℚ.* α) ⋆
+    a-generator r = fast-corollary-2-15 (x r) (((+ 1 / (2 ℕ.* n)) ℚ.* α) ⋆) posα/2n
+
+    a : (r : ℕ) -> ℚᵘ
+    a r = proj₁ (a-generator r)
+-}
+
+
+ℝ-Sequence : Set
+ℝ-Sequence = ℕ -> ℝ
+
+≤⇒≡∨< : ∀ (m n : ℕ) -> m ℕ.≤ n -> m ≡ n ⊎ m ℕ.< n
+≤⇒≡∨< zero zero m≤n = inj₁ _≡_.refl
+≤⇒≡∨< zero (suc n) m≤n = inj₂ ℕP.0<1+n
+≤⇒≡∨< (suc m) (suc n) (ℕ.s≤s m≤n) = [ (λ m≡n -> inj₁ (cong suc m≡n)) , (λ m<n -> inj₂ (ℕ.s≤s m<n)) ]′ (≤⇒≡∨< m n m≤n)
+
+{-
+No empty sums, which is sad, but this is much nicer to case split on.
+An alternative solution might be to allow for empty sums and, in some proofs about sums, to have an i ≤ n hypothesis
+to perhaps get a nicer case split while not losing empty sums. Will need to test this.
+
+Maybe alter the notation slightly? Instead of ∑ a i n, how about ∑ i n a? Might be better for readability in longer sums.
+-}
+∑ : ℝ-Sequence -> (i n : ℕ) -> {i ℕ.≤ n} -> ℝ
+∑ a i n {i≤n} with ≤⇒≡∨< i n i≤n
+... | inj₁ i≡n = a i
+∑ a i (suc n) {i≤n} | inj₂ (ℕ.s≤s y) = ∑ a i n {y} + a (suc n)
+
+{-
+An example of the solver working!! Works very well with normal addition since there's no canonical bounds to deal with.
+
+The (λ j -> x j + y j) is an unfortunately ugly consequence of this implementation of sums. While the notation is ugly,
+that the sequence portion of the sum is a function is technically the correct interpretation anyway.
+-}
+∑x+∑y≃∑x+y : ∀ x y -> ∀ i n -> {i≤n : i ℕ.≤ n} ->
+             ∑ x i n {i≤n} + ∑ y i n {i≤n} ≃ ∑ (λ j -> x j + y j) i n {i≤n}
+∑x+∑y≃∑x+y x y i n {i≤n} with ≤⇒≡∨< i n i≤n
+... | inj₁ i≡n = ≃-refl
+∑x+∑y≃∑x+y x y i (suc n) {i≤n} | inj₂ (ℕ.s≤s i<n) = begin
+  ∑ x i n {i<n} + x (suc n) + (∑ y i n {i<n} + y (suc n))  ≈⟨ solve 4 (λ ∑x ∑y x y ->
+                                                                    ∑x :+ x :+ (∑y :+ y) := ∑x :+ ∑y :+ (x :+ y))
+                                                                    ≃-refl (∑ x i n {i<n}) (∑ y i n {i<n}) (x (suc n)) (y (suc n)) ⟩
+  ∑ x i n {i<n} + ∑ y i n {i<n} + (x (suc n) + y (suc n))  ≈⟨ +-congˡ (x (suc n) + y (suc n)) (∑x+∑y≃∑x+y x y i n {i<n}) ⟩
+  ∑ (λ j -> x j + y j) i n {i<n} + (x (suc n) + y (suc n))  ∎
+  where
+    open ≃-Reasoning
+    open ℝ-+-*-Solver
+
+neg-distrib-∑ : ∀ x -> ∀ i n -> {i≤n : i ℕ.≤ n} ->
+                - ∑ x i n {i≤n} ≃ ∑ (λ j -> - x j) i n {i≤n}
+neg-distrib-∑ x i n {i≤n} with ≤⇒≡∨< i n i≤n
+... | inj₁ i≡n = ≃-refl
+neg-distrib-∑ x i (suc n) {i≤n+1} | inj₂ (ℕ.s≤s i≤n) = let n+1 = suc n in begin
+  - (∑ x i n {i≤n} + x n+1)          ≈⟨ neg-distrib-+ (∑ x i n {i≤n}) (x n+1) ⟩
+  - ∑ x i n {i≤n} - x n+1            ≈⟨ +-congˡ (- x n+1) (neg-distrib-∑ x i n {i≤n}) ⟩
+  ∑ (λ j -> - x j) i n {i≤n} - x n+1  ∎
+  where open ≃-Reasoning
+
+{-
+Suppose, towards contradiction, that p ≤ 2⁻¹r and q ≤ 2⁻¹r. Then
+p + q ≤ 2⁻¹r + 2⁻¹r
+      = r
+      < p + q,
+a contradiction.
+-}
+p+q>r⇒p>2⁻¹r∨q>2⁻¹r : ∀ p q r -> p ℚ.+ q ℚ.> r -> p ℚ.> (+ 1 / 2) ℚ.* r ⊎ q ℚ.> (+ 1 / 2) ℚ.* r
+p+q>r⇒p>2⁻¹r∨q>2⁻¹r p q r p+q>r = {!!}
+
+0<q-p⇒p<q : ∀ p q -> 0ℚᵘ ℚ.< q ℚ.- p -> p ℚ.< q
+0<q-p⇒p<q p q 0<q-p = begin-strict
+  p               ≈⟨ ℚP.≃-sym (ℚP.+-identityʳ p) ⟩
+  p ℚ.+ 0ℚᵘ       <⟨ ℚP.+-monoʳ-< p 0<q-p ⟩
+  p ℚ.+ (q ℚ.- p) ≈⟨ solve 2 (λ p q -> p :+ (q :- p) := q) ℚP.≃-refl p q ⟩
+  q                ∎
+  where
+    open ℚP.≤-Reasoning
+    open ℚ-Solver.+-*-Solver
+
+p⋆<q⋆⇒p<q : ∀ p q -> p ⋆ < q ⋆ -> p ℚ.< q
+p⋆<q⋆⇒p<q p q (pos* (n , p⋆<q⋆)) = 0<q-p⇒p<q p q (begin-strict
+  0ℚᵘ           ≤⟨ ℚP.nonNegative⁻¹ _ ⟩
+  + 1 / (suc n) <⟨ p⋆<q⋆ ⟩
+  q ℚ.- p        ∎)
+  where open ℚP.≤-Reasoning
+
+posp⇒posp⋆ : ∀ p -> ℚ.Positive p -> Positive (p ⋆)
+posp⇒posp⋆ p posp = 0<x⇒posx (p<q⇒p⋆<q⋆ 0ℚᵘ p (ℚP.positive⁻¹ posp))
+
+{-
+Proposition:
+  If x + y > 0, then x > 0 or y > 0.
+Proof:
+  This proof is the n=2 special case of Bishop's proof of Proposition 2.16.
+Let α∈ℚᵘ such that 0 < α < x + y. By Corollay 2.15, there is X,Y∈ℚᵘ such that
+                                 ∣x - X∣ < 4̂⁻¹α and
+                                 ∣y - Y∣ < 4⁻¹α.
+We have
+            X + Y = (x + y) - (x - X) - (y - Y)
+                  ≥ (x + y) - ∣x - X∣ - ∣y - Y∣
+                  ≥    α    -  4⁻¹α   -  4⁻¹α
+                  = 2̂⁻¹α.
+Thus X + Y > 2⁻¹α, and so X > 4⁻¹α or Y > 4⁻¹α. Let Z be the value X or Y such that Z > 4⁻¹α and let
+z be the corresponding x or y value. Then
+            z = Z - (Z - z)
+              ≥ Z - ∣z - Z∣
+              > 4⁻¹α - 4⁻¹α
+              = 0.
+Hence z > 0, so x > 0 or y > 0.                                                                    □ 
+-}
+x+y>0⇒x>0∨y>0 : ∀ x y -> x + y > 0ℝ -> x > 0ℝ ⊎ y > 0ℝ
+x+y>0⇒x>0∨y>0 x y x+y>0 = [ (λ hyp -> inj₁ (lem x X (proj₂ X-generator) (ℚP.<-respˡ-≃ 2⁻¹*2⁻¹α≃4⁻¹α hyp))) ,
+                            (λ hyp -> inj₂ (lem y Y (proj₂ Y-generator) (ℚP.<-respˡ-≃ 2⁻¹*2⁻¹α≃4⁻¹α hyp))) ]′
+                            (p+q>r⇒p>2⁻¹r∨q>2⁻¹r X Y ((+ 1 / 2) ℚ.* α) ax+ay>α/4)
+  where
+    open ℤ-Solver.+-*-Solver
+    open ℝ-+-*-Solver using ()
+      renaming
+        ( solve to ℝsolve
+        ; _:+_ to _+:_
+        ; _:-_ to _-:_
+        ; :-_  to -:_
+        ; _:=_ to _=:_
+        )
+    α-generator = fast-density-of-ℚ 0ℝ (x + y) x+y>0
+    α = proj₁ α-generator
+
+    pos4⁻¹α : Positive (((+ 1 / 4) ℚ.* α) ⋆)
+    pos4⁻¹α = posp⇒posp⋆ ((+ 1 / 4) ℚ.* α) (ℚ.positive (begin-strict
+      0ℚᵘ               ≈⟨ ℚP.≃-sym (ℚP.*-zeroʳ (+ 1 / 4)) ⟩
+      (+ 1 / 4) ℚ.* 0ℚᵘ <⟨ ℚP.*-monoʳ-<-pos {+ 1 / 4} _ (p⋆<q⋆⇒p<q 0ℚᵘ α (proj₁ (proj₂ α-generator))) ⟩
+      (+ 1 / 4) ℚ.* α    ∎))
+      where open ℚP.≤-Reasoning
+
+    X-generator = fast-corollary-2-15 x (((+ 1 / 4) ℚ.* α) ⋆) pos4⁻¹α
+    X = proj₁ X-generator
+    Y-generator = fast-corollary-2-15 y (((+ 1 / 4) ℚ.* α) ⋆) pos4⁻¹α
+    Y = proj₁ Y-generator
+
+    2⁻¹*2⁻¹α≃4⁻¹α : (+ 1 / 2) ℚ.* ((+ 1 / 2) ℚ.* α) ℚ.≃ (+ 1 / 4) ℚ.* α
+    2⁻¹*2⁻¹α≃4⁻¹α = ℚ.*≡* (solve 2 (λ p q ->
+                    con (+ 1) :* (con (+ 1) :* p) :* (con (+ 4) :* q) := (con (+ 1) :* p :* (con (+ 2) :* (con (+ 2) :* q))))
+                    _≡_.refl (↥ α) (↧ α))
+
+    ax+ay>α/4 : X ℚ.+ Y ℚ.> (+ 1 / 2) ℚ.* α
+    ax+ay>α/4 = p⋆<q⋆⇒p<q ((+ 1 / 2) ℚ.* α) (X ℚ.+ Y) (begin-strict
+      ((+ 1 / 2) ℚ.* α) ⋆                             ≈⟨ ⋆-cong (ℚ.*≡* (solve 2 (λ p q ->
+                                                         (con (+ 1) :* p) :* ((q :* (con (+ 4) :* q)) :* (con (+ 4) :* q)) :=
+                                                         ((p :* (con (+ 4) :* q) :+ (:- (con (+ 1) :* p)) :* q) :* (con (+ 4) :* q) :+ (:- (con (+ 1) :* p)) :*
+                                                         (q :* (con (+ 4) :* q))) :* (con (+ 2) :* q)) _≡_.refl (↥ α) (↧ α))) ⟩
+      (α ℚ.- (+ 1 / 4) ℚ.* α ℚ.- (+ 1 / 4) ℚ.* α) ⋆   ≈⟨ ≃-trans
+                                                         (⋆-distrib-to-p⋆-q⋆ (α ℚ.- (+ 1 / 4) ℚ.* α) ((+ 1 / 4) ℚ.* α))
+                                                         (+-congˡ (- ((+ 1 / 4 ℚ.* α) ⋆)) (⋆-distrib-to-p⋆-q⋆ α ((+ 1 / 4) ℚ.* α))) ⟩
+      α ⋆ - ((+ 1 / 4) ℚ.* α) ⋆ - ((+ 1 / 4) ℚ.* α) ⋆ <⟨ +-mono-<
+                                                         (+-mono-< (proj₂ (proj₂ α-generator)) (neg-mono-< (proj₂ X-generator)))
+                                                         (neg-mono-< (proj₂ Y-generator)) ⟩
+      (x + y) - ∣ x - X ⋆ ∣ - ∣ y - Y ⋆ ∣              ≤⟨ +-mono-≤ (+-monoʳ-≤ (x + y) (neg-mono-≤ x≤∣x∣)) (neg-mono-≤ x≤∣x∣) ⟩
+      (x + y) - (x - X ⋆) - (y - Y ⋆)                 ≈⟨ +-cong (+-congʳ (x + y) (neg-distrib-+ x (- (X ⋆)))) (neg-distrib-+ y (- (Y ⋆))) ⟩
+      (x + y) + (- x - (- (X ⋆))) + (- y - (- (Y ⋆))) ≈⟨ ℝsolve 4 (λ x y X Y ->
+                                                         (x +: y) +: (-: x -: (-: X)) +: (-: y -: (-: Y)) =:
+                                                         (x -: x) +: (y -: y) +: (-: (-: X) -: (-: Y)))
+                                                         ≃-refl x y (X ⋆) (Y ⋆) ⟩
+      (x - x) + (y - y) + (- (- (X ⋆)) - (- (Y ⋆)))   ≈⟨ +-cong (≃-trans (+-cong (+-inverseʳ x) (+-inverseʳ y)) (+-identityʳ 0ℝ))
+                                                         (+-cong (neg-involutive (X ⋆)) (neg-involutive (Y ⋆))) ⟩
+      0ℝ + (X ⋆ + Y ⋆)                                ≈⟨ ≃-trans (+-identityˡ (X ⋆ + Y ⋆)) (≃-symm (⋆-distrib-+ X Y)) ⟩
+      (X ℚ.+ Y) ⋆                                      ∎)
+      where open ≤-Reasoning
+
+    lem : ∀ (z : ℝ) -> (Z : ℚᵘ) -> ∣ z - Z ⋆ ∣ < ((+ 1 / 4) ℚ.* α) ⋆ -> Z ℚ.> (+ 1 / 4) ℚ.* α -> z > 0ℝ
+    lem z Z ∣z-Z∣<4⁻¹α Z>4⁻¹α = begin-strict
+      0ℝ                                        ≈⟨ ≃-symm (+-inverseʳ (((+ 1 / 4) ℚ.* α) ⋆)) ⟩
+      ((+ 1 / 4) ℚ.* α) ⋆ - ((+ 1 / 4) ℚ.* α) ⋆ <⟨ +-mono-< (p<q⇒p⋆<q⋆ ((+ 1 / 4) ℚ.* α) Z Z>4⁻¹α) (neg-mono-< ∣z-Z∣<4⁻¹α) ⟩
+      Z ⋆ - ∣ z - Z ⋆ ∣                         ≈⟨ +-congʳ (Z ⋆) (-‿cong (∣x-y∣≃∣y-x∣ z (Z ⋆))) ⟩
+      Z ⋆ - ∣ Z ⋆ - z ∣                         ≤⟨ +-monoʳ-≤ (Z ⋆) (neg-mono-≤ x≤∣x∣) ⟩
+      Z ⋆ - (Z ⋆ - z)                           ≈⟨ +-congʳ (Z ⋆) (neg-distrib-+ (Z ⋆) (- z)) ⟩
+      Z ⋆ + (- (Z ⋆) - (- z))                   ≈⟨ ≃-symm (+-assoc (Z ⋆) (- (Z ⋆)) (- (- z))) ⟩
+      Z ⋆ - Z ⋆ - (- z)                         ≈⟨ +-cong (+-inverseʳ (Z ⋆)) (neg-involutive z) ⟩
+      0ℝ + z                                    ≈⟨ +-identityˡ z ⟩
+      z                        ∎
+      where open ≤-Reasoning
+
+proposition-2-16 : ∀ (x : ℝ-Sequence) -> ∀ i n -> {i≤n : i ℕ.≤ n} ->
+                   ∑ x i n {i≤n} > 0ℝ -> ∃ λ (j : ℕ) -> x j > 0ℝ
+proposition-2-16 x i n {i≤n} ∑x>0 with ≤⇒≡∨< i n i≤n
+... | inj₁ i≡n = i , ∑x>0
+proposition-2-16 x i (suc n) {i≤n+1} ∑x>0 | inj₂ (ℕ.s≤s i≤n) = let n+1 = suc n in
+                                                               [ proposition-2-16 x i n {i≤n} , (λ xₙ₊₁>0 -> n+1 , xₙ₊₁>0) ]′
+                                                               (x+y>0⇒x>0∨y>0 (∑ x i n {i≤n}) (x n+1) ∑x>0)
+
+corollary-2-17 : ∀ x y z -> y < z -> x < z ⊎ x > y
+corollary-2-17 x y z y<z = [ (λ z-x>0 -> inj₁ (0<y-x⇒x<y x z z-x>0)) , (λ x-y>0 -> inj₂ (0<y-x⇒x<y y x x-y>0)) ]′
+                           (x+y>0⇒x>0∨y>0 (z - x) (x - y) (<-respʳ-≃ lem (x<y⇒0<y-x y z y<z)))
+  where
+    open ≃-Reasoning
+    open ℝ-+-*-Solver
+    lem : z - y ≃ (z - x) + (x - y)
+    lem = begin
+      z - y             ≈⟨ +-congˡ (- y) (≃-symm (+-identityʳ z)) ⟩
+      z + 0ℝ - y        ≈⟨ +-congˡ (- y) (+-congʳ z (≃-symm (+-inverseˡ x))) ⟩
+      z + (- x + x) - y ≈⟨ solve 3 (λ x y z -> z :+ (:- x :+ x) :- y := (z :- x) :+ (x :- y)) ≃-refl x y z ⟩
+      (z - x) + (x - y)  ∎
+
+_≮_ : Rel ℝ 0ℓ
+x ≮ y = ¬ (x < y)
+
+_≰_ : Rel ℝ 0ℓ
+x ≰ y = ¬ (x ≤ y)
+
+_≱_ : Rel ℝ 0ℓ
+x ≱ y = y ≰ x
+
+≤∨> : ∀ p q -> p ℚ.≤ q ⊎ q ℚ.< p  
+≤∨> p q with p ℚP.≤? q
+... | .Bool.true because ofʸ p₁ = inj₁ p₁
+... | .Bool.false because ofⁿ ¬p = inj₂ (ℚP.≰⇒> ¬p)
+
+{-
+Proposition:
+  If x ≮ y, then y ≤ x.
+Proof:
+  This is the extended version of Bishop's proof. Let n∈ℕ. Either y₂ₙ - x₂ₙ ≤ n⁻¹ or y₂ₙ - x₂ₙ > n⁻¹.
+If y₂ₙ - x₂ₙ > n⁻¹, then y - x is positive and x < y, a contradiction. Thus y₂ₙ - x₂ₙ ≤ n⁻¹, and so
+x₂ₙ - y₂ₙ ≥ -n⁻¹ for all n∈ℕ. Hence x - y ≥ 0, and y ≤ x.                                        □
+
+x - y = - (y - x)
+-}
+≮⇒≥ : _≮_ ⇒ _≥_
+≮⇒≥ {x} {y} x≮y = nonNeg* (λ {(suc k₁) -> let n = suc k₁ in
+                  ℚP.≤-respʳ-≃ (solve 2 (λ x y -> :- (y :- x) := x :- y) ℚP.≃-refl (seq x (2 ℕ.* n)) (seq y (2 ℕ.* n)))
+                  (ℚP.neg-mono-≤ ([ (λ hyp -> hyp) , (λ hyp -> ⊥-elim (x≮y (pos* (k₁ , hyp)))) ]′ (≤∨> (seq (y - x) n) (+ 1 / n))))})
+  where open ℚ-Solver.+-*-Solver
