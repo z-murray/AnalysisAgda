@@ -3196,6 +3196,10 @@ corollary-2-17 x y z y<z = [ (λ z-x>0 -> inj₁ (0<y-x⇒x<y x z z-x>0)) , (λ 
       z + (- x + x) - y ≈⟨ solve 3 (λ x y z -> z :+ (:- x :+ x) :- y := (z :- x) :+ (x :- y)) ≃-refl x y z ⟩
       (z - x) + (x - y)  ∎
 
+abstract
+  fast-corollary-2-17 : ∀ x y z -> y < z -> x < z ⊎ x > y
+  fast-corollary-2-17 = corollary-2-17
+
 _≮_ : Rel ℝ 0ℓ
 x ≮ y = ¬ (x < y)
 
@@ -3226,4 +3230,88 @@ x ≤ y ≤ z = (x ≤ y) × (y ≤ z)
 
 uncountability : ∀ (a : ℝ-Sequence) -> ∀ (x₀ y₀ : ℝ) -> x₀ < y₀ ->
                  ∃ λ (x : ℝ) -> (x₀ ≤ x ≤ y₀) × (∀ (n : ℕ) -> {n≢0 : n ≢0} -> x ≄ a n)
-uncountability = {!!}
+uncountability a x₀ y₀ x₀<y₀ = {!!}
+  where
+    {-xy-gen : (n : ℕ) -> {n≢0 : n ≢0} -> ℚᵘ × ℚᵘ
+    xy-gen 1 with fast-corollary-2-17 (a 1) x₀ y₀ x₀<y₀
+    ... | inj₁ a₁<x₀ = let x₁ = proj₁ (fast-density-of-ℚ x₀ ((a 1) ⊓ y₀) {!!})
+                              ; y₁ = proj₁ (fast-density-of-ℚ (x₁ ⋆) (a 1 ⊓ y₀ ⊓ (x₁ ℚ.+ 1ℚᵘ) ⋆) {!!}) in
+                              x₁ , y₁
+    ... | inj₂ y₀<a₁ = {!!}
+    xy-gen (suc (suc n)) = {!!}-}
+
+    record sub : Set where
+      constructor mkSub
+      field
+        ϕ : ℝ
+        ψ : ℝ
+        ϕ<ψ : ϕ < ψ
+
+    {-
+      Trying to embed the properties inside each element of the sequence so they don't individually need to be proved
+      after the construction of the sequences.
+    -}
+    record sub2 (m : ℕ) : Set where
+      constructor mkSub2
+      field
+        xₘ : ℝ
+        yₘ : ℝ
+        xs : ℕ -> ℝ
+        ys : ℕ -> ℝ
+        xₘ<yₘ : xₘ < yₘ
+        prop1 : ∀ (n : ℕ) -> (m≢0 : m ≢0) -> n ℕ.≤ m -> (x₀ ≤ xs n ≤ xₘ) × (yₘ ≤ ys n ≤ y₀) 
+        prop2 : (m≢0 : m ≢0) -> (xₘ > a m) ⊎ yₘ < a m
+        prop3 : (m≢0 : m ≢0) -> yₘ - xₘ < ((+ 1 / m) {m≢0}) ⋆
+
+    xy-gen : (m : ℕ) -> sub2 m
+    xy-gen 0 = mkSub2 x₀ y₀ (λ { 0 → x₀ ; (suc n) → 0ℝ}) (λ { 0 -> y₀ ; (suc n) -> 0ℝ})
+               x₀<y₀ (λ m 0≢0 -> ⊥-elim 0≢0) (λ 0≢0 -> ⊥-elim 0≢0) λ 0≢0 -> ⊥-elim 0≢0
+    xy-gen (suc m-1) with xy-gen m-1
+    ... | mkSub2 xₘ₋₁ yₘ₋₁ xs ys xₘ₋₁<yₘ₋₁ prop1 prop2 prop3 with fast-corollary-2-17 (a (suc m-1)) xₘ₋₁ yₘ₋₁ xₘ₋₁<yₘ₋₁
+    ... | inj₁ aₘ<yₘ₋₁ = mkSub2 xₘ yₘ xsₘ ysₘ (proj₂ (proj₂ xₘp)) prop1ₘ {!!} {!!}
+      where
+        m = suc m-1
+        yₘp = fast-density-of-ℚ (a m ⊔ xₘ₋₁) yₘ₋₁ {!!}
+        yₘ = (proj₁ yₘp) ⋆
+        xₘp = fast-density-of-ℚ (a m ⊔ xₘ₋₁ ⊔ (yₘ - (+ 1 / m) ⋆)) yₘ {!!}
+        xₘ = (proj₁ xₘp) ⋆
+
+        xsₘ : ℕ -> ℝ
+        xsₘ n with ℕP.<-cmp n m
+        ... | tri< n<m ¬b ¬c = xs n
+        ... | tri≈ ¬a n≡m ¬c = xₘ
+        ... | tri> ¬a ¬b m<n = 0ℝ
+
+        ysₘ : ℕ -> ℝ
+        ysₘ n with ℕP.<-cmp n m
+        ... | tri< n<m ¬b ¬c = ys n
+        ... | tri≈ ¬a n≡m ¬c = yₘ
+        ... | tri> ¬a ¬b m<n = 0ℝ
+
+        prop1ₘ : ∀ (n : ℕ) -> (m ≢0) -> n ℕ.≤ m -> (x₀ ≤ xsₘ n ≤ xₘ) × (yₘ ≤ ysₘ n ≤ y₀)
+        prop1ₘ n _ n≤m with ℕP.<-cmp n m
+        ... | tri< n<m ¬b ¬c = ({!!} , {!!}) , ({!!} , {!!})
+        ... | tri≈ ¬a refl ¬c = ({!!} , {!!}) , ({!!} , {!!})
+        ... | tri> ¬a ¬b n>m = ⊥-elim (ℕP.≤⇒≯ n≤m n>m)
+          where open ≤-Reasoning
+    ... | inj₂ xₘ₋₁<aₘ = {!!}
+
+    {-
+    xy-gen : ℕ -> sub
+    xy-gen 0 = mkSub x₀ y₀ x₀<y₀
+    xy-gen (suc n-1) with xy-gen n-1
+    ... | mkSub xₙ₋₁ yₙ₋₁ xₙ₋₁<yₙ₋₁ with fast-corollary-2-17 (a (suc n-1)) xₙ₋₁ yₙ₋₁ xₙ₋₁<yₙ₋₁
+    ... | inj₁ aₙ<yₙ₋₁ = let n = suc n-1; aₙ = a n; yₙp = {!!}; yₙ = {!!}; xₙp = {!!}; xₙ = {!!} in
+                         mkSub xₙ yₙ {!!}
+    ... | inj₂ xₙ₋₁<aₙ = let n = suc n-1; aₙ = a n; xₙp = fast-density-of-ℚ xₙ₋₁ (aₙ ⊓ yₙ₋₁) {!!}; xₙ = (proj₁ xₙp) ⋆
+                                 ; yₙp = fast-density-of-ℚ xₙ (aₙ ⊓ yₙ₋₁ ⊓ (xₙ + (+ 1 / n) ⋆)) {!!}; yₙ = (proj₁ xₙp) ⋆ in
+                                 mkSub xₙ yₙ {!!}
+
+    xs : ℕ -> ℚᵘ
+    xs 0 = 0ℚᵘ
+    xs (suc n) with xy-gen (suc n)
+    ... | mkSub (mkℝ seq₁ reg₁) ψ ϕ<ψ = {!!}
+
+    ys : ℕ -> ℚᵘ
+    ys 0 = 0ℚᵘ
+    ys (suc n) = {!!}-}
