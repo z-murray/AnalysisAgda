@@ -3687,5 +3687,33 @@ test x y = {!!}
 0test : 0ℝ ≃ - 0ℝ
 0test = ≃-refl {0ℝ}
 
-test0 : 0ℝ ≃ - 0ℝ
-test0 = {!!}
+data _≃'_ : Rel ℝ 0ℓ where
+  *≃* : ∀ {x y : ℝ} -> (∀ (n : ℕ) -> {n≢0 : n ≢0} -> ℚ.∣ seq x n ℚ.- seq y n ∣ ℚ.≤ (+ 2 / n) {n≢0}) -> x ≃' y
+
+≃'-refl : Reflexive _≃'_
+≃'-refl {x} = *≃* λ { (suc k₁) → let n = suc k₁ in begin
+  ℚ.∣ seq x n ℚ.- seq x n ∣ ≈⟨ ℚP.∣-∣-cong (ℚP.+-inverseʳ (seq x n)) ⟩
+  0ℚᵘ                       ≤⟨ ℚP.∣p∣≃p⇒0≤p ℚP.≃-refl ⟩
+  + 2 / n                    ∎}
+  where open ℚP.≤-Reasoning 
+
+test0 : ∀ p -> - (p ⋆) ≃ (ℚ.- p) ⋆
+test0 p = ≃-refl { - (p ⋆)}
+
+test3 : 0ℝ ≃ - 0ℝ
+test3 = ≃-refl {0ℝ}
+
+test2 : seq 0ℝ ≡ seq (- 0ℝ)
+test2 = _≡_.refl
+
+test4 : reg 0ℝ ≡ reg (- 0ℝ)
+test4 = {!refl!}
+
+alpha : ¬ (0ℝ ≡ - 0ℝ)
+alpha hyp = {!!}
+
+gamma : 0ℝ ≃ - 0ℝ -> 0ℝ ≡ - 0ℝ
+gamma 0≃-0 = {!!}
+
+test1 : ∀ p -> (- (p ⋆)) ≃' ((ℚ.- p) ⋆)
+test1 p = {!≃'-refl {(ℚ.- p) ⋆}!}
