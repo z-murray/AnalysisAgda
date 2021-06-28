@@ -3649,20 +3649,305 @@ uncountability : ∀ (a : ℝ-Sequence) -> ∀ (x₀ y₀ : ℝ) -> x₀ < y₀ 
                  ∃ λ (x : ℝ) -> (x₀ ≤ x ≤ y₀) × (∀ (n : ℕ) -> {n≢0 : n ≢0} -> x ≄ a n)
 uncountability a x₀ y₀ x₀<y₀ = {!!}
   where
+    record Sub (n : ℕ) : Set where
+      constructor mkSub
+      field
+        x : ℚᵘ 
+        y : ℚᵘ
+        x<y : x ℚ.< y
+        prop2 : x ⋆ > a n ⊎ y ⋆ < a n
+        prop3 : {n≢0 : n ≢0} -> y ℚ.- x ℚ.< (+ 1 / n) {n≢0}
+
+    generator : (n : ℕ) -> {n ≢0} -> (x y : ℝ) -> x < y -> a n < y ⊎ a n > x -> Sub n
+    generator (suc n-1) x y x<y (inj₁ aₙ<y) = mkSub X Y (p⋆<q⋆⇒p<q X Y (proj₂ (proj₂ Xp)))
+                                              (inj₁ prop2) prop3
+      where
+        n = suc n-1
+        Yp = fast-density-of-ℚ (a n ⊔ x) y (x<z∧y<z⇒x⊔y<z (a n) x y aₙ<y x<y)
+        Y = proj₁ Yp
+        Xp = fast-density-of-ℚ (a n ⊔ x ⊔ ((Y ℚ.- + 1 / n) ⋆)) (Y ⋆)
+             (x<z∧y<z⇒x⊔y<z (a n ⊔ x) ((Y ℚ.- + 1 / n) ⋆) (Y ⋆) (proj₁ (proj₂ Yp))
+             (p<q⇒p⋆<q⋆ (Y ℚ.- + 1 / n) Y (begin-strict
+          Y ℚ.- + 1 / n <⟨ ℚP.+-monoʳ-< Y {ℚ.- (+ 1 / n)} {0ℚᵘ} (ℚP.negative⁻¹ _) ⟩
+          Y ℚ.+ 0ℚᵘ     ≈⟨ ℚP.+-identityʳ Y ⟩
+          Y              ∎)))
+          where open ℚP.≤-Reasoning
+        X = proj₁ Xp
+
+        prop2 : X ⋆ > a n
+        prop2 = begin-strict
+          a n                           ≤⟨ ≤-trans
+                                           (x≤x⊔y (a n) x)
+                                           (x≤x⊔y (a n ⊔ x) ((Y ℚ.- + 1 / n) ⋆)) ⟩
+          a n ⊔ x ⊔ ((Y ℚ.- + 1 / n) ⋆) <⟨ proj₁ (proj₂ Xp) ⟩
+          X ⋆                            ∎
+          where open ≤-Reasoning
+
+        prop3 : Y ℚ.- X ℚ.< + 1 / n
+        prop3 = begin-strict
+          Y ℚ.- X                           ≈⟨ solve 3 (λ X Y n⁻¹ ->
+                                               Y :- X := (Y :- n⁻¹) :- X :+ n⁻¹)
+                                               ℚP.≃-refl X Y (+ 1 / n) ⟩
+          (Y ℚ.- + 1 / n) ℚ.- X ℚ.+ + 1 / n <⟨ ℚP.+-monoˡ-< (+ 1 / n) (ℚP.+-monoˡ-< (ℚ.- X)
+                                               (p⋆<q⋆⇒p<q (Y ℚ.- + 1 / n) X
+                                               (≤-<-trans (x≤y⊔x ((Y ℚ.- + 1 / n) ⋆) (a n ⊔ x)) (proj₁ (proj₂ Xp))))) ⟩
+          X ℚ.- X ℚ.+ + 1 / n               ≈⟨ solve 2 (λ X n⁻¹ -> X :- X :+ n⁻¹ := n⁻¹) ℚP.≃-refl X (+ 1 / n) ⟩
+          + 1 / n                            ∎
+          where
+            open ℚP.≤-Reasoning
+            open ℚ-Solver.+-*-Solver
+
+    generator (suc n-1) x y x<y (inj₂ aₙ>x) = mkSub X Y (p⋆<q⋆⇒p<q X Y (proj₁ (proj₂ Yp))) (inj₂ prop2) prop3
+      where
+        n = suc n-1
+        Xp = fast-density-of-ℚ x (a n ⊓ y) (x<y∧x<z⇒x<y⊓z x (a n) y aₙ>x x<y)
+        X = proj₁ Xp
+        Yp = fast-density-of-ℚ (X ⋆) (a n ⊓ y ⊓ ((X ℚ.+ + 1 / n) ⋆))
+             (x<y∧x<z⇒x<y⊓z (X ⋆) (a n ⊓ y) ((X ℚ.+ + 1 / n) ⋆) (proj₂ (proj₂ Xp))
+             (p<q⇒p⋆<q⋆ X (X ℚ.+ + 1 / n) (begin-strict
+          X             ≈⟨ ℚP.≃-sym (ℚP.+-identityʳ X) ⟩
+          X ℚ.+ 0ℚᵘ     <⟨ ℚP.+-monoʳ-< X {0ℚᵘ} {+ 1 / n} (ℚP.positive⁻¹ _) ⟩
+          X ℚ.+ + 1 / n  ∎)))
+          where open ℚP.≤-Reasoning
+        Y = proj₁ Yp
+
+        prop2 : Y ⋆ < a n
+        prop2 = begin-strict
+          Y ⋆                           <⟨ proj₂ (proj₂ Yp) ⟩
+          a n ⊓ y ⊓ ((X ℚ.+ + 1 / n) ⋆) ≤⟨ ≤-trans
+                                           (x⊓y≤x (a n ⊓ y) ((X ℚ.+ + 1 / n) ⋆))
+                                           (x⊓y≤x (a n) y) ⟩
+          a n                            ∎
+          where open ≤-Reasoning
+
+        prop3 : Y ℚ.- X ℚ.< + 1 / n
+        prop3 = begin-strict
+          Y ℚ.- X             <⟨ ℚP.+-monoˡ-< (ℚ.- X) (p⋆<q⋆⇒p<q Y (X ℚ.+ + 1 / n)
+                                 (<-≤-trans
+                                 (proj₂ (proj₂ Yp))
+                                 (x⊓y≤y (a n ⊓ y) ((X ℚ.+ + 1 / n) ⋆)))) ⟩
+          X ℚ.+ + 1 / n ℚ.- X ≈⟨ solve 2 (λ X n⁻¹ -> X :+ n⁻¹ :- X := n⁻¹) ℚP.≃-refl X (+ 1 / n) ⟩
+          + 1 / n              ∎
+          where
+            open ℚP.≤-Reasoning
+            open ℚ-Solver.+-*-Solver
+
+    xy-gen : (n : ℕ) -> {n ≢0} -> Sub n
+    xy-gen 1 = generator 1 x₀ y₀ x₀<y₀ (fast-corollary-2-17 (a 1) x₀ y₀ x₀<y₀)
+    xy-gen (suc (suc n-2)) = let n-1 = suc n-2; n = suc n-1; xₙ₋₁ = Sub.x (xy-gen n-1); yₙ₋₁ = Sub.y (xy-gen n-1)
+                                      ; xₙ₋₁<yₙ₋₁ = p<q⇒p⋆<q⋆ xₙ₋₁ yₙ₋₁ (Sub.x<y (xy-gen n-1)) in
+                             generator n (xₙ₋₁ ⋆) (yₙ₋₁ ⋆) xₙ₋₁<yₙ₋₁ (fast-corollary-2-17 (a n) (xₙ₋₁ ⋆) (yₙ₋₁ ⋆) (xₙ₋₁<yₙ₋₁))
+
+    xs : ℕ -> ℚᵘ
+    xs 0 = 0ℚᵘ
+    xs (suc n-1) = Sub.x (xy-gen (suc n-1))
+
+    ys : ℕ -> ℚᵘ
+    ys 0 = 0ℚᵘ
+    ys (suc n-1) = Sub.y (xy-gen (suc n-1))
+
+    prop1 : ∀ (m n : ℕ) -> {m ≢0} -> {n ≢0} -> n ℕ.≤ m ->
+            (x₀ ≤ xs n ⋆ ≤ (xs m ⋆)) × xs m ℚ.< ys m × ((ys m ⋆) ≤ ys n ⋆ ≤ y₀)
+    prop1 (suc m-1) (suc n-1) n≤m = ({!!} , [ (λ {refl -> ≤-refl}) ,
+                                    (λ {(ℕ.s≤s n<m) → ≤-trans
+                                    (proj₂ (proj₁ (prop1 m-1 n {0<n⇒n≢0 m-1 (ℕP.<-transˡ ℕP.0<1+n n<m)} n<m)))
+                                    (x-helper m-1 {0<n⇒n≢0 m-1 (ℕP.<-transˡ ℕP.0<1+n n<m)})}) ]′ (≤⇒≡∨< n m n≤m)) ,
+                                    Sub.x<y (xy-gen (suc m-1)) , {!!} , {!!}
+      where
+        m = suc m-1
+        n = suc n-1
+
+        0<n⇒n≢0 : ∀ n -> 0 ℕ.< n -> n ≢0
+        0<n⇒n≢0 (suc n-1) 0<n = _
+
+        {-
+          Might need to put x-helper, y-helper, and the x₀ ≤ xₙ, yₙ ≤ y₀ proofs in one block to avoid having to with abstract
+          too many times.
+        -}
+        x-helper : ∀ (k : ℕ) -> {k≢0 : k ≢0} -> xs k ⋆ ≤ xs (suc k) ⋆
+        x-helper (suc k-1) = {!!}
+
+        y-helper : ∀ (k : ℕ) -> {k≢0 : k ≢0} -> ys (suc k) ⋆ ≤ ys k ⋆
+        y-helper (suc k-1) = {!!}
+
+    {-xy-gen : (n : ℕ) -> {n ≢0} -> Sub
+    xy-gen 1 = generator 1 x₀ y₀ x₀<y₀ (fast-corollary-2-17 (a 1) x₀ y₀ x₀<y₀)
+    xy-gen (suc (suc n-2)) = let n-1 = suc n-2; n = suc n-1; xₙ₋₁ = Sub.x (xy-gen n-1); yₙ₋₁ = Sub.y (xy-gen n-1)
+                                     ; xₙ₋₁<yₙ₋₁ = p<q⇒p⋆<q⋆ xₙ₋₁ yₙ₋₁ (Sub.x<y (xy-gen n-1)) in
+                             generator n (xₙ₋₁ ⋆) (yₙ₋₁ ⋆) xₙ₋₁<yₙ₋₁
+                             (fast-corollary-2-17 (a n) (xₙ₋₁ ⋆) (yₙ₋₁ ⋆) xₙ₋₁<yₙ₋₁)
+
+    xs : ℕ -> ℚᵘ
+    xs 0 = 0ℚᵘ
+    xs (suc n-1) = Sub.x (xy-gen (suc n-1))
+
+    ys : ℕ -> ℚᵘ
+    ys 0 = 0ℚᵘ
+    ys (suc n-1) = Sub.y (xy-gen (suc n-1))
+
+    props : ∀ (m : ℕ) -> {m≢0 : m ≢0} ->
+            (∀ (n : ℕ) -> {n ≢0} -> n ℕ.≤ m -> (x₀ ≤ (xs n ⋆) ≤ (xs m ⋆)) × xs m ℚ.< ys m × ((ys m ⋆) ≤ (ys n ⋆) ≤ y₀)) ×
+            (xs m ⋆ > a m ⊎ ys m ⋆ < a m) ×
+            ys m ℚ.- xs m ℚ.< (+ 1 / m) {m≢0}
+    props 1 = (λ {1 (ℕ.s≤s 0≤0) -> ({!!} , ≤-refl) , Sub.x<y (generator 1 x₀ y₀ x₀<y₀ (fast-corollary-2-17 (a 1) x₀ y₀ x₀<y₀)) , (≤-refl , {!!})}) , {!!} , {!!}
+    props (suc (suc n-2)) = {!!}-}
+
+{-uncountability : ∀ (a : ℝ-Sequence) -> ∀ (x₀ y₀ : ℝ) -> x₀ < y₀ ->
+                 ∃ λ (x : ℝ) -> (x₀ ≤ x ≤ y₀) × (∀ (n : ℕ) -> {n≢0 : n ≢0} -> x ≄ a n)
+uncountability a x₀ y₀ x₀<y₀ = {!fast-corollary-2-17!}
+  where
     record Sub : Set where
       constructor mkSub
       field
-        x : ℝ
-        y : ℝ
-        x<y : x < y
+        x : ℚᵘ
+        y : ℚ̂ᵘ 
+        x<y : x ℚ.< y
 
-    xy-gen : ℕ -> Sub
+    abstract
+          fast-neg-mono-< = neg-mono-<
+
+    {-xy-gen : ℕ -> Sub
+    xy-gen 0 = mkSub x₀ y₀ x₀<y₀
+    xy-gen (suc n-1) = func (fast-corollary-2-17 aₙ xₙ₋₁ yₙ₋₁ xₙ₋₁<yₙ₋₁)
+      where
+        open ℚP.≤-Reasoning
+        n = suc n-1
+        aₙ = a n
+        xₙ₋₁ = Sub.x (xy-gen n-1)
+        yₙ₋₁ = Sub.y (xy-gen n-1)
+        xₙ₋₁<yₙ₋₁ = Sub.x<y (xy-gen n-1)
+
+        func : aₙ < yₙ₋₁ ⊎ aₙ > xₙ₋₁ -> Sub
+        func (inj₁ aₙ<yₙ₋₁) = mkSub (xₙ ⋆) (yₙ ⋆) (proj₂ (proj₂ xₙp))
+          where
+            yₙp = fast-density-of-ℚ (aₙ ⊔ xₙ₋₁) yₙ₋₁ (x<z∧y<z⇒x⊔y<z aₙ xₙ₋₁ yₙ₋₁ aₙ<yₙ₋₁ xₙ₋₁<yₙ₋₁)
+            yₙ = proj₁ yₙp
+            xₙp = fast-density-of-ℚ (aₙ ⊔ xₙ₋₁ ⊔ ((yₙ ℚ.- + 1 / n) ⋆)) (yₙ ⋆)
+                  (x<z∧y<z⇒x⊔y<z (aₙ ⊔ xₙ₋₁) ((yₙ ℚ.- + 1 / n) ⋆) (yₙ ⋆) (proj₁ (proj₂ yₙp))
+                  (p<q⇒p⋆<q⋆ (yₙ ℚ.- + 1 / n) yₙ (begin-strict
+              yₙ ℚ.- + 1 / n <⟨ ℚP.+-monoʳ-< yₙ {ℚ.- (+ 1 / n)} {0ℚᵘ} (ℚP.negative⁻¹ _) ⟩
+              yₙ ℚ.+ 0ℚᵘ     ≈⟨ ℚP.+-identityʳ yₙ ⟩
+              yₙ              ∎)))
+            xₙ = proj₁ xₙp
+        func (inj₂ aₙ>xₙ₋₁) = mkSub (xₙ ⋆) (yₙ ⋆) (proj₁ (proj₂ yₙp))
+          where
+            xₙp = fast-density-of-ℚ xₙ₋₁ (aₙ ⊓ yₙ₋₁) (x<y∧x<z⇒x<y⊓z xₙ₋₁ aₙ yₙ₋₁ aₙ>xₙ₋₁ xₙ₋₁<yₙ₋₁)
+            xₙ = proj₁ xₙp
+            yₙp = fast-density-of-ℚ (xₙ ⋆) (aₙ ⊓ yₙ₋₁ ⊓ (xₙ ℚ.+ + 1 / n) ⋆)
+                  (x<y∧x<z⇒x<y⊓z (xₙ ⋆) (aₙ ⊓ yₙ₋₁) ((xₙ ℚ.+ + 1 / n) ⋆) (proj₂ (proj₂ xₙp))
+                  (p<q⇒p⋆<q⋆ xₙ (xₙ ℚ.+ + 1 / n) (begin-strict
+              xₙ             ≈⟨ ℚP.≃-sym (ℚP.+-identityʳ xₙ) ⟩
+              xₙ ℚ.+ 0ℚᵘ     <⟨ ℚP.+-monoʳ-< xₙ {0ℚᵘ} {+ 1 / n} (ℚP.positive⁻¹ _) ⟩
+              xₙ ℚ.+ + 1 / n  ∎)))
+            yₙ = proj₁ yₙp-}
+
+    xy-gen : (n : ℕ) -> {n ≢0} -> Sub
+    xy-gen 1 = mkSub x₀ y₀ x₀<y₀
+    xy-gen (suc n-1) = func (fast-corollary-2-17 aₙ xₙ₋₁ yₙ₋₁ xₙ₋₁<yₙ₋₁)
+      where
+        open ℚP.≤-Reasoning
+        n = suc n-1
+        aₙ = a n
+        xₙ₋₁ = Sub.x (xy-gen n-1)
+        yₙ₋₁ = Sub.y (xy-gen n-1)
+        xₙ₋₁<yₙ₋₁ = Sub.x<y (xy-gen n-1)
+
+        func : aₙ < yₙ₋₁ ⊎ aₙ > xₙ₋₁ -> Sub
+        func (inj₁ aₙ<yₙ₋₁) = mkSub (xₙ ⋆) (yₙ ⋆) (proj₂ (proj₂ xₙp))
+          where
+            yₙp = fast-density-of-ℚ (aₙ ⊔ xₙ₋₁) yₙ₋₁ (x<z∧y<z⇒x⊔y<z aₙ xₙ₋₁ yₙ₋₁ aₙ<yₙ₋₁ xₙ₋₁<yₙ₋₁)
+            yₙ = proj₁ yₙp
+            xₙp = fast-density-of-ℚ (aₙ ⊔ xₙ₋₁ ⊔ ((yₙ ℚ.- + 1 / n) ⋆)) (yₙ ⋆)
+                  (x<z∧y<z⇒x⊔y<z (aₙ ⊔ xₙ₋₁) ((yₙ ℚ.- + 1 / n) ⋆) (yₙ ⋆) (proj₁ (proj₂ yₙp))
+                  (p<q⇒p⋆<q⋆ (yₙ ℚ.- + 1 / n) yₙ (begin-strict
+              yₙ ℚ.- + 1 / n <⟨ ℚP.+-monoʳ-< yₙ {ℚ.- (+ 1 / n)} {0ℚᵘ} (ℚP.negative⁻¹ _) ⟩
+              yₙ ℚ.+ 0ℚᵘ     ≈⟨ ℚP.+-identityʳ yₙ ⟩
+              yₙ              ∎)))
+            xₙ = proj₁ xₙp
+        func (inj₂ aₙ>xₙ₋₁) = mkSub (xₙ ⋆) (yₙ ⋆) (proj₁ (proj₂ yₙp))
+          where
+            xₙp = fast-density-of-ℚ xₙ₋₁ (aₙ ⊓ yₙ₋₁) (x<y∧x<z⇒x<y⊓z xₙ₋₁ aₙ yₙ₋₁ aₙ>xₙ₋₁ xₙ₋₁<yₙ₋₁)
+            xₙ = proj₁ xₙp
+            yₙp = fast-density-of-ℚ (xₙ ⋆) (aₙ ⊓ yₙ₋₁ ⊓ (xₙ ℚ.+ + 1 / n) ⋆)
+                  (x<y∧x<z⇒x<y⊓z (xₙ ⋆) (aₙ ⊓ yₙ₋₁) ((xₙ ℚ.+ + 1 / n) ⋆) (proj₂ (proj₂ xₙp))
+                  (p<q⇒p⋆<q⋆ xₙ (xₙ ℚ.+ + 1 / n) (begin-strict
+              xₙ             ≈⟨ ℚP.≃-sym (ℚP.+-identityʳ xₙ) ⟩
+              xₙ ℚ.+ 0ℚᵘ     <⟨ ℚP.+-monoʳ-< xₙ {0ℚᵘ} {+ 1 / n} (ℚP.positive⁻¹ _) ⟩
+              xₙ ℚ.+ + 1 / n  ∎)))
+            yₙ = proj₁ yₙp
+
+    xs : ℕ -> ℚᵘ
+    xs 0 = 0ℚᵘ
+    xs (suc n-1) = {!!}
+
+    ys : ℕ -> ℚᵘ
+    ys 0 = 0ℚᵘ
+    ys (suc n-1) = {!!}
+    
+    {-xy-gen : (n : ℕ) -> {n ≢0} -> (x y : ℝ) -> x < y -> a n < y ⊎ a n > x -> Sub
+    xy-gen (suc n-1) xₙ₋₁ yₙ₋₁ xₙ₋₁<yₙ₋₁ (inj₁ aₙ<yₙ₋₁) = mkSub xₙ yₙ (p⋆<q⋆⇒p<q xₙ yₙ (proj₂ (proj₂ xₙp)))
+      where
+        open ℚP.≤-Reasoning
+        n = suc n-1
+        yₙp = fast-density-of-ℚ (a n ⊔ xₙ₋₁) yₙ₋₁ (x<z∧y<z⇒x⊔y<z (a n) xₙ₋₁ yₙ₋₁ aₙ<yₙ₋₁ xₙ₋₁<yₙ₋₁)
+        yₙ = proj₁ yₙp
+        xₙp = fast-density-of-ℚ (a n ⊔ xₙ₋₁ ⊔ ((yₙ ℚ.- (+ 1 / n)) ⋆)) (yₙ ⋆)
+              (x<z∧y<z⇒x⊔y<z (a n ⊔ xₙ₋₁) ((yₙ ℚ.- + 1 / n) ⋆) (yₙ ⋆) (proj₁ (proj₂ yₙp))
+              (p<q⇒p⋆<q⋆ (yₙ ℚ.- + 1 / n) yₙ (begin-strict
+          yₙ ℚ.- + 1 / n <⟨ ℚP.+-monoʳ-< yₙ {ℚ.- (+ 1 / n)} {0ℚᵘ} (ℚP.negative⁻¹ _) ⟩
+          yₙ ℚ.+ 0ℚᵘ     ≈⟨ ℚP.+-identityʳ yₙ ⟩
+          yₙ              ∎)))
+        xₙ = proj₁ xₙp
+    xy-gen (suc n-1) xₙ₋₁ yₙ₋₁ xₙ₋₁<yₙ₋₁ (inj₂ aₙ>xₙ₋₁) = mkSub xₙ yₙ (p⋆<q⋆⇒p<q xₙ yₙ (proj₁ (proj₂ yₙp)))
+      where
+        open ℚP.≤-Reasoning
+        n = suc n-1
+        xₙp = fast-density-of-ℚ xₙ₋₁ (a n ⊓ yₙ₋₁) (x<y∧x<z⇒x<y⊓z xₙ₋₁ (a n) yₙ₋₁ aₙ>xₙ₋₁ xₙ₋₁<yₙ₋₁)
+        xₙ = proj₁ xₙp
+        yₙp = fast-density-of-ℚ (xₙ ⋆) (a n ⊓ yₙ₋₁ ⊓ (xₙ ℚ.+ + 1 / n) ⋆)
+              (x<y∧x<z⇒x<y⊓z (xₙ ⋆) (a n ⊓ yₙ₋₁) ((xₙ ℚ.+ + 1 / n) ⋆)
+              (proj₂ (proj₂ xₙp)) (p<q⇒p⋆<q⋆ xₙ (xₙ ℚ.+ + 1 / n) (begin-strict
+          xₙ             ≈⟨ ℚP.≃-sym (ℚP.+-identityʳ xₙ) ⟩
+          xₙ ℚ.+ 0ℚᵘ     <⟨ ℚP.+-monoʳ-< xₙ {0ℚᵘ} {+ 1 / n} (ℚP.positive⁻¹ _) ⟩
+          xₙ ℚ.+ + 1 / n  ∎)))
+        yₙ = proj₁ yₙp-}
+
+    {-xs : ℕ -> ℚᵘ
+    xs 0 = 0ℚᵘ
+    xs 1 = Sub.x (xy-gen 1 x₀ y₀ x₀<y₀ (fast-corollary-2-17 (a 1) x₀ y₀ x₀<y₀))
+    xs (suc (suc n-2)) = let n-1 = suc n-2; n = suc n-1; gen = xy-gen n {!!} {!!} {!!} {!!}
+                                  ; xₙ₋₁ = Sub.x gen; yₙ₋₁ = Sub.y gen; xₙ₋₁<yₙ₋₁ = Sub.x<y gen in
+                                  {!!}-}
+
+    {-xy-gen : ℕ -> Sub
     xy-gen 0 = mkSub x₀ y₀ x₀<y₀
     xy-gen (suc n-1) with fast-corollary-2-17 (a (suc n-1)) (Sub.x (xy-gen n-1)) (Sub.y (xy-gen n-1)) (Sub.x<y (xy-gen n-1))
     ... | inj₁ aₙ<yₙ₋₁ = mkSub (- y₀) (- x₀) (neg-mono-< x₀<y₀)
     ... | inj₂ aₙ>xₙ₋₁ = mkSub x₀ y₀ x₀<y₀
 
     test : (n : ℕ) -> {n ≢0} -> {!!}
-    test (suc n-1) with fast-corollary-2-17 (a (suc n-1)) (Sub.x (xy-gen n-1)) (Sub.y (xy-gen n-1)) (Sub.x<y (xy-gen n-1))
-    ... | inj₁ x = let reftest : Sub.x (xy-gen n-1) ≡ - y₀; reftest = {!refl!} in {!!}
-    ... | inj₂ y = {!!}
+    test (suc n-1) with Sub.x (xy-gen (suc n-1)) | fast-corollary-2-17 (a (suc n-1)) (Sub.x (xy-gen n-1)) (Sub.y (xy-gen n-1)) (Sub.x<y (xy-gen n-1))
+    ... | res | inj₁ x = {!let reftest : res ≡ - y₀; reftest = refl in ?!}
+    ... | res | inj₂ y = {!!}-}
+
+    {-xy-gen : ℕ -> Sub
+    xy-gen 0 = mkSub x₀ y₀ x₀<y₀
+    xy-gen (suc n-1) = func (fast-corollary-2-17 (a (suc n-1)) (Sub.x (xy-gen n-1)) (Sub.y (xy-gen n-1)) (Sub.x<y (xy-gen n-1)))
+      where
+        func : a (suc n-1) < Sub.y (xy-gen n-1) ⊎ a (suc n-1) > Sub.x (xy-gen n-1) -> Sub
+        func (inj₁ x) = mkSub (- y₀) (- x₀) (neg-mono-< x₀<y₀)
+        func (inj₂ y) = mkSub x₀ y₀ x₀<y₀
+
+    generator : (n : ℕ) -> (x y : ℝ) -> x < y -> a n < y ⊎ a n > x -> Sub
+    generator n x y x<y (inj₁ x₁) = mkSub (- y₀) (- x₀) (fast-neg-mono-< x₀<y₀)
+      where
+        abstract
+          fast-neg-mono-< : ∀ {a b} -> a < b -> - b < - a
+          fast-neg-mono-< = neg-mono-<
+    generator n x y x<y (inj₂ y₁) = mkSub x₀ y₀ x₀<y₀
+
+    test : (n : ℕ) -> {n ≢0} -> {!!}
+    test (suc n-1) with fast-corollary-2-17 (a (suc n-1)) x₀ y₀ x₀<y₀
+    ... | inj₁ x = {!generator (suc n-1) x₀ y₀ x₀<y₀ (inj₁ x)!}
+    ... | inj₂ y = {!generator (suc n-1) x₀ y₀ x₀<y₀ (inj₂ y)!}-}
+-}
