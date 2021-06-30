@@ -3510,7 +3510,11 @@ p⋆≤q⋆⇒p≤q p q (nonNeg* hyp) = p-q≤j⁻¹⇒p≤q (λ {(suc j-1) -> l
   where open ℚ-Solver.+-*-Solver
 
 p≤q⇒p⋆≤q⋆ : ∀ p q -> p ℚ.≤ q -> p ⋆ ≤ q ⋆
-p≤q⇒p⋆≤q⋆ p q p≤q = {!!}
+p≤q⇒p⋆≤q⋆ p q p≤q = nonNeg* (λ {(suc n-1) -> let n = suc n-1 in begin
+  ℚ.- (+ 1 / n) <⟨ ℚP.negative⁻¹ _ ⟩
+  0ℚᵘ           ≤⟨ ℚP.p≤q⇒0≤q-p p≤q ⟩
+  q ℚ.- p        ∎})
+  where open ℚP.≤-Reasoning
 
 0<n⇒n≢0 : ∀ n -> 0 ℕ.< n -> n ≢0
 0<n⇒n≢0 (suc n-1) 0<n = _
@@ -3699,18 +3703,6 @@ uncountability a x₀ y₀ x₀<y₀ = {!!}
     xy-gen 1 = ?
     xy-gen (suc (suc n)) = ?
 -}
-
-abstract
-  ∨-getter : {a b : Level.Level} -> {A : Set a} -> {B : Set b} -> (P : A ⊎ B) ->
-             (∃ λ (x : A) -> P ≡ inj₁ x) ⊎ ∃ λ (y : B) -> P ≡ inj₂ y
-  ∨-getter (inj₁ x) = inj₁ (x , refl)
-  ∨-getter (inj₂ y) = inj₂ (y , refl)
-
-abstract
-  2-17-getter : ∀ x y z -> (y<z : y < z) ->
-                (∃ λ (L : x < z) -> fast-corollary-2-17 x y z y<z ≡ inj₁ L) ⊎
-                (∃ λ (R : y < x) -> fast-corollary-2-17 x y z y<z ≡ inj₂ R)
-  2-17-getter x y z y<z = ∨-getter (fast-corollary-2-17 x y z y<z)
 
 {-
 Function for aₙ<y
@@ -4123,16 +4115,28 @@ uncountability a x₀ y₀ x₀<y₀ = {!!}
     xs (suc n-1) = {!!}-}
 -}
 
-{-
-Idea: Use ∃ to generate the sequences and their properties. Prop1 will need an extra proof to extend it, but it should be a lot
-easier with this implementation (I should be able to prove xₙ₋₁ ≤ xₙ for all n for free since it's baked into the definition of
-the sequence via the generator function, and then extend that, via transitivity, to xₙ ≤ xₘ for all m ≥ n, as you normally would 
-with an increasing sequence).
--}
+regular-n≤m : (x : ℕ -> ℚᵘ) ->
+                   (∀ (m n : ℕ) -> {m≢0 : m ≢0} -> {n≢0 : n ≢0} -> m ℕ.≥ n -> ℚ.∣ x m ℚ.- x n ∣ ℚ.≤ (+ 1 / m) {m≢0} ℚ.+ (+ 1 / n) {n≢0}) ->
+                   ∀ (m n : ℕ) -> {m≢0 : m ≢0} -> {n≢0 : n ≢0} -> ℚ.∣ x m ℚ.- x n ∣ ℚ.≤ (+ 1 / m) {m≢0} ℚ.+ (+ 1 / n) {n≢0}
+regular-n≤m x hyp (suc m-1) (suc n-1) = [ left , right ]′ (ℕP.≤-total m n)
+  where
+    open ℚP.≤-Reasoning
+    m = suc m-1
+    n = suc n-1
+
+    left : m ℕ.≤ n -> ℚ.∣ x m ℚ.- x n ∣ ℚ.≤ (+ 1 / m) ℚ.+ (+ 1 / n)
+    left m≤n = begin
+      ℚ.∣ x m ℚ.- x n ∣   ≈⟨ ∣p-q∣≃∣q-p∣ (x m) (x n) ⟩
+      ℚ.∣ x n ℚ.- x m ∣   ≤⟨ hyp n m m≤n ⟩
+      + 1 / n ℚ.+ + 1 / m ≈⟨ ℚP.+-comm (+ 1 / n) (+ 1 / m) ⟩
+      + 1 / m ℚ.+ + 1 / n  ∎
+
+    right : n ℕ.≤ m -> ℚ.∣ x m ℚ.- x n ∣ ℚ.≤ (+ 1 / m) ℚ.+ (+ 1 / n)
+    right n≤m = hyp m n n≤m
 
 uncountability : ∀ (a : ℝ-Sequence) -> ∀ (x₀ y₀ : ℝ) -> x₀ < y₀ ->
                  ∃ λ (x : ℝ) -> (x₀ ≤ x ≤ y₀) × (∀ (n : ℕ) -> {n≢0 : n ≢0} -> x ≄ a n)
-uncountability a x₀ y₀ x₀<y₀ = {!!}
+uncountability a x₀ y₀ x₀<y₀ = x , ((≤-trans (x₀≤xₙ 1) (xₙ≤x 1)) , (≤-respˡ-≃ (≃-symm x≃y) (≤-trans (yₙ≥y 1) (yₙ≤y₀ 1)))) , x≄aₙ
   where
     generator : (n : ℕ) -> {n≢0 : n ≢0} -> (xₙ₋₁ yₙ₋₁ : ℝ) -> xₙ₋₁ < yₙ₋₁ -> x₀ ≤ xₙ₋₁ -> yₙ₋₁ ≤ y₀ ->
                 ∃ λ (xₙ : ℚᵘ) -> ∃ λ (yₙ : ℚᵘ) ->
@@ -4220,7 +4224,7 @@ uncountability a x₀ y₀ x₀<y₀ = {!!}
     xs : ℕ -> ℚᵘ
     ys : ℕ -> ℚᵘ
     xs-increasing : ∀ (n : ℕ) -> {n ≢0} -> xs n ℚ.≤ xs (suc n)
-    ys-increasing : ∀ (n : ℕ) -> {n ≢0} -> ys (suc n) ℚ.≤ ys n
+    ys-decreasing : ∀ (n : ℕ) -> {n ≢0} -> ys (suc n) ℚ.≤ ys n
     xₙ<yₙ : ∀ (n : ℕ) -> {n ≢0} -> xs n ⋆ < ys n ⋆
     x₀≤xₙ : ∀ (n : ℕ) -> {n ≢0} -> x₀ ≤ xs n ⋆
     yₙ≤y₀ : ∀ (n : ℕ) -> {n ≢0} -> ys n ⋆ ≤ y₀
@@ -4239,9 +4243,9 @@ uncountability a x₀ y₀ x₀<y₀ = {!!}
                                     p⋆≤q⋆⇒p≤q (xs n-1) (xs n)
                                     (proj₂ (proj₁ (proj₁ (proj₂ (proj₂ (generator n (xs n-1 ⋆) (ys n-1 ⋆) (xₙ<yₙ n-1) (x₀≤xₙ n-1) (yₙ≤y₀ n-1)))))))
     
-    ys-increasing 1 = p⋆≤q⋆⇒p≤q (ys 2) (ys 1)
+    ys-decreasing 1 = p⋆≤q⋆⇒p≤q (ys 2) (ys 1)
                       (proj₁ (proj₂ (proj₂ (proj₁ (proj₂ (proj₂ (generator 2 (xs 1 ⋆) (ys 1 ⋆) (xₙ<yₙ 1) (x₀≤xₙ 1) (yₙ≤y₀ 1))))))))
-    ys-increasing (suc (suc n-2)) = let n-1 = suc (suc n-2); n = suc n-1 in
+    ys-decreasing (suc (suc n-2)) = let n-1 = suc (suc n-2); n = suc n-1 in
                                     p⋆≤q⋆⇒p≤q (ys n) (ys n-1)
                                     (proj₁ (proj₂ (proj₂ (proj₁ (proj₂ (proj₂ (generator n (xs n-1 ⋆) (ys n-1 ⋆) (xₙ<yₙ n-1) (x₀≤xₙ n-1) (yₙ≤y₀ n-1))))))))
 
@@ -4266,7 +4270,12 @@ uncountability a x₀ y₀ x₀<y₀ = {!!}
                                         (≤⇒≡∨< n m n≤m)
 
     n≤m⇒yₘ≤yₙ : ∀ (m n : ℕ) -> {n ≢0} -> n ℕ.≤ m -> ys m ⋆ ≤ ys n ⋆
-    n≤m⇒yₘ≤yₙ (suc m-1) (suc n-1) n≤m = {!!}
+    n≤m⇒yₘ≤yₙ (suc m-1) (suc n-1) n≤m = let m = suc m-1; n = suc n-1 in
+                                        [ (λ {refl -> ≤-refl}) ,
+                                        (λ {n<m -> ≤-trans (p≤q⇒p⋆≤q⋆ (ys m) (ys m-1) (ys-decreasing m-1
+                                                                      {0<n⇒n≢0 m-1 (ℕP.<-transˡ ℕP.0<1+n (m<1+n⇒m≤n n m-1 n<m))}))
+                                                           (n≤m⇒yₘ≤yₙ m-1 n (m<1+n⇒m≤n n m-1 n<m))}) ]′
+                                        (≤⇒≡∨< n m n≤m)
 
     xₙ>aₙ∨yₙ<aₙ : ∀ (n : ℕ) -> {n ≢0} -> xs n ⋆ > a n ⊎ ys n ⋆ < a n
     xₙ>aₙ∨yₙ<aₙ 1 = proj₁ (proj₂ (proj₂ (proj₂ (generator 1 x₀ y₀ x₀<y₀ ≤-refl ≤-refl))))
@@ -4278,14 +4287,63 @@ uncountability a x₀ y₀ x₀<y₀ = {!!}
     yₙ-xₙ<n⁻¹ (suc (suc n-2)) = let n-1 = suc n-2; n = suc n-1 in
                                 proj₂ (proj₂ (proj₂ (proj₂ (generator n (xs n-1 ⋆) (ys n-1 ⋆) (xₙ<yₙ n-1) (x₀≤xₙ n-1) (yₙ≤y₀ n-1)))))
 
-    testing : (n : ℕ) -> {n ≢0} -> (x y : ℝ) -> {!!}
-    testing n {n≢0} x y = {!proj₂ (proj₂ (proj₂ (proj₂ (generator n {n≢0} x y ? ? ?))))!}
+    x : ℝ
+    seq x = xs
+    reg x = regular-n≤m xs (λ {(suc m-1) (suc n-1) m≥n → let m = suc m-1; n = suc n-1 in begin
+      ℚ.∣ xs m ℚ.- xs n ∣ ≈⟨ ℚP.0≤p⇒∣p∣≃p (ℚP.p≤q⇒0≤q-p (p⋆≤q⋆⇒p≤q (xs n) (xs m) (n≤m⇒xₙ≤xₘ m n m≥n))) ⟩
+      xs m ℚ.- xs n       <⟨ ℚP.+-monoˡ-< (ℚ.- xs n) (p⋆<q⋆⇒p<q (xs m) (ys n)
+                             (<-≤-trans (xₙ<yₙ m) (n≤m⇒yₘ≤yₙ m n m≥n))) ⟩
+      ys n ℚ.- xs n       <⟨ yₙ-xₙ<n⁻¹ n ⟩
+      + 1 / n             ≈⟨ ℚP.≃-sym (ℚP.+-identityˡ (+ 1 / n)) ⟩
+      0ℚᵘ ℚ.+ + 1 / n     <⟨ ℚP.+-monoˡ-< (+ 1 / n) {0ℚᵘ} {+ 1 / m} (ℚP.positive⁻¹ _) ⟩
+      + 1 / m ℚ.+ + 1 / n  ∎})
+      where open ℚP.≤-Reasoning
 
-even : ℕ -> Bool
-odd : ℕ -> Bool
+    y : ℝ
+    seq y = ys
+    reg y = regular-n≤m ys (λ {(suc m-1) (suc n-1) m≥n -> let m = suc m-1; n = suc n-1 in begin
+      ℚ.∣ ys m ℚ.- ys n ∣ ≈⟨ ∣p-q∣≃∣q-p∣ (ys m) (ys n) ⟩
+      ℚ.∣ ys n ℚ.- ys m ∣ ≈⟨ ℚP.0≤p⇒∣p∣≃p (ℚP.p≤q⇒0≤q-p (p⋆≤q⋆⇒p≤q (ys m) (ys n) (n≤m⇒yₘ≤yₙ m n m≥n))) ⟩
+      ys n ℚ.- ys m       <⟨ ℚP.+-monoʳ-< (ys n) (ℚP.neg-mono-< (p⋆<q⋆⇒p<q (xs n) (ys m)
+                             (≤-<-trans (n≤m⇒xₙ≤xₘ m n m≥n) (xₙ<yₙ m)))) ⟩
+      ys n ℚ.- xs n       <⟨ yₙ-xₙ<n⁻¹ n ⟩
+      + 1 / n             ≈⟨ ℚP.≃-sym (ℚP.+-identityˡ (+ 1 / n)) ⟩
+      0ℚᵘ ℚ.+ + 1 / n     <⟨ ℚP.+-monoˡ-< (+ 1 / n) {0ℚᵘ} {+ 1 / m} (ℚP.positive⁻¹ _) ⟩
+      + 1 / m ℚ.+ + 1 / n  ∎})
+      where open ℚP.≤-Reasoning
 
-even 0 = Bool.true
-even (suc n) = odd n
+    x≃y : x ≃ y
+    x≃y = *≃* (λ {(suc n-1) -> let n = suc n-1 in begin
+      ℚ.∣ xs n ℚ.- ys n ∣ ≈⟨ ∣p-q∣≃∣q-p∣ (xs n) (ys n) ⟩
+      ℚ.∣ ys n ℚ.- xs n ∣ ≈⟨ ℚP.0≤p⇒∣p∣≃p (ℚP.<⇒≤ (p<q⇒0<q-p (xs n) (ys n)
+                             (p⋆<q⋆⇒p<q (xs n) (ys n) (xₙ<yₙ n)))) ⟩
+      ys n ℚ.- xs n       <⟨ yₙ-xₙ<n⁻¹ n ⟩
+      + 1 / n             ≤⟨ ℚ.*≤* (ℤP.*-monoʳ-≤-nonNeg n {+ 1} {+ 2} (ℤ.+≤+ (ℕ.s≤s ℕ.z≤n))) ⟩
+      + 2 / n              ∎})
+      where open ℚP.≤-Reasoning
 
-odd 0 = Bool.false
-odd (suc n) = even n
+    xₙ≤x : ∀ (n : ℕ) -> {n ≢0} -> xs n ⋆ ≤ x
+    xₙ≤x (suc n-1) = let n = suc n-1 in
+                     lemma-2-8-2-onlyif (λ {(suc k-1) -> n , _ , λ {(suc m-1) m≥n -> let k = suc k-1; m = suc m-1 in
+                     begin
+     ℚ.- (+ 1 / k)         <⟨ ℚP.negative⁻¹ _ ⟩
+     0ℚᵘ                   ≤⟨ ℚP.p≤q⇒0≤q-p (p⋆≤q⋆⇒p≤q (xs n) (xs (2 ℕ.* m))
+                              (n≤m⇒xₙ≤xₘ (2 ℕ.* m) n (ℕP.≤-trans m≥n (ℕP.m≤n*m m {2} ℕP.0<1+n)))) ⟩
+     xs (2 ℕ.* m) ℚ.- xs n  ∎}})
+      where open ℚP.≤-Reasoning
+
+    yₙ≥y : ∀ (n : ℕ) -> {n ≢0} -> ys n ⋆ ≥ y
+    yₙ≥y (suc n-1) = let n = suc n-1 in
+                     lemma-2-8-2-onlyif (λ {(suc k-1) -> n , _ , λ {(suc m-1) m≥n -> let k = suc k-1; m = suc m-1 in
+                     begin
+      ℚ.- (+ 1 / k)         <⟨ ℚP.negative⁻¹ _ ⟩
+      0ℚᵘ                   ≤⟨ ℚP.p≤q⇒0≤q-p (p⋆≤q⋆⇒p≤q (ys (2 ℕ.* m)) (ys n)
+                               (n≤m⇒yₘ≤yₙ (2 ℕ.* m) n (ℕP.≤-trans m≥n (ℕP.m≤n*m m {2} ℕP.0<1+n)))) ⟩
+      ys n ℚ.- ys (2 ℕ.* m)  ∎}})
+      where open ℚP.≤-Reasoning
+
+    x≄aₙ : ∀ (n : ℕ) -> {n ≢0} -> x ≄ (a n)
+    x≄aₙ (suc n-1) = let n = suc n-1 in
+                     [ (λ xₙ>aₙ -> inj₂ (<-≤-trans xₙ>aₙ (xₙ≤x n))) ,
+                     (λ yₙ<aₙ -> inj₁ (<-respˡ-≃ (≃-symm x≃y) (≤-<-trans (yₙ≥y n) yₙ<aₙ))) ]′
+                     (xₙ>aₙ∨yₙ<aₙ n)
