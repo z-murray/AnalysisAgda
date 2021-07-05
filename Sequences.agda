@@ -36,7 +36,7 @@ open ℝ
 
 data _ConvergesTo_ : REL (ℕ -> ℝ) ℝ 0ℓ where
   con* : {f : ℕ -> ℝ} -> {x₀ : ℝ} ->
-         (∀ k -> {k≢0 : k ≢0} -> ∃ λ Nₖ -> Nₖ ≢0 × (∀ n -> n ℕ.≥ Nₖ -> ∣ f n - x₀ ∣ ≤ ((+ 1 / k) {k≢0}) ⋆)) ->
+         (∀ k -> {k≢0 : k ≢0} -> ∃ λ Nₖ-1 -> (∀ n -> n ℕ.≥ suc (Nₖ-1) -> ∣ f n - x₀ ∣ ≤ ((+ 1 / k) {k≢0}) ⋆)) ->
          f ConvergesTo x₀
 
 _isConvergent : (ℕ -> ℝ) -> Set
@@ -101,7 +101,7 @@ Useful for escaping the "metal" of the reals.
 
 uniqueness-of-limits : ∀ {f : ℕ -> ℝ} -> ∀ {x y : ℝ} -> f ConvergesTo x -> f ConvergesTo y -> x ≃ y
 uniqueness-of-limits {f} {x} {y} (con* f→x) (con* f→y) = ∣x-y∣≤k⁻¹⇒x≃y x y (λ {(suc k-1) ->
-                                                         let k = suc k-1; N₁ = proj₁ (f→x (2 ℕ.* k)); N₂ = proj₁ (f→y (2 ℕ.* k))
+                                                         let k = suc k-1; N₁ = suc (proj₁ (f→x (2 ℕ.* k))); N₂ = suc (proj₁ ((f→y (2 ℕ.* k))))
                                                                ; N = N₁ ℕ.⊔ N₂ in begin
   ∣ x - y ∣                                 ≈⟨ ∣-∣-cong (≃-symm (+-congˡ (- y)
                                                (≃-trans (+-congʳ x (+-inverseʳ (f N))) (+-identityʳ x)))) ⟩
@@ -110,8 +110,8 @@ uniqueness-of-limits {f} {x} {y} (con* f→x) (con* f→y) = ∣x-y∣≤k⁻¹�
                                                ≃-refl x (- y) (f N) (- f N)) ⟩
   ∣ (x - f N) + (f N - y) ∣                 ≤⟨ ∣x+y∣≤∣x∣+∣y∣ (x - f N) (f N - y) ⟩
   ∣ x - f N ∣ + ∣ f N - y ∣                 ≤⟨ +-mono-≤
-                                              (≤-respˡ-≃ (∣x-y∣≃∣y-x∣ (f N) x) (proj₂ (proj₂ (f→x (2 ℕ.* k))) N (ℕP.m≤m⊔n N₁ N₂)))
-                                              (proj₂ (proj₂ (f→y (2 ℕ.* k))) N (ℕP.m≤n⊔m N₁ N₂)) ⟩
+                                              (≤-respˡ-≃ (∣x-y∣≃∣y-x∣ (f N) x) (proj₂ (f→x (2 ℕ.* k)) N (ℕP.m≤m⊔n N₁ N₂)))
+                                              (proj₂ (f→y (2 ℕ.* k)) N (ℕP.m≤n⊔m N₁ N₂)) ⟩
   (+ 1 / (2 ℕ.* k)) ⋆ + (+ 1 / (2 ℕ.* k)) ⋆ ≈⟨ ≃-trans
                                                (≃-symm (⋆-distrib-+ (+ 1 / (2 ℕ.* k)) (+ 1 / (2 ℕ.* k))))
                                                (⋆-cong (ℚ.*≡* (solve 1 (λ k ->
@@ -129,14 +129,18 @@ uniqueness-of-limits {f} {x} {y} (con* f→x) (con* f→y) = ∣x-y∣≤k⁻¹�
         )
     open ℤ-Solver.+-*-Solver
 
-data _isBounded : (ℕ -> ℝ) -> Set where
-  bound* : {f : ℕ -> ℝ} -> (∃ λ r -> Positive r × ∀ n -> {n ≢0} -> ∣ f n ∣ ≤ r) -> f isBounded
+data _hasBound_ : REL (ℕ -> ℝ) ℝ 0ℓ where
+  bound* : {f : ℕ -> ℝ} -> {r : ℝ} -> (∀ n -> {n ≢0} -> ∣ f n ∣ ≤ r) -> f hasBound r 
+
+
+_isBounded : (ℕ -> ℝ) -> Set
+f isBounded = ∃ λ r -> f hasBound r
 
 {-
 Let x₀ = lim f. Then
 -}
-convergentSeq⇒bounded : ∀ {f : ℕ -> ℝ} -> f isConvergent -> f isBounded
-convergentSeq⇒bounded {f} (x₀ , con* f→x₀) = bound* {!!}
+convergent⇒bounded : ∀ {f : ℕ -> ℝ} -> f isConvergent -> f isBounded
+convergent⇒bounded {f} (x₀ , con* f→x₀) = {!!}
 
 data _isCauchy : (ℕ -> ℝ) -> Set where
   cauchy* : {f : ℕ -> ℝ} ->
@@ -145,7 +149,7 @@ data _isCauchy : (ℕ -> ℝ) -> Set where
 
 convergent⇒cauchy : ∀ {f : ℕ -> ℝ} -> f isConvergent -> f isCauchy
 convergent⇒cauchy {f} (x₀ , con* f→x₀) = cauchy* (λ {(suc k-1) ->
-                                         let k = suc k-1; N₂ₖ = proj₁ (f→x₀ (2 ℕ.* k)); Mₖ = suc N₂ₖ in
+                                         let k = suc k-1; N₂ₖ = suc (proj₁ (f→x₀ (2 ℕ.* k))); Mₖ = suc N₂ₖ in
                                          Mₖ , _ , λ {(suc m-1) (suc n-1) m≥Mₖ n≥Mₖ -> let m = suc m-1 ; n = suc n-1 in
                                          begin
   ∣ f m - f n ∣                             ≈⟨ ∣-∣-cong (≃-symm (+-congˡ (- f n) (≃-trans
@@ -156,9 +160,9 @@ convergent⇒cauchy {f} (x₀ , con* f→x₀) = cauchy* (λ {(suc k-1) ->
                                                ≃-refl (f m) x₀ (- x₀) (- f n)) ⟩
   ∣ f m - x₀ + (x₀ - f n) ∣                 ≤⟨ ∣x+y∣≤∣x∣+∣y∣ (f m - x₀) (x₀ - f n) ⟩
   ∣ f m - x₀ ∣ + ∣ x₀ - f n ∣               ≤⟨ +-mono-≤
-                                              (proj₂ (proj₂ (f→x₀ (2 ℕ.* k))) m (ℕP.≤-trans (ℕP.n≤1+n N₂ₖ) m≥Mₖ))
+                                              (proj₂ (f→x₀ (2 ℕ.* k)) m (ℕP.≤-trans (ℕP.n≤1+n N₂ₖ) m≥Mₖ))
                                               (≤-respˡ-≃ (∣x-y∣≃∣y-x∣ (f n) x₀)
-                                                         (proj₂ (proj₂ (f→x₀ (2 ℕ.* k))) n (ℕP.≤-trans (ℕP.n≤1+n N₂ₖ) n≥Mₖ))) ⟩
+                                                         (proj₂ (f→x₀ (2 ℕ.* k)) n (ℕP.≤-trans (ℕP.n≤1+n N₂ₖ) n≥Mₖ))) ⟩
   (+ 1 / (2 ℕ.* k)) ⋆ + (+ 1 / (2 ℕ.* k)) ⋆ ≈⟨ ≃-trans
                                                (≃-symm (⋆-distrib-+ (+ 1 / (2 ℕ.* k)) (+ 1 / (2 ℕ.* k))))
                                                (⋆-cong (ℚ.*≡* (solve 1 (λ k ->
@@ -266,7 +270,7 @@ cauchy⇒convergent {f} (cauchy* fCauchy) = y , f→y
       (+ 1 / m ℚ.+ + 1 / n) ⋆                          ∎)})
 
     f→y : f ConvergesTo y
-    f→y = con* (λ {(suc k-1) -> N k-1 , _ ,
+    f→y = con* (λ {(suc k-1) -> ℕ.pred (N k-1) ,
           λ {(suc n-1) n≥Nₖ -> let k = suc k-1; n = suc n-1
                                      ; n≥3k = ℕP.≤-trans (ℕP.≤-trans (ℕP.m≤m⊔n (3 ℕ.* k) (proj₁ (fCauchy (2 ℕ.* k)))) (ℕP.n≤1+n (ℕ.pred (N k-1)))) n≥Nₖ in begin
       ∣ f n - y ∣                                                         ≈⟨ ∣-∣-cong (≃-symm (≃-trans
@@ -302,3 +306,105 @@ cauchy⇒convergent {f} (cauchy* fCauchy) = y , f→y
                                                                              refl (+ k))) ⟩
       (+ 1 / k) ⋆                                                          ∎}})
 
+xₙ+yₙ→x₀+y₀ : ∀ {xs ys : ℕ -> ℝ} -> (xₙ→x₀ : xs isConvergent) -> (yₙ→y₀ : ys isConvergent) ->
+              (λ n -> xs n + ys n) ConvergesTo (proj₁ xₙ→x₀ + proj₁ yₙ→y₀)
+xₙ+yₙ→x₀+y₀ {xs} {ys} (x₀ , con* xₙ→x₀) (y₀ , con* yₙ→y₀) = con* (λ {(suc k-1) ->
+                 let k = suc k-1; N₁ = suc (proj₁ (xₙ→x₀ (2 ℕ.* k))); N₂ = suc (proj₁ (yₙ→y₀ (2 ℕ.* k))); N = N₁ ℕ.⊔ N₂ in
+                 ℕ.pred N , λ {(suc n-1) N≤n -> let n = suc n-1; xₙ = xs n; yₙ = ys n in begin
+  ∣ xₙ + yₙ - (x₀ + y₀) ∣                   ≈⟨ ∣-∣-cong (+-congʳ (xₙ + yₙ) (neg-distrib-+ x₀ y₀)) ⟩
+  ∣ xₙ + yₙ + (- x₀ - y₀) ∣                 ≈⟨ ∣-∣-cong (ℝsolve 4 (λ xₙ yₙ -x₀ -y₀ ->
+                                               xₙ +: yₙ +: (-x₀ +: -y₀) =: xₙ +: -x₀ +: (yₙ +: -y₀))
+                                               ≃-refl xₙ yₙ (- x₀) (- y₀)) ⟩
+  ∣ xₙ - x₀ + (yₙ - y₀) ∣                   ≤⟨ ∣x+y∣≤∣x∣+∣y∣ (xₙ - x₀) (yₙ - y₀) ⟩
+  ∣ xₙ - x₀ ∣ + ∣ yₙ - y₀ ∣                 ≤⟨ +-mono-≤
+                                               (proj₂ (xₙ→x₀ (2 ℕ.* k)) n (ℕP.≤-trans (ℕP.m≤m⊔n N₁ N₂) N≤n))
+                                               (proj₂ (yₙ→y₀ (2 ℕ.* k)) n (ℕP.≤-trans (ℕP.m≤n⊔m N₁ N₂) N≤n)) ⟩
+  (+ 1 / (2 ℕ.* k)) ⋆ + (+ 1 / (2 ℕ.* k)) ⋆ ≈⟨ ≃-trans
+                                               (≃-symm (⋆-distrib-+ (+ 1 / (2 ℕ.* k)) (+ 1 / (2 ℕ.* k))))
+                                               (⋆-cong (ℚ.*≡* (solve 1 (λ k ->
+                                               (con (+ 1) :* (con (+ 2) :* k) :+ con (+ 1) :* (con (+ 2) :* k)) :* k :=
+                                               con (+ 1) :* (con (+ 2) :* k :* (con (+ 2) :* k)))
+                                               refl (+ k)))) ⟩
+  (+ 1 / k) ⋆                                ∎}})
+  where
+    open ≤-Reasoning
+    open ℝ-+-*-Solver using ()
+      renaming
+        ( solve to ℝsolve
+        ; _:+_  to _+:_
+        ; _:=_  to _=:_
+        )
+    open ℤ-Solver.+-*-Solver
+
+_·_ : (n : ℕ) -> {n ≢0} -> ℝ -> ℝ
+1 · x = x
+suc (suc n) · x = (suc n) · x + x 
+
+archimedean-ℝ : ∀ x y -> Positive x -> ∃ λ (n-1 : ℕ) -> (suc n-1) · x > y
+archimedean-ℝ x y posx = {!!}
+
+archimedean-ℝ₂ : ∀ x -> ∃ λ (n-1 : ℕ) -> (+ (suc n-1) / 1) ⋆ > x
+archimedean-ℝ₂ x = {!!}
+
+bound⇒boundℕ : ∀ {f : ℕ -> ℝ} -> f isBounded ->
+               ∃ λ (M-1 : ℕ) -> ∀ (n : ℕ) -> {n ≢0} -> ∣ f n ∣ < (+ suc (M-1) / 1) ⋆
+bound⇒boundℕ = {!!}
+
+*-mono-≤ : ∀ {x y z w} -> NonNegative x -> NonNegative z -> x ≤ y -> z ≤ w -> x * z ≤ y * w
+*-mono-≤ {x} {y} {z} {w} nonx nonz x≤y z≤w = begin
+  x * z ≤⟨ *-monoˡ-≤-nonNeg z≤w nonx ⟩
+  x * w ≤⟨ *-monoʳ-≤-nonNeg x≤y (0≤x⇒nonNegx (≤-trans (nonNegx⇒0≤x nonz) z≤w)) ⟩
+  y * w  ∎
+  where open ≤-Reasoning
+
+⋆-distrib-* : ∀ p q -> (p ℚ.* q) ⋆ ≃ p ⋆ * q ⋆
+⋆-distrib-* p q = {!!}
+
+xₙyₙ→x₀y₀ : ∀ {xs ys : ℕ -> ℝ} -> (xₙ→x₀ : xs isConvergent) -> (yₙ→y₀ : ys isConvergent) ->
+            (λ n -> (xs n * ys n)) ConvergesTo (proj₁ xₙ→x₀ * proj₁ yₙ→y₀)
+xₙyₙ→x₀y₀ {xs} {ys} (x₀ , con* xₙ→x₀) (y₀ , con* yₙ→y₀) = con* (λ {(suc k-1) ->
+               let k = suc k-1; archy₀ = archimedean-ℝ₂ ∣ y₀ ∣; N₁ = suc (proj₁ archy₀); boundxₙ = bound⇒boundℕ (convergent⇒bounded (x₀ , con* xₙ→x₀))
+                     ; N₂ = suc (proj₁ boundxₙ); m = N₁ ℕ.⊔ N₂; M₁ = suc (proj₁ (xₙ→x₀ (2 ℕ.* m ℕ.* k))); M₂ = suc (proj₁ (yₙ→y₀ (2 ℕ.* m ℕ.* k)))
+                     ; Mₖ = M₁ ℕ.⊔ M₂ in ℕ.pred Mₖ , λ {(suc n-1) n≥Mₖ -> let n = suc n-1; xₙ = xs (suc n-1); yₙ = ys (suc n-1) in begin
+  ∣ xₙ * yₙ - x₀ * y₀ ∣                               ≈⟨ ∣-∣-cong (≃-symm (+-congˡ (- (x₀ * y₀)) (≃-trans
+                                                         (+-congʳ (xₙ * yₙ) (≃-trans
+                                                         (≃-trans (≃-symm (*-distribˡ-+ xₙ y₀ (- y₀))) (*-congˡ (+-inverseʳ y₀) ))
+                                                         (*-zeroʳ xₙ)))
+                                                         (+-identityʳ (xₙ * yₙ))))) ⟩
+  ∣ xₙ * yₙ + (xₙ * y₀ + xₙ * (- y₀)) - x₀ * y₀ ∣     ≈⟨ ∣-∣-cong (ℝsolve 4 (λ a b c d -> a +: (b +: c) +: d =: a +: c +: (b +: d))
+                                                         ≃-refl (xₙ * yₙ) (xₙ * y₀) (xₙ * (- y₀)) (- (x₀ * y₀))) ⟩ 
+  ∣ xₙ * yₙ + xₙ * (- y₀) + (xₙ * y₀ - x₀ * y₀) ∣     ≤⟨ ∣x+y∣≤∣x∣+∣y∣ (xₙ * yₙ + xₙ * (- y₀)) (xₙ * y₀ - x₀ * y₀) ⟩
+  ∣ xₙ * yₙ + xₙ * (- y₀) ∣ + ∣ xₙ * y₀ - x₀ * y₀ ∣   ≈⟨ ≃-symm (+-cong
+                                                         (∣-∣-cong (*-distribˡ-+ xₙ yₙ (- y₀)))
+                                                         (∣-∣-cong (≃-trans (*-distribʳ-+ y₀ xₙ (- x₀))
+                                                                            (+-congʳ (xₙ * y₀) (≃-symm (neg-distribˡ-* x₀ y₀)))))) ⟩
+  ∣ xₙ * (yₙ - y₀) ∣ + ∣ (xₙ - x₀) * y₀ ∣             ≈⟨ +-cong
+                                                         (∣x*y∣≃∣x∣*∣y∣ xₙ (yₙ - y₀))
+                                                         (≃-trans (∣x*y∣≃∣x∣*∣y∣ (xₙ - x₀) y₀) (*-comm ∣ xₙ - x₀ ∣ ∣ y₀ ∣)) ⟩
+  ∣ xₙ ∣ * ∣ yₙ - y₀ ∣ + ∣ y₀ ∣ * ∣ xₙ - x₀ ∣          ≤⟨ +-mono-≤
+                                                         (*-mono-≤ (nonNeg∣x∣ xₙ) (nonNeg∣x∣ (yₙ - y₀))
+                                                                   (<⇒≤ (proj₂ boundxₙ n))
+                                                                   (proj₂ (yₙ→y₀ (2 ℕ.* m ℕ.* k)) n (ℕP.≤-trans (ℕP.m≤n⊔m M₁ M₂) n≥Mₖ)))
+                                                         (*-mono-≤ (nonNeg∣x∣ y₀) (nonNeg∣x∣ (xₙ - x₀))
+                                                                   (<⇒≤ (proj₂ archy₀))
+                                                                   (proj₂ (xₙ→x₀ (2 ℕ.* m ℕ.* k)) n (ℕP.≤-trans (ℕP.m≤m⊔n M₁ M₂) n≥Mₖ))) ⟩
+  (+ m / 1) ⋆ * (+ 1 / (2 ℕ.* m ℕ.* k)) ⋆ +
+  (+ m / 1) ⋆ * (+ 1 / (2 ℕ.* m ℕ.* k)) ⋆             ≈⟨ ≃-symm (≃-trans (≃-trans
+                                                         (⋆-distrib-* (+ m / 1) (+ 1 / (2 ℕ.* m ℕ.* k) ℚ.+ + 1 / (2 ℕ.* m ℕ.* k)))
+                                                         (*-congˡ (⋆-distrib-+ (+ 1 / (2 ℕ.* m ℕ.* k)) (+ 1 / (2 ℕ.* m ℕ.* k)))))
+                                                         (*-distribˡ-+ ((+ m / 1) ⋆) ((+ 1 / (2 ℕ.* m ℕ.* k)) ⋆) ((+ 1 / (2 ℕ.* m ℕ.* k)) ⋆))) ⟩
+  (+ m / 1 ℚ.* (+ 1 / (2 ℕ.* m ℕ.* k) ℚ.+
+  + 1 / (2 ℕ.* m ℕ.* k))) ⋆                           ≈⟨ ⋆-cong (ℚ.*≡* (solve 2 (λ m k ->
+                                                         (m :* (con (+ 1) :* (con (+ 2) :* m :* k) :+ con (+ 1) :* (con (+ 2) :* m :* k))) :* k :=
+                                                         con (+ 1) :* (con (+ 1) :* (con (+ 2) :* m :* k :* (con (+ 2) :* m :* k))))
+                                                         refl (+ m) (+ k))) ⟩
+  (+ 1 / k) ⋆                                           ∎}})
+  where
+    open ≤-Reasoning
+    open ℝ-+-*-Solver using ()
+      renaming
+        ( solve to ℝsolve
+        ; _:+_  to _+:_
+        ; _:=_  to _=:_
+        )
+    open ℤ-Solver.+-*-Solver
