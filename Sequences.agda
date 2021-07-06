@@ -137,10 +137,55 @@ _isBounded : (ℕ -> ℝ) -> Set
 f isBounded = ∃ λ r -> f hasBound r
 
 {-
-Let x₀ = lim f. Then
+Taking the max over a sequence instead of over a list for convenience.
+It seems to make it easier to take the max over a list of a variable length n, since I don't
+think we can write x₁ :: x₂ :: ... :: xₙ :: nil in Agda. 
+For an example of this, see the convergent⇒bounded proof, particularly the part where M is defined.
 -}
+max : (ℕ -> ℝ) -> (n : ℕ) -> {n ≢0} -> ℝ
+max f 1 = f 1
+max f (suc (suc n-2)) = max f (suc n-2) ⊔ f (suc (suc n-2))
+
+m≤n⇒maxfm≤maxfn : ∀ (f : ℕ -> ℝ) -> ∀ m n -> {m≢0 : m ≢0} -> {n≢0 : n ≢0} -> m ℕ.≤ n -> max f m {m≢0} ≤ max f n {n≢0}
+m≤n⇒maxfm≤maxfn f (suc m-1) (suc n-1) m≤n with ≤⇒≡∨< (suc m-1) (suc n-1) m≤n
+... | inj₁ refl = ≤-refl
+... | inj₂ (ℕ.s≤s m-1<n-1) = ≤-trans (m≤n⇒maxfm≤maxfn f (suc m-1) n-1 {_} {n-1≢0} m-1<n-1) (lem n-1 {n-1≢0})
+  where
+    n-1≢0 : n-1 ≢0
+    n-1≢0 = 0<n⇒n≢0 n-1 (ℕP.<-transˡ (ℕP.0<1+n {m-1}) m-1<n-1)
+
+    lem : ∀ k -> {k≢0 : k ≢0} -> max f k {k≢0} ≤ max f (suc k)
+    lem 1 = x≤x⊔y (f 1) (f 2)
+    lem (suc (suc k-2)) = let k-1 = suc k-2; k = suc k-1; k+1 = suc k in
+                          x≤x⊔y (max f k-1 ⊔ f k) (f k+1)
+
+max-property : ∀ (f : ℕ -> ℝ) -> ∀ m n -> {m ≢0} -> {n≢0 : n ≢0} -> m ℕ.≤ n -> f m ≤ max f n {n≢0}
+max-property f (suc m-1) (suc n-1) m≤n = ≤-trans (lem (suc m-1)) (m≤n⇒maxfm≤maxfn f (suc m-1) (suc n-1) m≤n)
+  where
+    lem : ∀ k -> {k≢0 : k ≢0} -> f k ≤ max f k {k≢0}
+    lem 1 = ≤-refl
+    lem (suc (suc k-2)) = x≤y⊔x (f (suc (suc k-2))) (max f (suc k-2))
+
 convergent⇒bounded : ∀ {f : ℕ -> ℝ} -> f isConvergent -> f isBounded
-convergent⇒bounded {f} (x₀ , con* f→x₀) = {!!}
+convergent⇒bounded {f} (x₀ , con* f→x₀) = M , bound* (λ {(suc n-1) -> let n = suc n-1 in
+                                          [ (λ N≤n -> ≤-trans (lem n N≤n) (x≤y⊔x (1ℝ + ∣ x₀ ∣) (max ∣f∣ N))) ,
+                                            (λ n≤N -> ≤-trans (max-property ∣f∣ n N n≤N) (x≤x⊔y (max ∣f∣ N) (1ℝ + ∣ x₀ ∣))) ]′
+                                          (ℕP.≤-total N n)})
+  where
+    open ≤-Reasoning
+    open ℝ-+-*-Solver
+    ∣f∣ = λ n -> ∣ f n ∣
+    N = suc (proj₁ (f→x₀ 1))
+    M = max ∣f∣ N ⊔ (1ℝ + ∣ x₀ ∣)
+    lem : ∀ n -> N ℕ.≤ n -> ∣ f n ∣ ≤ 1ℝ + ∣ x₀ ∣
+    lem (suc n-1) N≤n = let n = suc n-1 in begin
+      ∣ f n ∣               ≈⟨ ∣-∣-cong (≃-symm (≃-trans (+-congʳ (f n) (+-inverseʳ x₀)) (+-identityʳ (f n)))) ⟩
+      ∣ f n + (x₀ - x₀) ∣   ≤⟨ ≤-respˡ-≃ (∣-∣-cong (solve 3 (λ fn x₀ -x₀ ->
+                               fn :+ -x₀ :+ x₀ := fn :+ (x₀ :+ -x₀))
+                               ≃-refl (f n) x₀ (- x₀)))
+                               (∣x+y∣≤∣x∣+∣y∣ (f n - x₀) x₀) ⟩
+      ∣ f n - x₀ ∣ + ∣ x₀ ∣ ≤⟨ +-monoˡ-≤ ∣ x₀ ∣ (proj₂ (f→x₀ 1) n N≤n) ⟩
+      1ℝ + ∣ x₀ ∣            ∎
 
 data _isCauchy : (ℕ -> ℝ) -> Set where
   cauchy* : {f : ℕ -> ℝ} ->
@@ -340,15 +385,35 @@ _·_ : (n : ℕ) -> {n ≢0} -> ℝ -> ℝ
 1 · x = x
 suc (suc n) · x = (suc n) · x + x 
 
-archimedean-ℝ : ∀ x y -> Positive x -> ∃ λ (n-1 : ℕ) -> (suc n-1) · x > y
-archimedean-ℝ x y posx = {!!}
+x≤Kx : ∀ x -> x ≤ (+ K x / 1) ⋆
+x≤Kx x = nonNeg* (λ {(suc n-1) -> let n = suc n-1 in begin
+  ℚ.- (+ 1 / n)                       <⟨ ℚP.negative⁻¹ _ ⟩
+  0ℚᵘ                                 <⟨ p<q⇒0<q-p ℚ.∣ seq x (2 ℕ.* n) ∣ (+ K x / 1)
+                                         (canonical-strict-upper-bound x (2 ℕ.* n)) ⟩
+  + K x / 1 ℚ.- ℚ.∣ seq x (2 ℕ.* n) ∣ ≤⟨ ℚP.+-monoʳ-≤ (+ K x / 1) (
+                                         ℚP.neg-mono-≤ (p≤∣p∣ (seq x (2 ℕ.* n)))) ⟩
+  + K x / 1 ℚ.- seq x (2 ℕ.* n)        ∎})
+  where open ℚP.≤-Reasoning
 
-archimedean-ℝ₂ : ∀ x -> ∃ λ (n-1 : ℕ) -> (+ (suc n-1) / 1) ⋆ > x
-archimedean-ℝ₂ x = {!!}
+archimedean-ℝ : ∀ x -> ∃ λ (n-1 : ℕ) -> (+ (suc n-1) / 1) ⋆ > x
+archimedean-ℝ x = K x , (begin-strict
+  x                     <⟨ <-respˡ-≃ (+-identityˡ x)
+                           (+-monoˡ-< x (p<q⇒p⋆<q⋆ 0ℚᵘ 1ℚᵘ (ℚ.*<* (ℤ.+<+ ℕP.0<1+n)))) ⟩
+  1ℝ + x                ≤⟨ +-monoʳ-≤ 1ℝ (x≤Kx x) ⟩
+  1ℝ + (+ K x / 1) ⋆    ≈⟨ ≃-trans
+                           (≃-symm (⋆-distrib-+ 1ℚᵘ (+ K x / 1)))
+                           (⋆-cong (ℚP.≃-reflexive (ℚP./-cong (cong (λ r -> + 1 ℤ.+ r) (ℤP.*-identityʳ (+ K x))) refl _ _))) ⟩
+  (+ (suc (K x)) / 1) ⋆  ∎)
+  where open ≤-Reasoning
 
 bound⇒boundℕ : ∀ {f : ℕ -> ℝ} -> f isBounded ->
                ∃ λ (M-1 : ℕ) -> ∀ (n : ℕ) -> {n ≢0} -> ∣ f n ∣ < (+ suc (M-1) / 1) ⋆
-bound⇒boundℕ = {!!}
+bound⇒boundℕ {f} (r , (bound* ∣f∣≤r)) = let M = suc (proj₁ (archimedean-ℝ r)) in
+                               ℕ.pred M , λ {(suc n-1) -> let n = suc n-1 in begin-strict
+  ∣ f n ∣     ≤⟨ ∣f∣≤r n ⟩
+  r           <⟨ proj₂ (archimedean-ℝ r) ⟩
+  (+ M / 1) ⋆  ∎}
+  where open ≤-Reasoning
 
 *-mono-≤ : ∀ {x y z w} -> NonNegative x -> NonNegative z -> x ≤ y -> z ≤ w -> x * z ≤ y * w
 *-mono-≤ {x} {y} {z} {w} nonx nonz x≤y z≤w = begin
@@ -358,12 +423,16 @@ bound⇒boundℕ = {!!}
   where open ≤-Reasoning
 
 ⋆-distrib-* : ∀ p q -> (p ℚ.* q) ⋆ ≃ p ⋆ * q ⋆
-⋆-distrib-* p q = {!!}
+⋆-distrib-* p q = *≃* (λ {(suc n-1) -> let n = suc n-1 in begin
+  ℚ.∣ p ℚ.* q ℚ.- p ℚ.* q ∣ ≈⟨ ℚP.∣-∣-cong (ℚP.+-inverseʳ (p ℚ.* q)) ⟩
+  0ℚᵘ                       ≤⟨ ℚP.nonNegative⁻¹ _ ⟩
+  + 2 / n                    ∎})
+  where open ℚP.≤-Reasoning
 
 xₙyₙ→x₀y₀ : ∀ {xs ys : ℕ -> ℝ} -> (xₙ→x₀ : xs isConvergent) -> (yₙ→y₀ : ys isConvergent) ->
             (λ n -> (xs n * ys n)) ConvergesTo (proj₁ xₙ→x₀ * proj₁ yₙ→y₀)
 xₙyₙ→x₀y₀ {xs} {ys} (x₀ , con* xₙ→x₀) (y₀ , con* yₙ→y₀) = con* (λ {(suc k-1) ->
-               let k = suc k-1; archy₀ = archimedean-ℝ₂ ∣ y₀ ∣; N₁ = suc (proj₁ archy₀); boundxₙ = bound⇒boundℕ (convergent⇒bounded (x₀ , con* xₙ→x₀))
+               let k = suc k-1; archy₀ = archimedean-ℝ ∣ y₀ ∣; N₁ = suc (proj₁ archy₀); boundxₙ = bound⇒boundℕ (convergent⇒bounded (x₀ , con* xₙ→x₀))
                      ; N₂ = suc (proj₁ boundxₙ); m = N₁ ℕ.⊔ N₂; M₁ = suc (proj₁ (xₙ→x₀ (2 ℕ.* m ℕ.* k))); M₂ = suc (proj₁ (yₙ→y₀ (2 ℕ.* m ℕ.* k)))
                      ; Mₖ = M₁ ℕ.⊔ M₂ in ℕ.pred Mₖ , λ {(suc n-1) n≥Mₖ -> let n = suc n-1; xₙ = xs (suc n-1); yₙ = ys (suc n-1) in begin
   ∣ xₙ * yₙ - x₀ * y₀ ∣                               ≈⟨ ∣-∣-cong (≃-symm (+-congˡ (- (x₀ * y₀)) (≃-trans
@@ -381,12 +450,17 @@ xₙyₙ→x₀y₀ {xs} {ys} (x₀ , con* xₙ→x₀) (y₀ , con* yₙ→y₀
   ∣ xₙ * (yₙ - y₀) ∣ + ∣ (xₙ - x₀) * y₀ ∣             ≈⟨ +-cong
                                                          (∣x*y∣≃∣x∣*∣y∣ xₙ (yₙ - y₀))
                                                          (≃-trans (∣x*y∣≃∣x∣*∣y∣ (xₙ - x₀) y₀) (*-comm ∣ xₙ - x₀ ∣ ∣ y₀ ∣)) ⟩
-  ∣ xₙ ∣ * ∣ yₙ - y₀ ∣ + ∣ y₀ ∣ * ∣ xₙ - x₀ ∣          ≤⟨ +-mono-≤
-                                                         (*-mono-≤ (nonNeg∣x∣ xₙ) (nonNeg∣x∣ (yₙ - y₀))
-                                                                   (<⇒≤ (proj₂ boundxₙ n))
+  ∣ xₙ ∣ * ∣ yₙ - y₀ ∣ + ∣ y₀ ∣ * ∣ xₙ - x₀ ∣          ≤⟨ +-mono-≤ {∣ xₙ ∣ * ∣ yₙ - y₀ ∣} {(+ m / 1) ⋆ * (+ 1 / (2 ℕ.* m ℕ.* k)) ⋆}
+                                                                  {∣ y₀ ∣ * ∣ xₙ - x₀ ∣} {(+ m / 1) ⋆ * (+ 1 / (2 ℕ.* m ℕ.* k)) ⋆}
+                                                         (*-mono-≤ {∣ xₙ ∣} {(+ m / 1) ⋆} {∣ yₙ - y₀ ∣} {(+ 1 / (2 ℕ.* m ℕ.* k)) ⋆}
+                                                                   (nonNeg∣x∣ xₙ) (nonNeg∣x∣ (yₙ - y₀))
+                                                                   (<⇒≤ (<-≤-trans (proj₂ boundxₙ n) (p≤q⇒p⋆≤q⋆ (+ N₂ / 1) (+ m / 1)
+                                                                                   (p≤q⇒p/r≤q/r (+ N₂) (+ m) 1 (ℤ.+≤+ (ℕP.m≤n⊔m N₁ N₂))))))
                                                                    (proj₂ (yₙ→y₀ (2 ℕ.* m ℕ.* k)) n (ℕP.≤-trans (ℕP.m≤n⊔m M₁ M₂) n≥Mₖ)))
-                                                         (*-mono-≤ (nonNeg∣x∣ y₀) (nonNeg∣x∣ (xₙ - x₀))
-                                                                   (<⇒≤ (proj₂ archy₀))
+                                                         (*-mono-≤ {∣ y₀ ∣} {(+ m / 1) ⋆} {∣ xₙ - x₀ ∣} {(+ 1 / (2 ℕ.* m ℕ.* k)) ⋆}
+                                                                   (nonNeg∣x∣ y₀) (nonNeg∣x∣ (xₙ - x₀))
+                                                                   (<⇒≤ (<-≤-trans (proj₂ archy₀) (p≤q⇒p⋆≤q⋆ (+ N₁ / 1) (+ m / 1)
+                                                                                   (p≤q⇒p/r≤q/r (+ N₁) (+ m) 1 (ℤ.+≤+ (ℕP.m≤m⊔n N₁ N₂))))))
                                                                    (proj₂ (xₙ→x₀ (2 ℕ.* m ℕ.* k)) n (ℕP.≤-trans (ℕP.m≤m⊔n M₁ M₂) n≥Mₖ))) ⟩
   (+ m / 1) ⋆ * (+ 1 / (2 ℕ.* m ℕ.* k)) ⋆ +
   (+ m / 1) ⋆ * (+ 1 / (2 ℕ.* m ℕ.* k)) ⋆             ≈⟨ ≃-symm (≃-trans (≃-trans
@@ -408,3 +482,36 @@ xₙyₙ→x₀y₀ {xs} {ys} (x₀ , con* xₙ→x₀) (y₀ , con* yₙ→y₀
         ; _:=_  to _=:_
         )
     open ℤ-Solver.+-*-Solver
+
+{-
+-1/k ≤ xₙ⊔yₙ - x₀⊔y₀ ≤ 1/k?
+
+xₙ⊔yₙ - x₀⊔y₀ ≤ ∣x - x₀∣ ⊔ ∣y - y₀∣ ?
+xₙ⊔yₙ - x₀⊔y₀ ≤ xₙ⊔yₙ - x₀
+              ≤ 
+
+Not sure how to prove this constructively yet. Can't rely on xₙ ⊔ yₙ = xₙ or yₙ since that's not valid.
+-}
+xₙ⊔yₙ→x₀⊔y₀ : ∀ {xs ys : ℕ -> ℝ} -> (xₙ→x₀ : xs isConvergent) -> (yₙ→y₀ : ys isConvergent) ->
+              (λ n -> xs n ⊔ ys n) ConvergesTo (proj₁ xₙ→x₀ ⊔ proj₁ yₙ→y₀)
+xₙ⊔yₙ→x₀⊔y₀ {xs} {ys} (x₀ , con* xₙ→x₀) (y₀ , con* yₙ→y₀) = con* (λ {(suc k-1) ->
+                      let k = suc k-1; N₁ = suc (proj₁ (xₙ→x₀ k)); N₂ = suc (proj₁ (yₙ→y₀ k)); N = N₁ ℕ.⊔ N₂ in
+                      N , λ {(suc n-1) n≥N -> let n = suc n-1 in {!!}}})
+  where open ≤-Reasoning
+
+xₙ≃c⇒xₙ→c : ∀ {xs : ℕ -> ℝ} -> ∀ {c : ℝ} -> (∀ n -> {n ≢0} -> xs n ≃ c) -> xs ConvergesTo c
+xₙ≃c⇒xₙ→c {xs} {c} hyp = con* (λ {(suc k-1) -> let k = suc k-1 in 0 , λ {(suc n-1) n≥1 -> let n = suc n-1 in begin
+  ∣ xs n - c ∣ ≈⟨ ∣-∣-cong (+-congˡ (- c) (hyp n)) ⟩
+  ∣ c - c ∣    ≈⟨ ≃-trans (∣-∣-cong (+-inverseʳ c)) (≃-reflexive (λ n -> ℚP.≃-refl)) ⟩
+  0ℝ           ≤⟨ p≤q⇒p⋆≤q⋆ 0ℚᵘ (+ 1 / k) (ℚP.nonNegative⁻¹ _) ⟩
+  (+ 1 / k) ⋆   ∎}})
+  where open ≤-Reasoning
+
+xₙ≄0∧x₀≄0⇒xₙ⁻¹→x₀⁻¹ : ∀ {xs : ℕ -> ℝ} -> ∀ {x₀ : ℝ} -> xs ConvergesTo x₀ -> (xₙ≄0 : ∀ n -> xs n ≄0) -> (x₀≄0 : x₀ ≄0) ->
+                      (λ n -> (xs n ⁻¹) (xₙ≄0 n)) ConvergesTo (x₀ ⁻¹) x₀≄0
+xₙ≄0∧x₀≄0⇒xₙ⁻¹→x₀⁻¹ {xs} {x₀} (con* xₙ→x₀) xₙ≄0 x₀≄0 = con* λ {(suc k-1) -> {!!}}
+
+xₙ≤yₙ⇒x₀≤y₀ : ∀ {xs ys : ℕ -> ℝ} -> ∀ {x₀ y₀ : ℝ} -> xs ConvergesTo x₀ -> ys ConvergesTo y₀ ->
+              (∀ n -> {n ≢0} -> xs n ≤ ys n) -> x₀ ≤ y₀
+xₙ≤yₙ⇒x₀≤y₀ {xs} {ys} {x₀} {y₀} (con* xₙ→x₀) (con* yₙ→y₀) xₙ≤yₙ = nonNeg-cong {!!} (begin {!!})
+  where open ≤-Reasoning
