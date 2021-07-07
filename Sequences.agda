@@ -99,6 +99,14 @@ Useful for escaping the "metal" of the reals.
         )
     open ℤ-Solver.+-*-Solver
 
+xₙ≃yₙ∧xₙ→x₀⇒yₙ→x₀ : ∀ {xs ys : ℕ -> ℝ} -> (∀ n -> {n ≢0} -> xs n ≃ ys n) -> (x→x₀ : xs isConvergent) -> ys ConvergesTo proj₁ x→x₀
+xₙ≃yₙ∧xₙ→x₀⇒yₙ→x₀ {xs} {ys} xₙ≃yₙ (x₀ , con* x→x₀) = con* (λ {(suc k-1) -> let k = suc k-1 in
+                                                     proj₁ (x→x₀ k) , λ {(suc n-1) n≥N -> let n = suc n-1 in begin
+  ∣ ys n - x₀ ∣ ≈⟨ ∣-∣-cong (+-congˡ (- x₀) (≃-symm (xₙ≃yₙ n))) ⟩
+  ∣ xs n - x₀ ∣ ≤⟨ proj₂ (x→x₀ k) n n≥N ⟩
+  (+ 1 / k) ⋆    ∎}})
+  where open ≤-Reasoning
+
 uniqueness-of-limits : ∀ {f : ℕ -> ℝ} -> ∀ {x y : ℝ} -> f ConvergesTo x -> f ConvergesTo y -> x ≃ y
 uniqueness-of-limits {f} {x} {y} (con* f→x) (con* f→y) = ∣x-y∣≤k⁻¹⇒x≃y x y (λ {(suc k-1) ->
                                                          let k = suc k-1; N₁ = suc (proj₁ (f→x (2 ℕ.* k))); N₂ = suc (proj₁ ((f→y (2 ℕ.* k))))
@@ -429,6 +437,15 @@ bound⇒boundℕ {f} (r , (bound* ∣f∣≤r)) = let M = suc (proj₁ (archimed
   + 2 / n                    ∎})
   where open ℚP.≤-Reasoning
 
+-xₙ→-x₀ : ∀ {xs : ℕ -> ℝ} -> (x→x₀ : xs isConvergent) -> (λ n -> - xs n) ConvergesTo (- (proj₁ x→x₀))
+-xₙ→-x₀ {xs} (x₀ , con* x→x₀) = con* (λ {(suc k-1) -> let k = suc k-1 in
+                                proj₁ (x→x₀ k) , λ {(suc n-1) n≥N -> let n = suc n-1 in begin
+  ∣ - xs n - (- x₀) ∣ ≈⟨ ∣-∣-cong (≃-symm (neg-distrib-+ (xs n) (- x₀))) ⟩
+  ∣ - (xs n - x₀) ∣   ≈⟨ ∣-x∣≃∣x∣ ⟩
+  ∣ xs n - x₀ ∣       ≤⟨ proj₂ (x→x₀ k) n n≥N ⟩
+  (+ 1 / k) ⋆          ∎}})
+  where open ≤-Reasoning
+
 xₙyₙ→x₀y₀ : ∀ {xs ys : ℕ -> ℝ} -> (xₙ→x₀ : xs isConvergent) -> (yₙ→y₀ : ys isConvergent) ->
             (λ n -> (xs n * ys n)) ConvergesTo (proj₁ xₙ→x₀ * proj₁ yₙ→y₀)
 xₙyₙ→x₀y₀ {xs} {ys} (x₀ , con* xₙ→x₀) (y₀ , con* yₙ→y₀) = con* (λ {(suc k-1) ->
@@ -483,22 +500,6 @@ xₙyₙ→x₀y₀ {xs} {ys} (x₀ , con* xₙ→x₀) (y₀ , con* yₙ→y₀
         )
     open ℤ-Solver.+-*-Solver
 
-{-
--1/k ≤ xₙ⊔yₙ - x₀⊔y₀ ≤ 1/k?
-
-xₙ⊔yₙ - x₀⊔y₀ ≤ ∣x - x₀∣ ⊔ ∣y - y₀∣ ?
-xₙ⊔yₙ - x₀⊔y₀ ≤ xₙ⊔yₙ - x₀
-              ≤ 
-
-Not sure how to prove this constructively yet. Can't rely on xₙ ⊔ yₙ = xₙ or yₙ since that's not valid.
--}
-xₙ⊔yₙ→x₀⊔y₀ : ∀ {xs ys : ℕ -> ℝ} -> (xₙ→x₀ : xs isConvergent) -> (yₙ→y₀ : ys isConvergent) ->
-              (λ n -> xs n ⊔ ys n) ConvergesTo (proj₁ xₙ→x₀ ⊔ proj₁ yₙ→y₀)
-xₙ⊔yₙ→x₀⊔y₀ {xs} {ys} (x₀ , con* xₙ→x₀) (y₀ , con* yₙ→y₀) = con* (λ {(suc k-1) ->
-                      let k = suc k-1; N₁ = suc (proj₁ (xₙ→x₀ k)); N₂ = suc (proj₁ (yₙ→y₀ k)); N = N₁ ℕ.⊔ N₂ in
-                      N , λ {(suc n-1) n≥N -> let n = suc n-1 in {!!}}})
-  where open ≤-Reasoning
-
 xₙ≃c⇒xₙ→c : ∀ {xs : ℕ -> ℝ} -> ∀ {c : ℝ} -> (∀ n -> {n ≢0} -> xs n ≃ c) -> xs ConvergesTo c
 xₙ≃c⇒xₙ→c {xs} {c} hyp = con* (λ {(suc k-1) -> let k = suc k-1 in 0 , λ {(suc n-1) n≥1 -> let n = suc n-1 in begin
   ∣ xs n - c ∣ ≈⟨ ∣-∣-cong (+-congˡ (- c) (hyp n)) ⟩
@@ -507,11 +508,242 @@ xₙ≃c⇒xₙ→c {xs} {c} hyp = con* (λ {(suc k-1) -> let k = suc k-1 in 0 ,
   (+ 1 / k) ⋆   ∎}})
   where open ≤-Reasoning
 
+archimedean-ℝ₂ : ∀ {x} -> Positive x -> ∃ λ n-1 -> (+ 1 / (suc n-1)) ⋆ < x
+archimedean-ℝ₂ {x} posx = {!!}
+
+{-
+Proposition:
+  If x and y are nonzero, then so is x * y.
+Proof:
+  Let x,y∈ℝ such that x ≠ 0 and y ≠ 0. We must show that x * y ≠ 0. We have x < 0 ∨ 0 < x and
+y < 0 ∨ 0 < y. 
+Case 1: Suppose x > 0 and y > 0. Then x * y > 0.
+Case 2: Suppose x > 0 and y < 0. Then x * y < 0.
+Case 3: Suppose x < 0 and y < 0. Then -x > 0 and -y > 0, so x * y = -x * -y > 0. 
+Case 4: Similar to case 2.                                                                   □
+-}
+
+negx,y⇒posx*y : ∀ {x y} -> Negative x -> Negative y -> Positive (x * y)
+negx,y⇒posx*y {x} {y} negx negy = {!!}
+
+negx∧posy⇒negx*y : ∀ {x y} -> Negative x -> Positive y -> Negative (x * y)
+negx∧posy⇒negx*y {x} {y} negx posy = {!!}
+
+x≄0∧y≄0⇒x*y≄0 : ∀ {x y} -> x ≄0 -> y ≄0 -> (x * y) ≄0
+x≄0∧y≄0⇒x*y≄0 {x} {y} x≄0 y≄0 = [ [ y<0∧x<0 , {!!} ]′ y≄0 , [ {!!} , 0<y∧0<x ]′ y≄0 ]′ x≄0
+  where
+    0<y∧0<x : 0ℝ < y -> 0ℝ < x -> (x * y) ≄0
+    0<y∧0<x 0<y 0<x = inj₂ (posx⇒0<x (posx,y⇒posx*y (0<x⇒posx 0<x) (0<x⇒posx 0<y)))
+
+    y<0∧x<0 : y < 0ℝ -> x < 0ℝ -> (x * y) ≄0
+    y<0∧x<0 y<0 x<0 = inj₂ (posx⇒0<x (negx,y⇒posx*y {!!} {!!}))
+
+{-
+Proposition:
+  If xₙ ≠ 0 for all n∈ℕ, x₀ ≠ 0, and (xₙ)→x₀, then (xₙ⁻¹)→x₀⁻¹.
+Proof:
+  We must show that, for all k∈ℕ, there is Nₖ∈ℕ such that
+                         ∣xₙ⁻¹ - x₀⁻¹∣ ≤ k⁻¹.
+By the Archimedean Property, there is r∈ℕ such that r⁻¹ < 2⁻¹∣x₀∣ since ∣x₀∣ > 0.
+Then for some n₀∈ℕ, we have
+                         ∣xₙ - x₀∣ ≤ r⁻¹ < 2⁻¹∣x₀∣            (n ≥ n₀).
+Let k∈ℕ. Then there is m₀∈ℕ such that 
+                   ∣xₙ - x₀∣ ≤ k⁻¹ < (2k)⁻¹∣x₀∣²              (n ≥ m₀).
+Let Nₖ = max{m₀, n₀} and let n ≥ N. We have:
+        ∣xₙ⁻¹ - x₀⁻¹∣ = ∣xₙ∣⁻¹ * ∣x₀∣⁻¹ * ∣xₙ - x₀∣
+                      < 2∣x₀∣⁻¹ * ∣x₀∣⁻¹ * ∣xₙ - x₀∣ since n ≥ n₀
+                      ≤ 2∣x₀∣⁻¹ * ∣x₀∣⁻¹ * (2k)⁻¹∣x₀∣²
+                      = k⁻¹.
+Hence ∣xₙ⁻¹ - x₀⁻¹∣ ≤ k⁻¹ for all n ≥ N.                                       □
+-}
 xₙ≄0∧x₀≄0⇒xₙ⁻¹→x₀⁻¹ : ∀ {xs : ℕ -> ℝ} -> ∀ {x₀ : ℝ} -> xs ConvergesTo x₀ -> (xₙ≄0 : ∀ n -> xs n ≄0) -> (x₀≄0 : x₀ ≄0) ->
                       (λ n -> (xs n ⁻¹) (xₙ≄0 n)) ConvergesTo (x₀ ⁻¹) x₀≄0
-xₙ≄0∧x₀≄0⇒xₙ⁻¹→x₀⁻¹ {xs} {x₀} (con* xₙ→x₀) xₙ≄0 x₀≄0 = con* λ {(suc k-1) -> {!!}}
+xₙ≄0∧x₀≄0⇒xₙ⁻¹→x₀⁻¹ {xs} {x₀} (con* xₙ→x₀) xₙ≄0 x₀≄0 = con* main
+  where
+    open ≤-Reasoning
+    main : ∀ k -> {k≢0 : k ≢0} -> ∃ λ Nₖ-1 -> ∀ n -> n ℕ.≥ suc Nₖ-1 ->
+           ∣ (xs n ⁻¹) (xₙ≄0 n) - (x₀ ⁻¹) x₀≄0 ∣ ≤ ((+ 1 / k) {k≢0}) ⋆
+    main (suc k-1) = ℕ.pred Nₖ , sub
+      where
+        k = suc k-1
+        Nₖ = suc (proj₁ (xₙ→x₀ k))
+        arch = archimedean-ℝ₂ {!!}
+        sub : ∀ n -> n ℕ.≥ Nₖ ->
+              ∣ (xs n ⁻¹) (xₙ≄0 n) - (x₀ ⁻¹) x₀≄0 ∣ ≤ (+ 1 / k) ⋆
+        sub (suc n-1) n≥Nₖ = {!!}
+          where
+            n = suc n-1
+            xₙ = xs n
+            xₙ⁻¹ = (xₙ ⁻¹) (xₙ≄0 n)
+            x₀⁻¹ = (x₀ ⁻¹) x₀≄0
+            ∣xₙ∣⁻¹ = {!!}
+            ∣x₀∣⁻¹ = {!!}
+
+            2⁻¹∣x₀∣<∣xₙ∣ : (+ 1 / 2) ⋆ * ∣ x₀ ∣ < ∣ xₙ ∣
+            2⁻¹∣x₀∣<∣xₙ∣ = begin-strict {!!}
+              
+
+0≤y-x⇒x≤y : ∀ {x y} -> 0ℝ ≤ y - x -> x ≤ y
+0≤y-x⇒x≤y {x} {y} 0≤y-x = nonNeg-cong (≃-trans (+-congʳ (y - x) (≃-symm 0≃-0)) (+-identityʳ (y - x))) 0≤y-x
+
+x≤z∧y≤z⇒x⊔y≤z : ∀ {x y z} -> x ≤ z -> y ≤ z -> x ⊔ y ≤ z
+x≤z∧y≤z⇒x⊔y≤z {x} {y} {z} x≤z y≤z = lemma-2-8-2-onlyif lem
+  where
+    open ℚP.≤-Reasoning
+    lem : ∀ n -> {n≢0 : n ≢0} -> ∃ λ Nₙ -> Nₙ ≢0 × (∀ m -> m ℕ.≥ Nₙ -> seq (z - (x ⊔ y)) m ℚ.≥ ℚ.- (+ 1 / n) {n≢0})
+    lem (suc n-1) = N , _ , λ {(suc m-1) m≥N -> let m = suc m-1 in
+                  [ left m m≥N , right m m≥N ]′ (ℚP.≤-total (seq y (2 ℕ.* m)) (seq x (2 ℕ.* m)))}
+      where
+        n = suc n-1
+        fromx≤z = fast-lemma-2-8-2-if x≤z n
+        fromy≤z = fast-lemma-2-8-2-if y≤z n
+        N₁ = proj₁ fromx≤z
+        N₂ = proj₁ fromy≤z
+        N = suc (N₁ ℕ.⊔ N₂)
+
+        left : ∀ m -> m ℕ.≥ N -> seq y (2 ℕ.* m) ℚ.≤ seq x (2 ℕ.* m) ->
+               seq (z - (x ⊔ y)) m ℚ.≥ ℚ.- (+ 1 / n)
+        left (suc m-1) m≥N y₂ₘ≤x₂ₘ = let m = suc m-1 in begin
+          ℚ.- (+ 1 / n)                             ≤⟨ proj₂ (proj₂ fromx≤z) m
+                                                       (ℕP.≤-trans (ℕP.≤-trans (ℕP.m≤m⊔n N₁ N₂) (ℕP.n≤1+n (N₁ ℕ.⊔ N₂))) m≥N) ⟩
+          seq z (2 ℕ.* m) ℚ.- seq x (2 ℕ.* m)       ≈⟨ ℚP.+-congʳ (seq z (2 ℕ.* m))
+                                                       (ℚP.-‿cong (ℚP.≃-sym (ℚP.p≥q⇒p⊔q≃p y₂ₘ≤x₂ₘ))) ⟩
+          seq z (2 ℕ.* m) ℚ.- seq (x ⊔ y) (2 ℕ.* m)  ∎
+
+        right : ∀ m -> m ℕ.≥ N -> seq x (2 ℕ.* m) ℚ.≤ seq y (2 ℕ.* m) ->
+               seq (z - (x ⊔ y)) m ℚ.≥ ℚ.- (+ 1 / n)
+        right (suc m-1) m≥N x₂ₘ≤y₂ₘ = let m = suc m-1 in begin
+          ℚ.- (+ 1 / n)                             ≤⟨ proj₂ (proj₂ fromy≤z) m
+                                                       (ℕP.≤-trans (ℕP.≤-trans (ℕP.m≤n⊔m N₁ N₂) (ℕP.n≤1+n (N₁ ℕ.⊔ N₂))) m≥N) ⟩
+          seq z (2 ℕ.* m) ℚ.- seq y (2 ℕ.* m)       ≈⟨ ℚP.+-congʳ (seq z (2 ℕ.* m))
+                                                       (ℚP.-‿cong (ℚP.≃-sym (ℚP.p≤q⇒p⊔q≃q x₂ₘ≤y₂ₘ))) ⟩
+          seq z (2 ℕ.* m) ℚ.- seq (x ⊔ y) (2 ℕ.* m)  ∎
+
+-[x-y]≃y-x : ∀ x y -> - (x - y) ≃ y - x
+-[x-y]≃y-x x y = begin-equality
+  - (x - y)   ≈⟨ neg-distrib-+ x (- y) ⟩
+  - x - (- y) ≈⟨ +-congʳ (- x) (neg-involutive y) ⟩
+  - x + y     ≈⟨ +-comm (- x) y ⟩
+  y - x        ∎
+  where open ≤-Reasoning
+
+∣∣x∣-∣y∣∣≤∣x-y∣ : ∀ x y -> ∣ ∣ x ∣ - ∣ y ∣ ∣ ≤ ∣ x - y ∣
+∣∣x∣-∣y∣∣≤∣x-y∣ x y = ≤-respˡ-≃ (≃-symm (∣x∣≃x⊔-x (∣ x ∣ - ∣ y ∣))) (x≤z∧y≤z⇒x⊔y≤z (left x y) right)
+  where
+    open ≤-Reasoning
+    left : ∀ x y -> ∣ x ∣ - ∣ y ∣ ≤ ∣ x - y ∣
+    left x y = begin
+      ∣ x ∣ - ∣ y ∣             ≈⟨ +-congˡ (- ∣ y ∣) (∣-∣-cong (≃-symm
+                                  (≃-trans (+-congʳ x (+-inverseˡ y)) (+-identityʳ x)))) ⟩
+      ∣ x + (- y + y) ∣ - ∣ y ∣ ≤⟨ +-monoˡ-≤ (- ∣ y ∣)
+                                  (≤-respˡ-≃ (∣-∣-cong (+-assoc x (- y) y)) (∣x+y∣≤∣x∣+∣y∣ (x - y) y)) ⟩
+      ∣ x - y ∣ + ∣ y ∣ - ∣ y ∣ ≈⟨ ≃-trans (≃-trans
+                                   (+-assoc ∣ x - y ∣ ∣ y ∣ (- ∣ y ∣))
+                                   (+-congʳ ∣ x - y ∣ (+-inverseʳ ∣ y ∣)))
+                                   (+-identityʳ ∣ x - y ∣) ⟩
+      ∣ x - y ∣                  ∎
+
+    right : - (∣ x ∣ - ∣ y ∣) ≤ ∣ x - y ∣
+    right = begin
+      - (∣ x ∣ - ∣ y ∣) ≈⟨ -[x-y]≃y-x ∣ x ∣ ∣ y ∣ ⟩
+      ∣ y ∣ - ∣ x ∣     ≤⟨ left y x ⟩
+      ∣ y - x ∣         ≈⟨ ∣x-y∣≃∣y-x∣ y x ⟩
+      ∣ x - y ∣          ∎
+
+∣xₙ∣→∣x₀∣ : ∀ {xs : ℕ -> ℝ} -> (x→x₀ : xs isConvergent) -> (λ n -> ∣ xs n ∣) ConvergesTo ∣ proj₁ x→x₀ ∣
+∣xₙ∣→∣x₀∣ {xs} (x₀ , con* x→x₀) = con* λ {(suc k-1) -> let k = suc k-1 in
+                                  proj₁ (x→x₀ k) , λ {(suc n-1) n≥N -> let n = suc n-1 in begin
+  ∣ ∣ xs n ∣ - ∣ x₀ ∣ ∣ ≤⟨ ∣∣x∣-∣y∣∣≤∣x-y∣ (xs n) x₀ ⟩
+  ∣ xs n - x₀ ∣        ≤⟨ proj₂ (x→x₀ k) n n≥N ⟩
+  (+ 1 / k) ⋆           ∎}}
+  where open ≤-Reasoning
+
+0≤x⇒∣x∣≃x : ∀ {x} -> 0ℝ ≤ x -> ∣ x ∣ ≃ x
+0≤x⇒∣x∣≃x {x} 0≤x = nonNegx⇒∣x∣≃x (nonNeg-cong (≃-trans (+-congʳ x (≃-symm 0≃-0)) (+-identityʳ x)) 0≤x)
+
+x≤y⇒0≤y-x : ∀ {x y} -> x ≤ y -> 0ℝ ≤ y - x
+x≤y⇒0≤y-x {x} {y} x≤y = nonNeg-cong (≃-symm (≃-trans (+-congʳ (y - x) (≃-symm 0≃-0)) (+-identityʳ (y - x)))) x≤y
 
 xₙ≤yₙ⇒x₀≤y₀ : ∀ {xs ys : ℕ -> ℝ} -> ∀ {x₀ y₀ : ℝ} -> xs ConvergesTo x₀ -> ys ConvergesTo y₀ ->
               (∀ n -> {n ≢0} -> xs n ≤ ys n) -> x₀ ≤ y₀
-xₙ≤yₙ⇒x₀≤y₀ {xs} {ys} {x₀} {y₀} (con* xₙ→x₀) (con* yₙ→y₀) xₙ≤yₙ = nonNeg-cong {!!} (begin {!!})
+xₙ≤yₙ⇒x₀≤y₀ {xs} {ys} {x₀} {y₀} (con* xₙ→x₀) (con* yₙ→y₀) xₙ≤yₙ = 0≤y-x⇒x≤y (begin
+  0ℝ          ≤⟨ 0≤∣x∣ (y₀ - x₀) ⟩
+  ∣ y₀ - x₀ ∣ ≈⟨ uniqueness-of-limits (∣xₙ∣→∣x₀∣ (y₀ - x₀ , yₙ-xₙ→y₀-x₀))
+                 (xₙ≃yₙ∧xₙ→x₀⇒yₙ→x₀ (λ {(suc n-1) -> let n = suc n-1 in
+                 ≃-symm (0≤x⇒∣x∣≃x (x≤y⇒0≤y-x (xₙ≤yₙ n)))}) (y₀ - x₀ , yₙ-xₙ→y₀-x₀)) ⟩
+  y₀ - x₀      ∎)
+  where
+    open ≤-Reasoning
+    yₙ-xₙ→y₀-x₀ = xₙ+yₙ→x₀+y₀ (y₀ , con* yₙ→y₀) (- x₀ , -xₙ→-x₀ (x₀ , con* xₙ→x₀))
+
+private
+  x-y≤z⇒x≤z+y : ∀ {x y z} -> x - y ≤ z -> x ≤ z + y
+  x-y≤z⇒x≤z+y {x} {y} {z} x-y≤z = begin
+    x         ≈⟨ ≃-symm (≃-trans (≃-trans
+                 (+-assoc x (- y) y)
+                 (+-congʳ x (+-inverseˡ y)))
+                 (+-identityʳ x)) ⟩
+    x - y + y ≤⟨ +-monoˡ-≤ y x-y≤z ⟩
+    z + y      ∎
+    where open ≤-Reasoning
+
+  ∣x⊔y-z⊔w∣≤∣x-z∣⊔∣y-w∣ : ∀ x y z w -> ∣ x ⊔ y - (z ⊔ w) ∣ ≤ ∣ x - z ∣ ⊔ ∣ y - w ∣
+  ∣x⊔y-z⊔w∣≤∣x-z∣⊔∣y-w∣ x y z w = ≤-respˡ-≃ (≃-symm (∣x∣≃x⊔-x (x ⊔ y - (z ⊔ w))))
+                                (x≤z∧y≤z⇒x⊔y≤z
+                                (lem x y (z ⊔ w) (∣ x - z ∣ ⊔ ∣ y - w ∣) part1 part2)
+                                (≤-respˡ-≃ (≃-symm (-[x-y]≃y-x (x ⊔ y) (z ⊔ w)))
+                                           (lem z w (x ⊔ y) (∣ x - z ∣ ⊔ ∣ y - w ∣) part3 part4)))
+    where
+      open ≤-Reasoning
+      lem : ∀ x y z w -> x - z ≤ w -> y - z ≤ w -> x ⊔ y - z ≤ w
+      lem x y z w x-z≤w y-z≤w = begin
+        x ⊔ y - z ≤⟨ +-monoˡ-≤ (- z) (x≤z∧y≤z⇒x⊔y≤z
+                     (x-y≤z⇒x≤z+y x-z≤w)
+                     (x-y≤z⇒x≤z+y y-z≤w)) ⟩
+        w + z - z ≈⟨ ≃-trans (≃-trans
+                     (+-assoc w z (- z))
+                     (+-congʳ w (+-inverseʳ z)))
+                     (+-identityʳ w) ⟩
+        w          ∎
+
+      part1 : x - (z ⊔ w) ≤ ∣ x - z ∣ ⊔ ∣ y - w ∣
+      part1 = begin
+        x - (z ⊔ w)           ≤⟨ +-monoʳ-≤ x (neg-mono-≤ (x≤x⊔y z w)) ⟩
+        x - z                 ≤⟨ x≤∣x∣ ⟩
+        ∣ x - z ∣             ≤⟨ x≤x⊔y ∣ x - z ∣ ∣ y - w ∣ ⟩
+        ∣ x - z ∣ ⊔ ∣ y - w ∣   ∎
+
+      part2 : y - (z ⊔ w) ≤ ∣ x - z ∣ ⊔ ∣ y - w ∣ 
+      part2 = begin
+        y - (z ⊔ w)           ≤⟨ +-monoʳ-≤ y (neg-mono-≤ (x≤y⊔x w z)) ⟩
+        y - w                 ≤⟨ x≤∣x∣ ⟩
+        ∣ y - w ∣             ≤⟨ x≤y⊔x ∣ y - w ∣ ∣ x - z ∣ ⟩
+        ∣ x - z ∣ ⊔ ∣ y - w ∣   ∎
+
+      part3 : z - (x ⊔ y) ≤ ∣ x - z ∣ ⊔ ∣ y - w ∣
+      part3 = begin
+        z - (x ⊔ y)           ≤⟨ +-monoʳ-≤ z (neg-mono-≤ (x≤x⊔y x y)) ⟩
+        z - x                 ≤⟨ x≤∣x∣ ⟩
+        ∣ z - x ∣             ≈⟨ ∣x-y∣≃∣y-x∣ z x ⟩
+        ∣ x - z ∣             ≤⟨ x≤x⊔y ∣ x - z ∣ ∣ y - w ∣ ⟩
+        ∣ x - z ∣ ⊔ ∣ y - w ∣   ∎
+
+      part4 : w - (x ⊔ y) ≤ ∣ x - z ∣ ⊔ ∣ y - w ∣
+      part4 = begin
+        w - (x ⊔ y)           ≤⟨ +-monoʳ-≤ w (neg-mono-≤ (x≤y⊔x y x)) ⟩
+        w - y                 ≤⟨ x≤∣x∣ ⟩
+        ∣ w - y ∣             ≈⟨ ∣x-y∣≃∣y-x∣ w y ⟩
+        ∣ y - w ∣             ≤⟨ x≤y⊔x ∣ y - w ∣ ∣ x - z ∣ ⟩
+        ∣ x - z ∣ ⊔ ∣ y - w ∣   ∎
+
+xₙ⊔yₙ→x₀⊔y₀ : ∀ {xs ys : ℕ -> ℝ} -> (xₙ→x₀ : xs isConvergent) -> (yₙ→y₀ : ys isConvergent) ->
+              (λ n -> xs n ⊔ ys n) ConvergesTo (proj₁ xₙ→x₀ ⊔ proj₁ yₙ→y₀)
+xₙ⊔yₙ→x₀⊔y₀ {xs} {ys} (x₀ , con* xₙ→x₀) (y₀ , con* yₙ→y₀) = con* (λ {(suc k-1) ->
+                      let k = suc k-1; N₁ = suc (proj₁ (xₙ→x₀ k)); N₂ = suc (proj₁ (yₙ→y₀ k)) in
+                      ℕ.pred (N₁ ℕ.⊔ N₂) , λ {(suc n-1) n≥N -> let n = suc n-1 in begin
+  ∣ xs n ⊔ ys n - (x₀ ⊔ y₀) ∣   ≤⟨ ∣x⊔y-z⊔w∣≤∣x-z∣⊔∣y-w∣ (xs n) (ys n) x₀ y₀ ⟩
+  ∣ xs n - x₀ ∣ ⊔ ∣ ys n - y₀ ∣ ≤⟨ x≤z∧y≤z⇒x⊔y≤z
+                                  (proj₂ (xₙ→x₀ k) n (ℕP.≤-trans (ℕP.m≤m⊔n N₁ N₂) n≥N))
+                                  (proj₂ (yₙ→y₀ k) n (ℕP.≤-trans (ℕP.m≤n⊔m N₁ N₂) n≥N)) ⟩
+  (+ 1 / k) ⋆                    ∎}})
   where open ≤-Reasoning

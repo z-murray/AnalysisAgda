@@ -2983,6 +2983,18 @@ proposition-2-16 x i (suc k₁) {i≤n} ∑xᵢ>0 = {!!}
 ≤⇒≡∨< zero (suc n) m≤n = inj₂ ℕP.0<1+n
 ≤⇒≡∨< (suc m) (suc n) (ℕ.s≤s m≤n) = [ (λ m≡n -> inj₁ (cong suc m≡n)) , (λ m<n -> inj₂ (ℕ.s≤s m<n)) ]′ (≤⇒≡∨< m n m≤n)
 
+∑₀ : (ℕ -> ℝ) -> (n : ℕ) -> {n ≢0} -> ℝ
+∑₀ a 1 = a 0
+∑₀ a (suc (suc n)) = ∑₀ a (suc n) + a (suc n)
+
+∑ : (ℕ -> ℝ) -> (i n : ℕ) -> {i ≢0} -> {n ≢0} -> ℝ
+∑ a (suc i) (suc n) = ∑₀ a (suc n) - ∑₀ a (suc i)
+
+
+{-
+
+start here
+
 {-
 No empty sums, which is sad, but this is much nicer to case split on.
 An alternative solution might be to allow for empty sums and, in some proofs about sums, to have an i ≤ n hypothesis
@@ -3741,3 +3753,4 @@ uncountability a x₀ y₀ x₀<y₀ = x , ((≤-trans (x₀≤xₙ 1) (xₙ≤x
                      [ (λ xₙ>aₙ -> inj₂ (<-≤-trans xₙ>aₙ (xₙ≤x n))) ,
                      (λ yₙ<aₙ -> inj₁ (<-respˡ-≃ (≃-symm x≃y) (≤-<-trans (yₙ≥y n) yₙ<aₙ))) ]′
                      (xₙ>aₙ∨yₙ<aₙ n)
+-}
