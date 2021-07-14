@@ -33,7 +33,7 @@ open import RealsRefactored
 
 open ℚᵘ
 open ℝ
-
+--∀k∈ℕ ∃Nₖ∈ℕ ∀n≥Nₖ ∣ fₙ - x₀ ∣ ≤ k⁻¹
 data _ConvergesTo_ : REL (ℕ -> ℝ) ℝ 0ℓ where
   con* : {f : ℕ -> ℝ} -> {x₀ : ℝ} ->
          (∀ k -> {k≢0 : k ≢0} -> ∃ λ Nₖ-1 -> (∀ n -> n ℕ.≥ suc (Nₖ-1) -> ∣ f n - x₀ ∣ ≤ ((+ 1 / k) {k≢0}) ⋆)) ->
@@ -747,3 +747,14 @@ xₙ⊔yₙ→x₀⊔y₀ {xs} {ys} (x₀ , con* xₙ→x₀) (y₀ , con* yₙ�
                                   (proj₂ (yₙ→y₀ k) n (ℕP.≤-trans (ℕP.m≤n⊔m N₁ N₂) n≥N)) ⟩
   (+ 1 / k) ⋆                    ∎}})
   where open ≤-Reasoning
+
+{-
+y₀ - x₀ = lim (yₙ - xₙ) = lim ∣yₙ - xₙ∣ = ... 
+lim f(n) = x₀
+n→∞
+
+lim f(n) f→x₀
+
+Cauchy⇒Convergent 
+
+-}

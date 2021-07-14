@@ -71,6 +71,14 @@ data _≃_ : Rel ℝ 0ℓ where
   + 2 / n                    ∎})
   where open ℚP.≤-Reasoning
 
+≃-reflexive : ∀ {x y} -> (∀ n -> {n ≢0} -> seq x n ℚ.≃ seq y n) -> x ≃ y
+≃-reflexive {x} {y} hyp = *≃* (λ {(suc n-1) -> let n = suc n-1 in begin
+  ℚ.∣ seq x n ℚ.- seq y n ∣ ≈⟨ ℚP.∣-∣-cong (ℚP.+-congʳ (seq x n) (ℚP.-‿cong (ℚP.≃-sym (hyp n)))) ⟩
+  ℚ.∣ seq x n ℚ.- seq x n ∣ ≈⟨ ℚP.∣-∣-cong (ℚP.+-inverseʳ (seq x n)) ⟩
+  0ℚᵘ                       ≤⟨ ℚP.nonNegative⁻¹ _ ⟩
+  + 2 / n                    ∎})
+  where open ℚP.≤-Reasoning
+
 m≤∣m∣ : ∀ m -> m ℤ.≤ + ℤ.∣ m ∣
 m≤∣m∣ (+_ n) = ℤP.≤-refl
 m≤∣m∣ (-[1+_] n) = ℤ.-≤+
@@ -2107,9 +2115,6 @@ nonNeg-refl {x} = nonNeg-cong (≃-symm (+-inverseʳ x)) nonNeg0
       z + x + (- x - y) ≈⟨ +-cong (+-comm z x) (≃-symm (neg-distrib-+ x y)) ⟩
       x + z - (x + y)    ∎
 
-{-
-y + x < z + x
--}
 +-monoˡ-< : ∀ x → (_+ x) Preserves _<_ ⟶ _<_
 +-monoˡ-< x {y} {z} y<z = pos-cong (+-cong (+-comm x z) (-‿cong (+-comm x y))) (+-monoʳ-< x y<z)
 
@@ -2904,110 +2909,68 @@ abstract
 ≤⇒≡∨< zero (suc n) m≤n = inj₂ ℕP.0<1+n
 ≤⇒≡∨< (suc m) (suc n) (ℕ.s≤s m≤n) = [ (λ m≡n -> inj₁ (cong suc m≡n)) , (λ m<n -> inj₂ (ℕ.s≤s m<n)) ]′ (≤⇒≡∨< m n m≤n)
 
-{-
-Old sum definition
+∑₀ : (ℕ -> ℝ) -> ℕ -> ℝ
+∑₀ a 0 = 0ℝ
+∑₀ a (suc n) = ∑₀ a n + a n
 
-ℝ-Sequence : Set
-ℝ-Sequence = ℕ -> ℝ
+∑ : (ℕ -> ℝ) -> ℕ -> ℕ -> ℝ
+∑ a 0 n = ∑₀ a n
+∑ a (suc i) n = ∑₀ a n - ∑₀ a (suc i)
 
-∑ : ℝ-Sequence -> (i n : ℕ) -> {i ℕ.≤ n} -> ℝ
-∑ a i n {i≤n} with ≤⇒≡∨< i n i≤n
-... | inj₁ i≡n = a i
-∑ a i (suc n) {i≤n} | inj₂ (ℕ.s≤s y) = ∑ a i n {y} + a (suc n)
--}
-
-{-
-Note that the new sum definition has an exclusive upper bound and is initially defined from 0 to n instead of i to n. Also, 
-the sum from i to n no longer requires i ≤ n.
-
-Proofs about the basic properties of sums shouldn't require a with clause now, but we often need two proofs: One for ∑₀ and
-one for ∑. The ∑ case is obvious from ∑₀ though.
-
-Possible problem: i cannot be 0. Maybe change this so it can be 0. A new possible definition would be:
-
-∑ : (ℕ -> ℝ) -> (i n : ℕ) -> {n ≢0} -> ℝ
-∑ a 0 (suc n) = ∑₀ a n
-∑ a (suc i) (suc n) = ∑₀ a (suc n) - ∑₀ a (suc i).
-
-It would probably require an additional case split in most proofs about ∑ properties. However, we could condense the proof for ∑₀
-and the extended proof for ∑ into one proof. Just prove the ∑₀ case of ∑ in the ∑ proof, and then prove the ∑ case. Anytime
-the proof for ∑₀ is needed, we have one function to call instead of two (i.e. instead of ∑₀-distrib-+ and ∑-distrib-+, we have just
-∑-distrib-+). So it seems that, per property of ∑, we have slightly shorter code (mainly from not needing the type signature of the ∑₀ case).
--}
-∑₀ : (ℕ -> ℝ) -> (n : ℕ) -> {n ≢0} -> ℝ
-∑₀ a 1 = a 0
-∑₀ a (suc (suc n)) = ∑₀ a (suc n) + a (suc n)
-
-∑ : (ℕ -> ℝ) -> (i n : ℕ) -> {i ≢0} -> {n ≢0} -> ℝ
-∑ a (suc i) (suc n) = ∑₀ a (suc n) - ∑₀ a (suc i)
-
-{-
-Old proof of distributivity of ∑
-
-∑x+∑y≃∑x+y : ∀ x y -> ∀ i n -> {i≤n : i ℕ.≤ n} ->
-             ∑ x i n {i≤n} + ∑ y i n {i≤n} ≃ ∑ (λ j -> x j + y j) i n {i≤n}
-∑x+∑y≃∑x+y x y i n {i≤n} with ≤⇒≡∨< i n i≤n
-... | inj₁ i≡n = ≃-refl
-∑x+∑y≃∑x+y x y i (suc n) {i≤n} | inj₂ (ℕ.s≤s i<n) = begin
-  ∑ x i n {i<n} + x (suc n) + (∑ y i n {i<n} + y (suc n))  ≈⟨ solve 4 (λ ∑x ∑y x y ->
-                                                                    ∑x :+ x :+ (∑y :+ y) := ∑x :+ ∑y :+ (x :+ y))
-                                                                    ≃-refl (∑ x i n {i<n}) (∑ y i n {i<n}) (x (suc n)) (y (suc n)) ⟩
-  ∑ x i n {i<n} + ∑ y i n {i<n} + (x (suc n) + y (suc n))  ≈⟨ +-congˡ (x (suc n) + y (suc n)) (∑x+∑y≃∑x+y x y i n {i<n}) ⟩
-  ∑ (λ j -> x j + y j) i n {i<n} + (x (suc n) + y (suc n))  ∎
+∑-distrib-+ : ∀ (xs ys : ℕ -> ℝ) -> ∀ i n ->
+              ∑ (λ k -> xs k + ys k) i n ≃ ∑ xs i n + ∑ ys i n
+∑-distrib-+ xs ys 0 n = lem n
   where
     open ≃-Reasoning
     open ℝ-+-*-Solver
--}
-
-∑₀-distrib-+ : ∀ (xs ys : ℕ -> ℝ) -> ∀ n -> {n≢0 : n ≢0} ->
-               ∑₀ (λ k -> xs k + ys k) n {n≢0} ≃ (∑₀ xs n {n≢0}) + (∑₀ ys n {n≢0})
-∑₀-distrib-+ xs ys 1 = ≃-refl
-∑₀-distrib-+ xs ys (suc (suc n-2)) = let n-1 = suc n-2; n = suc n-1 in begin
-  ∑₀ (λ k -> xs k + ys k) n-1 + (xs n-1 + ys n-1) ≈⟨ +-congˡ (xs n-1 + ys n-1) (∑₀-distrib-+ xs ys n-1) ⟩
-  ∑₀ xs n-1 + ∑₀ ys n-1 + (xs n-1 + ys n-1)       ≈⟨ solve 4 (λ a b c d -> a :+ b :+ (c :+ d) := a :+ c :+ (b :+ d))
-                                                     ≃-refl (∑₀ xs n-1) (∑₀ ys n-1) (xs n-1) (ys n-1) ⟩
-  ∑₀ xs n-1 + xs n-1 + (∑₀ ys n-1 + ys n-1)        ∎
+    {-
+      If you just case split on n in ∑-distrib-+ and don't use this lemma, Agda's termination checker gives an error
+      for the (suc i) n case when the induction hypothesis is used.
+    -}
+    lem : ∀ n -> ∑₀ (λ k -> xs k + ys k) n ≃ ∑₀ xs n + ∑₀ ys n
+    lem 0 = ≃-reflexive (λ {(suc n-1) -> ℚP.≃-refl})
+    lem (suc n) = begin
+      ∑₀ (λ k -> xs k + ys k) n + (xs n + ys n) ≈⟨ +-congˡ (xs n + ys n) (lem n) ⟩
+      ∑₀ xs n + ∑₀ ys n + (xs n + ys n)         ≈⟨ solve 4 (λ a b c d -> a :+ c :+ (b :+ d) := a :+ b :+ (c :+ d))
+                                                   ≃-refl (∑₀ xs n) (xs n) (∑₀ ys n) (ys n) ⟩
+      ∑₀ xs n + xs n + (∑₀ ys n + ys n)          ∎
+∑-distrib-+ xs ys (suc i) n = begin
+  ∑₀ (λ k -> xs k + ys k) n -
+  (∑₀ (λ k -> xs k + ys k) i + (xs i + ys i))                 ≈⟨ +-cong
+                                                                 (∑-distrib-+ xs ys 0 n)
+                                                                 (-‿cong (+-congˡ (xs i + ys i) (∑-distrib-+ xs ys 0 i))) ⟩
+  ∑₀ xs n + ∑₀ ys n - (∑₀ xs i + ∑₀ ys i + (xs i + ys i))     ≈⟨ +-congʳ (∑₀ xs n + ∑₀ ys n)
+                                                                 (-‿cong (solve 4 (λ a b c d -> a :+ b :+ (c :+ d) := a :+ c :+ (b :+ d))
+                                                                 ≃-refl (∑₀ xs i) (∑₀ ys i) (xs i) (ys i))) ⟩
+  ∑₀ xs n + ∑₀ ys n - (∑₀ xs i + xs i + (∑₀ ys i + ys i))     ≈⟨ +-congʳ (∑₀ xs n + ∑₀ ys n) (neg-distrib-+ (∑₀ xs i + xs i) (∑₀ ys i + ys i)) ⟩
+  ∑₀ xs n + ∑₀ ys n + (- (∑₀ xs i + xs i) - (∑₀ ys i + ys i)) ≈⟨ solve 4 (λ a b c d -> a :+ b :+ (c :+ d) := a :+ c :+ (b :+ d))
+                                                                 ≃-refl (∑₀ xs n) (∑₀ ys n) (- (∑₀ xs i + xs i)) (- (∑₀ ys i + ys i)) ⟩
+  ∑₀ xs n - (∑₀ xs i + xs i) + (∑₀ ys n - (∑₀ ys i + ys i))    ∎
   where
     open ≃-Reasoning
     open ℝ-+-*-Solver
 
-∑-distrib-+ : ∀ (xs ys : ℕ -> ℝ) -> ∀ i n -> {i≢0 : i ≢0} -> {n≢0 : n ≢0} ->
-              ∑ (λ k -> xs k + ys k) i n {i≢0} {n≢0} ≃ (∑ xs i n {i≢0} {n≢0}) + (∑ ys i n {i≢0} {n≢0})
-∑-distrib-+ xs ys (suc i-1) (suc n-1) = let i = suc i-1; n = suc n-1 in begin
-  ∑₀ xₖ+yₖ n - ∑₀ xₖ+yₖ i                 ≈⟨ +-cong
-                                             (∑₀-distrib-+ xs ys n)
-                                             (-‿cong (∑₀-distrib-+ xs ys i)) ⟩
-  ∑₀ xs n + ∑₀ ys n - (∑₀ xs i + ∑₀ ys i) ≈⟨ ≃-trans (+-congʳ (∑₀ xs n + ∑₀ ys n) (neg-distrib-+ (∑₀ xs i) (∑₀ ys i)))
-                                             (solve 4 (λ a b c d -> a :+ b :+ (c :+ d) := a :+ c :+ (b :+ d))
-                                             ≃-refl (∑₀ xs n) (∑₀ ys n) (- ∑₀ xs i) (- ∑₀ ys i)) ⟩
-  ∑₀ xs n - ∑₀ xs i + (∑₀ ys n - ∑₀ ys i)  ∎
+neg-distrib-∑ : ∀ xs -> ∀ i n -> - ∑ xs i n ≃ ∑ (λ j -> - xs j) i n
+neg-distrib-∑ xs 0 n = lem n
   where
-    xₖ+yₖ = λ k -> xs k + ys k
+    open ≃-Reasoning
+    lem : ∀ n -> - ∑₀ xs n ≃ ∑₀ (λ j -> - xs j) n
+    lem 0 = ≃-symm 0≃-0
+    lem (suc n) = begin
+      - (∑₀ xs n + xs n)          ≈⟨ neg-distrib-+ (∑₀ xs n) (xs n) ⟩
+      - ∑₀ xs n - xs n            ≈⟨ +-congˡ (- xs n) (lem n) ⟩
+      ∑₀ (λ j -> - xs j) n - xs n  ∎
+neg-distrib-∑ xs (suc i) n = begin
+  - (∑₀ xs n - (∑₀ xs i + xs i))                       ≈⟨ neg-distrib-+ (∑₀ xs n) (- (∑₀ xs i + xs i)) ⟩
+  - ∑₀ xs n - (- (∑₀ xs i + xs i))                     ≈⟨ +-cong
+                                                          (neg-distrib-∑ xs 0 n)
+                                                          (-‿cong (≃-trans
+                                                                  (neg-distrib-+ (∑₀ xs i) (xs i))
+                                                                  (+-congˡ (- xs i) (neg-distrib-∑ xs 0 i)))) ⟩
+  ∑₀ (λ j -> - xs j) n - (∑₀ (λ j -> - xs j) i - xs i)  ∎
+  where
     open ≃-Reasoning
     open ℝ-+-*-Solver
-
-{-
-Old proof of distributivity of - over ∑
-
-neg-distrib-∑ : ∀ x -> ∀ i n -> {i≤n : i ℕ.≤ n} ->
-                - ∑ x i n {i≤n} ≃ ∑ (λ j -> - x j) i n {i≤n}
-neg-distrib-∑ x i n {i≤n} with ≤⇒≡∨< i n i≤n
-... | inj₁ i≡n = ≃-refl
-neg-distrib-∑ x i (suc n) {i≤n+1} | inj₂ (ℕ.s≤s i≤n) = let n+1 = suc n in begin
-  - (∑ x i n {i≤n} + x n+1)          ≈⟨ neg-distrib-+ (∑ x i n {i≤n}) (x n+1) ⟩
-  - ∑ x i n {i≤n} - x n+1            ≈⟨ +-congˡ (- x n+1) (neg-distrib-∑ x i n {i≤n}) ⟩
-  ∑ (λ j -> - x j) i n {i≤n} - x n+1  ∎
-  where open ≃-Reasoning
--}
-
-neg-distrib-∑₀ : ∀ xs -> ∀ n -> {n≢0 : n ≢0} ->
-                  - ∑₀ xs n {n≢0} ≃ ∑₀ (λ k -> - xs k) n {n≢0}
-neg-distrib-∑₀ xs 1 = ≃-refl
-neg-distrib-∑₀ xs (suc (suc n-2)) = let n-1 = suc n-2; n = suc n-1 in begin
-  - (∑₀ xs n-1 + xs n-1)          ≈⟨ neg-distrib-+ (∑₀ xs n-1) (xs n-1) ⟩
-  - ∑₀ xs n-1 - xs n-1            ≈⟨ +-congˡ (- xs n-1) (neg-distrib-∑₀ xs n-1) ⟩
-  ∑₀ (λ k -> - xs k) n-1 - xs n-1  ∎
-  where open ≃-Reasoning
 
 ≤∨> : ∀ p q -> p ℚ.≤ q ⊎ q ℚ.< p  
 ≤∨> p q with p ℚP.≤? q
@@ -3150,22 +3113,9 @@ x+y>0⇒x>0∨y>0 x y x+y>0 = [ (λ hyp -> inj₁ (lem x X (proj₂ X-generator)
       z                        ∎
       where open ≤-Reasoning
 
-{-
-Old proof of Proposition 2.16
-
-proposition-2-16 : ∀ (x : ℝ-Sequence) -> ∀ i n -> {i≤n : i ℕ.≤ n} ->
-                   ∑ x i n {i≤n} > 0ℝ -> ∃ λ (j : ℕ) -> x j > 0ℝ
-proposition-2-16 x i n {i≤n} ∑x>0 with ≤⇒≡∨< i n i≤n
-... | inj₁ i≡n = i , ∑x>0
-proposition-2-16 x i (suc n) {i≤n+1} ∑x>0 | inj₂ (ℕ.s≤s i≤n) = let n+1 = suc n in
-                                                               [ proposition-2-16 x i n {i≤n} , (λ xₙ₊₁>0 -> n+1 , xₙ₊₁>0) ]′
-                                                               (x+y>0⇒x>0∨y>0 (∑ x i n {i≤n}) (x n+1) ∑x>0)
--}
-
-proposition-2-16 : ∀ xs -> ∀ n -> {n≢0 : n ≢0} ->
-                   ∑₀ xs n {n≢0} > 0ℝ -> ∃ λ j -> j ℕ.< n × xs j > 0ℝ
-proposition-2-16 xs 1 ∑xs>0 = 0 , ℕP.0<1+n , ∑xs>0
-proposition-2-16 xs (suc (suc n-2)) ∑xs>0 = let n-1 = suc n-2; n = suc n-1 in
+proposition-2-16 : ∀ xs -> ∀ n -> {n ≢0} -> ∑₀ xs n > 0ℝ -> ∃ λ j -> j ℕ.< n × xs j > 0ℝ
+proposition-2-16 xs 1 ∑xs>0 = 0 , ℕP.0<1+n , <-respʳ-≃ (+-identityˡ (xs 0)) ∑xs>0
+proposition-2-16 xs (suc (suc n-2)) ∑xs>0 = let n-1 = suc n-2 in
                                             [ (λ hyp -> let fromhyp = proposition-2-16 xs n-1 hyp in
                                                         proj₁ fromhyp , ℕP.<-trans (proj₁ (proj₂ fromhyp)) (ℕP.n<1+n n-1) , proj₂ (proj₂ fromhyp)) ,
                                               (λ hyp -> n-1 , ℕP.n<1+n n-1 , hyp) ]′
@@ -3306,213 +3256,7 @@ regular-n≤m x hyp (suc m-1) (suc n-1) = [ left , right ]′ (ℕP.≤-total m 
     right : n ℕ.≤ m -> ℚ.∣ x m ℚ.- x n ∣ ℚ.≤ (+ 1 / m) ℚ.+ (+ 1 / n)
     right n≤m = hyp m n n≤m
 
-{-uncountability : ∀ (a : ℝ-Sequence) -> ∀ (x₀ y₀ : ℝ) -> x₀ < y₀ ->
-                 ∃ λ (x : ℝ) -> (x₀ ≤ x ≤ y₀) × (∀ (n : ℕ) -> {n≢0 : n ≢0} -> x ≄ a n)
-uncountability a x₀ y₀ x₀<y₀ = {!!}
-  where
-    record Sub : Set where
-      constructor mkSub
-      field
-        A : ℚᵘ
-        B : ℚᵘ
-        X : ℝ
-        Y : ℝ
-        X<Y : X < Y
-        A<B : A ℚ.< B
-
-    xy-gen : ℕ -> Sub
-    xy-gen 0 = mkSub 0ℚᵘ 1ℚᵘ x₀ y₀ x₀<y₀ (ℚP.positive⁻¹ _)
-    xy-gen (suc n-1) with xy-gen n-1
-    ... | mkSub A B xₙ₋₁ yₙ₋₁ xₙ₋₁<yₙ₋₁ A<B with fast-corollary-2-17 (a (suc n-1)) xₙ₋₁ yₙ₋₁ xₙ₋₁<yₙ₋₁
-    ... | inj₁ yₙ₋₁>aₙ = mkSub xₙ yₙ (xₙ ⋆) (yₙ ⋆) (proj₂ (proj₂ xₙp)) (p⋆<q⋆⇒p<q xₙ yₙ (proj₂ (proj₂ xₙp)))
-      where
-        n = suc n-1
-        yₙp = fast-density-of-ℚ (a n ⊔ xₙ₋₁) yₙ₋₁ (x<z∧y<z⇒x⊔y<z (a n) xₙ₋₁ yₙ₋₁ yₙ₋₁>aₙ xₙ₋₁<yₙ₋₁)
-        yₙ = proj₁ yₙp
-
-        abstract
-          aₙ⊔xₙ₋₁⊔[yₙ-n⁻¹]<yₙ : a n ⊔ xₙ₋₁ ⊔ (yₙ ⋆ - (+ 1 / n) ⋆) < yₙ ⋆
-          aₙ⊔xₙ₋₁⊔[yₙ-n⁻¹]<yₙ = x<z∧y<z⇒x⊔y<z (a n ⊔ xₙ₋₁) (yₙ ⋆ - (+ 1 / n) ⋆) (yₙ ⋆) (proj₁ (proj₂ yₙp)) (begin-strict
-            yₙ ⋆ - (+ 1 / n) ⋆ <⟨ +-monoʳ-< (yₙ ⋆) (neg-mono-< (p<q⇒p⋆<q⋆ 0ℚᵘ (+ 1 / n) (ℚP.positive⁻¹ _)))  ⟩
-            yₙ ⋆ - 0ℝ          ≈⟨ ≃-trans (+-congʳ (yₙ ⋆) (≃-symm 0≃-0)) (+-identityʳ (yₙ ⋆)) ⟩
-            yₙ ⋆                ∎)
-            where open ≤-Reasoning
-
-        xₙp = fast-density-of-ℚ (a n ⊔ xₙ₋₁ ⊔ (yₙ ⋆ - (+ 1 / n) ⋆)) (yₙ ⋆) aₙ⊔xₙ₋₁⊔[yₙ-n⁻¹]<yₙ
-        xₙ = proj₁ xₙp
-    ... | inj₂ aₙ>xₙ₋₁ = mkSub xₙ yₙ (xₙ ⋆) (yₙ ⋆) (proj₁ (proj₂ yₙp)) (p⋆<q⋆⇒p<q xₙ yₙ (proj₁ (proj₂ yₙp)))
-      where
-        n = suc n-1
-        xₙp = fast-density-of-ℚ xₙ₋₁ (a n ⊓ yₙ₋₁) (x<y∧x<z⇒x<y⊓z xₙ₋₁ (a n) yₙ₋₁ aₙ>xₙ₋₁ xₙ₋₁<yₙ₋₁)
-        xₙ = proj₁ xₙp
-
-        abstract
-          xₙ<aₙ⊓yₙ⊓[xₙ+n⁻¹] : xₙ ⋆ < a n ⊓ yₙ₋₁ ⊓ (xₙ ⋆ + (+ 1 / n) ⋆)
-          xₙ<aₙ⊓yₙ⊓[xₙ+n⁻¹] = x<y∧x<z⇒x<y⊓z (xₙ ⋆) (a n ⊓ yₙ₋₁) (xₙ ⋆ + (+ 1 / n) ⋆) (proj₂ (proj₂ xₙp)) (begin-strict
-            xₙ ⋆               ≈⟨ ≃-symm (+-identityʳ (xₙ ⋆)) ⟩
-            xₙ ⋆ + 0ℝ          <⟨ +-monoʳ-< (xₙ ⋆) (p<q⇒p⋆<q⋆ 0ℚᵘ (+ 1 / n) (ℚP.positive⁻¹ _)) ⟩
-            xₙ ⋆ + (+ 1 / n) ⋆  ∎)
-            where open ≤-Reasoning
-
-        yₙp = fast-density-of-ℚ (xₙ ⋆) (a n ⊓ yₙ₋₁ ⊓ (xₙ ⋆ + (+ 1 / n) ⋆)) xₙ<aₙ⊓yₙ⊓[xₙ+n⁻¹]
-        yₙ = proj₁ yₙp
-
-    xs : ℕ -> ℚᵘ
-    xs 0 = 0ℚᵘ
-    xs (suc n) = Sub.A (xy-gen (suc n))
-
-    ys : ℕ -> ℚᵘ
-    ys 0 = 0ℚᵘ 
-    ys (suc n) = Sub.B (xy-gen (suc n))
-
-    x₀≤xₙ : ∀ (n : ℕ) -> {n≢0 : n ≢0} -> x₀ ≤ (xs n) ⋆
-    x₀≤xₙ 1 = {!!}
-    x₀≤xₙ (suc (suc n)) = {!!}
-
-    xₙ≤xₘ : ∀ (m n : ℕ) -> m ℕ.≥ n -> Sub.X (xy-gen n) ≤ Sub.X (xy-gen m)
-    xₙ≤xₘ zero zero m≥n = ≤-refl
-    xₙ≤xₘ (suc m) zero m≥n = {!!}
-    xₙ≤xₘ (suc m) (suc n) m≥n = {!!}
-
-    my-Gen : ℕ -> ℝ × ℝ × Set × Set × Set
-    my-Gen n = {!!}
-
-    prop1 : ∀ (m n : ℕ) -> {m≢0 : m ≢0} -> {n≢0 : n ≢0} -> m ℕ.≥ n ->
-            (x₀ ≤ ((xs n) ⋆) ≤ ((xs m) ⋆)) × ((xs m) ⋆ < (ys m) ⋆) × (((ys m) ⋆) ≤ ((ys n) ⋆) ≤ y₀)
-    prop1 (suc m) (suc n) m≥n with xy-gen m
-    ... | res = {!!}-}
-
-{-uncountability : ∀ (a : ℝ-Sequence) -> ∀ (x₀ y₀ : ℝ) -> x₀ < y₀ ->
-                 ∃ λ (x : ℝ) -> (x₀ ≤ x ≤ y₀) × (∀ (n : ℕ) -> {n≢0 : n ≢0} -> x ≄ a n)
-uncountability a x₀ y₀ x₀<y₀ = {!!}
-  where
-    {-
-      Trying to embed the properties inside each element of the sequence so they don't individually need to be proved
-      after the construction of the sequences.
-    -}
-    record sub2 (m : ℕ) : Set where
-      constructor mkSub2
-      field
-        xₘ : ℝ
-        yₘ : ℝ
-        xs : ℕ -> ℝ
-        ys : ℕ -> ℝ
-        xₘ<yₘ : xₘ < yₘ
-        prop1 : ∀ (n : ℕ) -> n ℕ.≤ m -> (x₀ ≤ xs n ≤ xₘ) × (yₘ ≤ ys n ≤ y₀) 
-        prop2 : (m≢0 : m ≢0) -> (xₘ > a m) ⊎ yₘ < a m
-        prop3 : (m≢0 : m ≢0) -> yₘ - xₘ < ((+ 1 / m) {m≢0}) ⋆
-
-    xy-gen : (m : ℕ) -> sub2 m
-    xy-gen 0 = mkSub2 x₀ y₀ (λ { 0 → x₀ ; (suc n) → 0ℝ}) (λ { 0 -> y₀ ; (suc n) -> 0ℝ})
-               x₀<y₀ (λ { 0 n≤0 → (≤-refl , ≤-refl) , (≤-refl , ≤-refl)}) (λ 0≢0 -> ⊥-elim 0≢0) λ 0≢0 -> ⊥-elim 0≢0
-    xy-gen (suc m-1) with xy-gen m-1
-    ... | mkSub2 xₘ₋₁ yₘ₋₁ xs ys xₘ₋₁<yₘ₋₁ prop1 prop2 prop3 with fast-corollary-2-17 (a (suc m-1)) xₘ₋₁ yₘ₋₁ xₘ₋₁<yₘ₋₁
-    ... | inj₁ aₘ<yₘ₋₁ = mkSub2 xₘ yₘ xsₘ ysₘ (proj₂ (proj₂ xₘp)) prop1ₘ prop2ₘ prop3ₘ
-      where
-        m = suc m-1
-
-        abstract
-          aₘ⊔xₘ₋₁<yₘ₋₁ : a m ⊔ xₘ₋₁ <  yₘ₋₁
-          aₘ⊔xₘ₋₁<yₘ₋₁ = x<z∧y<z⇒x⊔y<z (a m) xₘ₋₁ yₘ₋₁ aₘ<yₘ₋₁ xₘ₋₁<yₘ₋₁
-          
-        yₘp = fast-density-of-ℚ (a m ⊔ xₘ₋₁) yₘ₋₁ aₘ⊔xₘ₋₁<yₘ₋₁
-        yₘ = (proj₁ yₘp) ⋆
-
-        abstract
-          aₘ⊔xₘ₋₁⊔[yₘ-m⁻¹]<yₘ : a m ⊔ xₘ₋₁ ⊔ (yₘ - (+ 1 / m) ⋆) < yₘ
-          aₘ⊔xₘ₋₁⊔[yₘ-m⁻¹]<yₘ = x<z∧y<z⇒x⊔y<z (a m ⊔ xₘ₋₁) (yₘ - (+ 1 / m) ⋆) yₘ (proj₁ (proj₂ yₘp)) (begin-strict
-            yₘ - (+ 1 / m) ⋆ <⟨ +-monoʳ-< yₘ (neg-mono-< (p<q⇒p⋆<q⋆ 0ℚᵘ (+ 1 / m) (ℚP.positive⁻¹ _))) ⟩
-            yₘ - 0ℝ          ≈⟨ ≃-trans (+-congʳ yₘ (≃-symm 0≃-0)) (+-identityʳ yₘ) ⟩
-            yₘ                ∎)
-            where open ≤-Reasoning
-
-        xₘp = fast-density-of-ℚ (a m ⊔ xₘ₋₁ ⊔ (yₘ - (+ 1 / m) ⋆)) yₘ aₘ⊔xₘ₋₁⊔[yₘ-m⁻¹]<yₘ
-        xₘ = (proj₁ xₘp) ⋆
-
-        xsₘ : ℕ -> ℝ
-        xsₘ n with ℕP.<-cmp n m
-        ... | tri< n<m ¬b ¬c = xs n
-        ... | tri≈ ¬a n≡m ¬c = xₘ
-        ... | tri> ¬a ¬b m<n = 0ℝ
-
-        ysₘ : ℕ -> ℝ
-        ysₘ n with ℕP.<-cmp n m
-        ... | tri< n<m ¬b ¬c = ys n
-        ... | tri≈ ¬a n≡m ¬c = yₘ
-        ... | tri> ¬a ¬b m<n = 0ℝ
-
-        prop1ₘ : ∀ (n : ℕ) -> n ℕ.≤ m -> (x₀ ≤ xsₘ n ≤ xₘ) × (yₘ ≤ ysₘ n ≤ y₀)
-        prop1ₘ n n≤m with ℕP.<-cmp n m
-        ... | tri< n<m ¬b ¬c = (proj₁ (proj₁ (prop1 n (m<1+n⇒m≤n n m-1 n<m))) ,
-                               ≤-trans (proj₂ (proj₁ (prop1 n (m<1+n⇒m≤n n m-1 n<m))))
-                                       (≤-trans (≤-trans (x≤y⊔x xₘ₋₁ (a m)) (x≤x⊔y (a m ⊔ xₘ₋₁) (yₘ - (+ 1 / m) ⋆))) (<⇒≤ (proj₁ (proj₂ xₘp))))) ,
-                               (≤-trans (<⇒≤ (proj₂ (proj₂ yₘp))) (proj₁ (proj₂ (prop1 n (m<1+n⇒m≤n n m-1 n<m)))) ,
-                               proj₂ (proj₂ (prop1 n (m<1+n⇒m≤n n m-1 n<m))))
-        ... | tri≈ ¬a refl ¬c = (≤-trans (≤-trans (proj₁ (proj₁ (prop1 m-1 ℕP.≤-refl))) (proj₂ (proj₁ (prop1 m-1 ℕP.≤-refl))))
-                                         (≤-trans (≤-trans (x≤y⊔x xₘ₋₁ (a m)) (x≤x⊔y (a m ⊔ xₘ₋₁) (yₘ - (+ 1 / m) ⋆))) (<⇒≤ (proj₁ (proj₂ xₘp)))) ,
-                                ≤-refl) , (≤-refl ,
-                                ≤-trans (<⇒≤ (proj₂ (proj₂ yₘp))) (≤-trans (proj₁ (proj₂ (prop1 m-1 ℕP.≤-refl)))
-                                                                           (proj₂ (proj₂ (prop1 m-1 ℕP.≤-refl)))))
-        ... | tri> ¬a ¬b n>m = ⊥-elim (ℕP.≤⇒≯ n≤m n>m)
-          where open ≤-Reasoning
-
-        prop2ₘ : (m≢0 : m ≢0) -> (xₘ > a m) ⊎ yₘ < a m
-        prop2ₘ m≢0 = inj₁ (begin-strict
-          a m                               ≤⟨ ≤-trans (x≤x⊔y (a m) xₘ₋₁) (x≤x⊔y (a m ⊔ xₘ₋₁) (yₘ - ((+ 1 / m) ⋆))) ⟩
-          a m ⊔ xₘ₋₁ ⊔ (yₘ - ((+ 1 / m) ⋆)) <⟨ proj₁ (proj₂ xₘp) ⟩
-          xₘ                                 ∎)
-          where open ≤-Reasoning
-
-        {-
-        *****Extremely interesting result!*****
-        Look at the ring solver application here (the solve 4 one).
-        If we do the following instead:
-        solve 3 (λ x y m⁻¹ -> y :- x :+ (m⁻¹ :- m⁻¹) := y :- m⁻¹ :- x :+ m⁻¹),
-        we cannot use ≃-refl! But changing it to solve 4 instead and removing the negatives works.
-        Is this related to the 0 ≃ -0 problem?    
-        -}
-        prop3ₘ : (m≢0 : m ≢0) -> yₘ - xₘ < ((+ 1 / m) {m≢0}) ⋆
-        prop3ₘ m≢0 = begin-strict
-          yₘ - xₘ                               ≈⟨ ≃-symm (≃-trans
-                                                   (+-congʳ (yₘ - xₘ)
-                                                   (+-inverseʳ ((+ 1 / m) ⋆))) (+-identityʳ (yₘ - xₘ))) ⟩
-          yₘ - xₘ + ((+ 1 / m) ⋆ - (+ 1 / m) ⋆) ≈⟨ solve 4 (λ x y a b -> y :+ x :+ (a :+ b) := (y :+ b) :+ x :+ a)
-                                                   ≃-refl (- xₘ) yₘ ((+ 1 / m) ⋆) (- ((+ 1 / m) ⋆)) ⟩
-          (yₘ - (+ 1 / m) ⋆) - xₘ + (+ 1 / m) ⋆ <⟨ +-monoˡ-< ((+ 1 / m) ⋆) (+-monoˡ-< (- xₘ)
-                                                   (≤-<-trans (x≤y⊔x (yₘ - (+ 1 / m) ⋆) (a m ⊔ xₘ₋₁)) (proj₁ (proj₂ xₘp)))) ⟩
-          xₘ - xₘ + ((+ 1 / m) ⋆)               ≈⟨ ≃-trans (+-congˡ ((+ 1 / m) ⋆) (+-inverseʳ xₘ)) (+-identityˡ ((+ 1 / m) ⋆)) ⟩
-          ((+ 1 / m) ⋆)                          ∎
-          where
-            open ≤-Reasoning
-            open ℝ-+-*-Solver
-    ... | inj₂ xₘ₋₁<aₘ = mkSub2 xₘ yₘ {!!} {!!} {!!} {!!} {!!} {!!}
-      where
-        m = suc m-1
-        xₘp = fast-density-of-ℚ xₘ₋₁ (a m ⊓ yₘ₋₁) (x<y∧x<z⇒x<y⊓z xₘ₋₁ (a m) yₘ₋₁ xₘ₋₁<aₘ xₘ₋₁<yₘ₋₁)
-        xₘ = (proj₁ xₘp) ⋆
-        yₘp = fast-density-of-ℚ xₘ (a m ⊓ yₘ₋₁ ⊓ (xₘ + (+ 1 / m) ⋆)) (x<y∧x<z⇒x<y⊓z xₘ (a m ⊓ yₘ₋₁) (xₘ + (+ 1 / m) ⋆)
-              (proj₂ (proj₂ xₘp)) (begin-strict
-          xₘ               ≈⟨ ≃-symm (+-identityʳ xₘ) ⟩
-          xₘ + 0ℝ          <⟨ +-monoʳ-< xₘ (p<q⇒p⋆<q⋆ 0ℚᵘ (+ 1 / m) (ℚP.positive⁻¹ _)) ⟩
-          xₘ + (+ 1 / m) ⋆  ∎))
-          where open ≤-Reasoning
-        yₘ = (proj₁ yₘp) ⋆
-
-        xsₘ : ℕ -> ℝ
-        xsₘ n with ℕP.<-cmp n m
-        ... | tri< n<m ¬b ¬c = xs n
-        ... | tri≈ ¬a refl ¬c = xₘ
-        ... | tri> ¬a ¬b n>m = 0ℝ
-
-        ysₘ : ℕ -> ℝ
-        ysₘ n with ℕP.<-cmp n m
-        ... | tri< n<m ¬b ¬c = ys n
-        ... | tri≈ ¬a refl ¬c = yₘ
-        ... | tri> ¬a ¬b n>m = 0ℝ
-
--}
-
-uncountability : ∀ (a : ℝ-Sequence) -> ∀ (x₀ y₀ : ℝ) -> x₀ < y₀ ->
+uncountability : ∀ (a : ℕ -> ℝ) -> ∀ (x₀ y₀ : ℝ) -> x₀ < y₀ ->
                  ∃ λ (x : ℝ) -> (x₀ ≤ x ≤ y₀) × (∀ (n : ℕ) -> {n≢0 : n ≢0} -> x ≄ a n)
 uncountability a x₀ y₀ x₀<y₀ = x , ((≤-trans (x₀≤xₙ 1) (xₙ≤x 1)) , (≤-respˡ-≃ (≃-symm x≃y) (≤-trans (yₙ≥y 1) (yₙ≤y₀ 1)))) , x≄aₙ
   where
@@ -3598,7 +3342,6 @@ uncountability a x₀ y₀ x₀<y₀ = x , ((≤-trans (x₀≤xₙ 1) (xₙ≤x
               + 1 / n                ∎
             
             
-
     xs : ℕ -> ℚᵘ
     ys : ℕ -> ℚᵘ
     xs-increasing : ∀ (n : ℕ) -> {n ≢0} -> xs n ℚ.≤ xs (suc n)
