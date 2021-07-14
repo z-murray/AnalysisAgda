@@ -42,14 +42,6 @@ data _ConvergesTo_ : REL (ℕ -> ℝ) ℝ 0ℓ where
 _isConvergent : (ℕ -> ℝ) -> Set
 f isConvergent = ∃ λ x₀ -> f ConvergesTo x₀
 
-≃-reflexive : ∀ {x y} -> (∀ n -> {n ≢0} -> seq x n ℚ.≃ seq y n) -> x ≃ y
-≃-reflexive {x} {y} hyp = *≃* (λ {(suc n-1) -> let n = suc n-1 in begin
-  ℚ.∣ seq x n ℚ.- seq y n ∣ ≈⟨ ℚP.∣-∣-cong (ℚP.+-congʳ (seq x n) (ℚP.-‿cong (ℚP.≃-sym (hyp n)))) ⟩
-  ℚ.∣ seq x n ℚ.- seq x n ∣ ≈⟨ ℚP.∣-∣-cong (ℚP.+-inverseʳ (seq x n)) ⟩
-  0ℚᵘ                       ≤⟨ ℚP.nonNegative⁻¹ _ ⟩
-  + 2 / n                    ∎})
-  where open ℚP.≤-Reasoning
-
 ∣p∣⋆≃∣p⋆∣ : ∀ p -> ℚ.∣ p ∣ ⋆ ≃ ∣ p ⋆ ∣
 ∣p∣⋆≃∣p⋆∣ p = ≃-reflexive (λ {n -> ℚP.≃-refl})
 
@@ -197,13 +189,13 @@ convergent⇒bounded {f} (x₀ , con* f→x₀) = M , bound* (λ {(suc n-1) -> l
 
 data _isCauchy : (ℕ -> ℝ) -> Set where
   cauchy* : {f : ℕ -> ℝ} ->
-            (∀ k -> {k≢0 : k ≢0} -> ∃ λ Mₖ -> Mₖ ≢0 × ∀ m n -> m ℕ.≥ Mₖ -> n ℕ.≥ Mₖ ->
+            (∀ k -> {k≢0 : k ≢0} -> ∃ λ Mₖ-1 -> ∀ m n -> m ℕ.≥ suc Mₖ-1 -> n ℕ.≥ suc Mₖ-1 ->
                     ∣ f m - f n ∣ ≤ (+ 1 / k) {k≢0} ⋆) -> f isCauchy
 
 convergent⇒cauchy : ∀ {f : ℕ -> ℝ} -> f isConvergent -> f isCauchy
 convergent⇒cauchy {f} (x₀ , con* f→x₀) = cauchy* (λ {(suc k-1) ->
                                          let k = suc k-1; N₂ₖ = suc (proj₁ (f→x₀ (2 ℕ.* k))); Mₖ = suc N₂ₖ in
-                                         Mₖ , _ , λ {(suc m-1) (suc n-1) m≥Mₖ n≥Mₖ -> let m = suc m-1 ; n = suc n-1 in
+                                         ℕ.pred Mₖ , λ {(suc m-1) (suc n-1) m≥Mₖ n≥Mₖ -> let m = suc m-1 ; n = suc n-1 in
                                          begin
   ∣ f m - f n ∣                             ≈⟨ ∣-∣-cong (≃-symm (+-congˡ (- f n) (≃-trans
                                                (+-congʳ (f m) (+-inverseʳ x₀)) (+-identityʳ (f m))))) ⟩
@@ -244,12 +236,12 @@ cauchy⇒convergent {f} (cauchy* fCauchy) = y , f→y
         )
     open ℤ-Solver.+-*-Solver
     N : ℕ -> ℕ
-    N k-1 = let k = suc k-1; M₂ₖ = proj₁ (fCauchy (2 ℕ.* k)) in
+    N k-1 = let k = suc k-1; M₂ₖ = suc (proj₁ (fCauchy (2 ℕ.* k))) in
                   suc ((3 ℕ.* k) ℕ.⊔ M₂ₖ)
 
     Nₖ-prop : ∀ k-1 -> ∀ m n -> m ℕ.≥ N k-1 -> n ℕ.≥ N k-1 -> ∣ f m - f n ∣ ≤ (+ 1 / (2 ℕ.* (suc k-1))) ⋆
-    Nₖ-prop k-1 = λ {(suc m-1) (suc n-1) m≥N n≥N -> let k = suc k-1; m = suc m-1; n = suc n-1; M₂ₖ = proj₁ (fCauchy (2 ℕ.* k)) in
-                  proj₂ (proj₂ (fCauchy (2 ℕ.* k))) m n
+    Nₖ-prop k-1 = λ {(suc m-1) (suc n-1) m≥N n≥N -> let k = suc k-1; m = suc m-1; n = suc n-1; M₂ₖ = suc (proj₁ (fCauchy (2 ℕ.* k))) in
+                  proj₂ (fCauchy (2 ℕ.* k)) m n
                   (ℕP.≤-trans (ℕP.≤-trans (ℕP.m≤n⊔m (3 ℕ.* k) M₂ₖ) (ℕP.n≤1+n ((3 ℕ.* k) ℕ.⊔ M₂ₖ))) m≥N)
                   (ℕP.≤-trans (ℕP.≤-trans (ℕP.m≤n⊔m (3 ℕ.* k) M₂ₖ) (ℕP.n≤1+n ((3 ℕ.* k) ℕ.⊔ M₂ₖ))) n≥N)}
 
@@ -325,7 +317,7 @@ cauchy⇒convergent {f} (cauchy* fCauchy) = y , f→y
     f→y : f ConvergesTo y
     f→y = con* (λ {(suc k-1) -> ℕ.pred (N k-1) ,
           λ {(suc n-1) n≥Nₖ -> let k = suc k-1; n = suc n-1
-                                     ; n≥3k = ℕP.≤-trans (ℕP.≤-trans (ℕP.m≤m⊔n (3 ℕ.* k) (proj₁ (fCauchy (2 ℕ.* k)))) (ℕP.n≤1+n (ℕ.pred (N k-1)))) n≥Nₖ in begin
+                                     ; n≥3k = ℕP.≤-trans (ℕP.≤-trans (ℕP.m≤m⊔n (3 ℕ.* k) (suc (proj₁ (fCauchy (2 ℕ.* k))))) (ℕP.n≤1+n (ℕ.pred (N k-1)))) n≥Nₖ in begin
       ∣ f n - y ∣                                                         ≈⟨ ∣-∣-cong (≃-symm (≃-trans
                                                                              (+-congˡ (f n - y) (≃-trans (+-cong (+-inverseʳ (f (N n-1))) (+-inverseʳ (ys n ⋆)))
                                                                                                          (+-identityʳ 0ℝ)))
@@ -342,7 +334,7 @@ cauchy⇒convergent {f} (cauchy* fCauchy) = y , f→y
                                                                               (lemma-2-14 (f (N n-1)) (2 ℕ.* n)))
                                                                               (Nₖ-prop k-1 n (N n-1) n≥Nₖ
                                                                               (ℕP.≤-trans (ℕP.≤-trans n≥Nₖ (ℕP.m≤n*m n {3} ℕP.0<1+n))
-                                                                                          (ℕP.≤-trans (ℕP.m≤m⊔n (3 ℕ.* n) (proj₁ (fCauchy (2 ℕ.* n))))
+                                                                                          (ℕP.≤-trans (ℕP.m≤m⊔n (3 ℕ.* n) (suc (proj₁ (fCauchy (2 ℕ.* n)))))
                                                                                                       (ℕP.n≤1+n (ℕ.pred (N n-1)))))) ⟩
       (+ 1 / n) ⋆ + (+ 1 / (2 ℕ.* n)) ⋆ + (+ 1 / (2 ℕ.* k)) ⋆             ≈⟨ ≃-symm (≃-trans
                                                                              (⋆-distrib-+ (+ 1 / n ℚ.+ + 1 / (2 ℕ.* n)) (+ 1 / (2 ℕ.* k)))
@@ -748,13 +740,77 @@ xₙ⊔yₙ→x₀⊔y₀ {xs} {ys} (x₀ , con* xₙ→x₀) (y₀ , con* yₙ�
   (+ 1 / k) ⋆                    ∎}})
   where open ≤-Reasoning
 
+SeriesOf_From_ : (ℕ -> ℝ) -> ℕ -> (ℕ -> ℝ)
+(SeriesOf xs From i) n = ∑ xs i n
+
+SeriesOf : (ℕ -> ℝ) -> (ℕ -> ℝ)
+SeriesOf xs = SeriesOf xs From 0
+
+limitShifting : ∀ xs -> ∀ k m n -> m ℕ.< n -> ∑ xs m k ≃ ∑ xs n k + ∑ xs m n
+limitShifting xs k zero (suc n) m<n = ≃-symm (begin
+  ∑₀ xs k - (∑₀ xs n + xs n) + (∑₀ xs n + xs n)     ≈⟨ +-assoc (∑₀ xs k) (- (∑₀ xs n + xs n)) (∑₀ xs n + xs n) ⟩
+  ∑₀ xs k + (- (∑₀ xs n + xs n) + (∑₀ xs n + xs n)) ≈⟨ +-congʳ (∑₀ xs k) (+-inverseˡ (∑₀ xs n + xs n)) ⟩
+  ∑₀ xs k + 0ℝ                                      ≈⟨ +-identityʳ (∑₀ xs k) ⟩
+  ∑₀ xs k                                            ∎)
+  where open ≃-Reasoning
+limitShifting xs k (suc m) (suc n) m<n = begin
+  ∑₀ xs k - (∑₀ xs m + xs m)                                       ≈⟨ ≃-symm (≃-trans
+                                                                      (+-congˡ (- (∑₀ xs m + xs m)) (+-congʳ (∑₀ xs k) (+-inverseʳ (∑₀ xs n + xs n))))
+                                                                      (+-congˡ (- (∑₀ xs m + xs m)) (+-identityʳ (∑₀ xs k)))) ⟩
+  ∑₀ xs k + (∑₀ xs n + xs n - (∑₀ xs n + xs n)) - (∑₀ xs m + xs m) ≈⟨ solve 4 (λ a b c d -> a :+ (b :+ c) :+ d := a :+ c :+ (b :+ d))
+                                                                      ≃-refl (∑₀ xs k) (∑₀ xs n + xs n) (- (∑₀ xs n + xs n)) (- (∑₀ xs m + xs m)) ⟩
+  ∑₀ xs k - (∑₀ xs n + xs n) + (∑₀ xs n + xs n - (∑₀ xs m + xs m))  ∎
+  where
+    open ≃-Reasoning
+    open ℝ-+-*-Solver
+
 {-
-y₀ - x₀ = lim (yₙ - xₙ) = lim ∣yₙ - xₙ∣ = ... 
-lim f(n) = x₀
-n→∞
+∑ₘᵗxₖ
+m<n :
+∑ₘᵗxₖ =  ∑ₙᵗxₖ + ∑ₘⁿ xₖ
 
-lim f(n) f→x₀
-
-Cauchy⇒Convergent 
-
+m>n:
+∑ₙᵗxₖ = ∑ₘᵗxₖ + ∑ₙᵐxₖ
+∑ₘᵗxₖ = ∑ₘᵗxₖ + ∑ₙᵗxₖ - ∑ₙᵗxₖ
+      = ∑ₘᵗxₖ + ∑ₙᵗxₖ - (∑ₘᵗxₖ + ∑ₙᵐxₖ)
+      = ∑ₙᵗxₖ - ∑ₙᵐxₖ
 -}
+lowerLimitShiftPreservesConvergence : ∀ xs -> ∀ n -> (SeriesOf xs From n) isConvergent ->
+                                 ∀ m -> (SeriesOf xs From m) isConvergent
+lowerLimitShiftPreservesConvergence xs n (ℓ , con* hyp) m with ℕP.<-cmp m n
+... | tri< m<n ¬m≡n ¬m>n = ℓ + ∑ xs m n , xₙ≃yₙ∧xₙ→x₀⇒yₙ→x₀ (λ {(suc k-1) -> ≃-symm (limitShifting xs (suc k-1) m n m<n)})
+                           (ℓ + ∑ xs m n , xₙ+yₙ→x₀+y₀ {SeriesOf xs From n} {λ k -> ∑ xs m n} (ℓ , con* hyp) (∑ xs m n , xₙ≃c⇒xₙ→c (λ {(suc k-1) -> ≃-refl})))
+... | tri≈ ¬m<n refl ¬m>n = ℓ , con* hyp
+... | tri> ¬m<n ¬m≡n m>n = ℓ - ∑ xs n m , xₙ≃yₙ∧xₙ→x₀⇒yₙ→x₀ (λ {(suc k-1) -> let k = suc k-1 in begin
+  ∑ xs n k - ∑ xs n m            ≈⟨ +-congˡ (- ∑ xs n m) (limitShifting xs k n m m>n) ⟩
+  ∑ xs m k + ∑ xs n m - ∑ xs n m ≈⟨ ≃-trans
+                                    (+-assoc (∑ xs m k) (∑ xs n m) (- ∑ xs n m))
+                                    (≃-trans (+-congʳ (∑ xs m k) (+-inverseʳ (∑ xs n m)))
+                                    (+-identityʳ (∑ xs m k))) ⟩
+  ∑ xs m k                        ∎})
+                           (ℓ - ∑ xs n m , xₙ+yₙ→x₀+y₀ {SeriesOf xs From n} {λ k -> - ∑ xs n m}
+                           (ℓ , con* hyp) (- ∑ xs n m , xₙ≃c⇒xₙ→c (λ {(suc k-1) -> ≃-refl})))
+  where open ≃-Reasoning
+
+--∀ε>0 ∃N∈ℕ ∀n>m≥N (∣xₘ₊₁ + ⋯ + ∣ ≤ ε)
+cauchyConvergenceTest-if : ∀ xs -> SeriesOf xs isConvergent ->
+                           ∀ k -> {k≢0 : k ≢0} -> ∃ λ Nₖ-1 -> ∀ m n -> m ℕ.≥ suc Nₖ-1 -> n ℕ.≥ suc Nₖ-1 -> n ℕ.> m ->
+                           ∣ ∑ xs m n ∣ ≤ ((+ 1 / k) {k≢0}) ⋆
+cauchyConvergenceTest-if xs hyp (suc k-1) = {!!}
+
+cauchyConvergenceTest-onlyif : ∀ xs ->
+                               (∀ k -> {k≢0 : k ≢0} -> ∃ λ Nₖ-1 -> ∀ m n -> m ℕ.≥ suc Nₖ-1 -> n ℕ.≥ suc Nₖ-1 -> n ℕ.> m ->
+                                       ∣ ∑ xs m n ∣ ≤ ((+ 1 / k) {k≢0}) ⋆) ->
+                               SeriesOf xs isConvergent
+cauchyConvergenceTest-onlyif xs hyp = {!!}
+{-
+Suppose ∑xₙ→ℓ for some ℓ∈ℝ. Let k∈ℕ. Then there is Nₖ∈ℕ s.t. m ≥ Nₖ implies ∣∑ᵐxₙ - ℓ∣ ≤ (2k)⁻¹. 
+Let m > Nₖ. Then:
+  ∣xₘ∣ = ∣∑ᵐxₙ - ∑ᵐ⁻¹xₙ - ℓ + ℓ∣
+       = ∣∑ᵐxₙ - ℓ∣ + ∣∑ᵐ̂⁻¹xₙ - ℓ∣
+       ≤ (2k)⁻¹ + (2k)⁻¹
+       = k⁻¹,
+so ∣xₘ∣ ≤ k⁻¹. Hence (xₙ) → 0.                                                                □
+-}
+∑xₙisConvergent⇒xₙ→0 : ∀ xs -> SeriesOf xs isConvergent -> xs ConvergesTo 0ℝ
+∑xₙisConvergent⇒xₙ→0 xs (ℓ , con* ∑xₙ→ℓ) = {!!}
