@@ -2917,6 +2917,8 @@ abstract
 ∑ a 0 n = ∑₀ a n
 ∑ a (suc i) n = ∑₀ a n - ∑₀ a (suc i)
 
+{- lem : ∑ᵢⁿxᵢ = ∑₀ x n - ∑₀ x i -}
+
 ∑-distrib-+ : ∀ (xs ys : ℕ -> ℝ) -> ∀ i n ->
               ∑ (λ k -> xs k + ys k) i n ≃ ∑ xs i n + ∑ ys i n
 ∑-distrib-+ xs ys 0 n = lem n

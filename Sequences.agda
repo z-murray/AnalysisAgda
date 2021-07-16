@@ -740,77 +740,231 @@ xₙ⊔yₙ→x₀⊔y₀ {xs} {ys} (x₀ , con* xₙ→x₀) (y₀ , con* yₙ�
   (+ 1 / k) ⋆                    ∎}})
   where open ≤-Reasoning
 
+{-
+(xₙ) k
+
+∑ᵢ₌ₖⁿ xᵢ
+-}
 SeriesOf_From_ : (ℕ -> ℝ) -> ℕ -> (ℕ -> ℝ)
 (SeriesOf xs From i) n = ∑ xs i n
 
 SeriesOf : (ℕ -> ℝ) -> (ℕ -> ℝ)
 SeriesOf xs = SeriesOf xs From 0
 
-limitShifting : ∀ xs -> ∀ k m n -> m ℕ.< n -> ∑ xs m k ≃ ∑ xs n k + ∑ xs m n
-limitShifting xs k zero (suc n) m<n = ≃-symm (begin
-  ∑₀ xs k - (∑₀ xs n + xs n) + (∑₀ xs n + xs n)     ≈⟨ +-assoc (∑₀ xs k) (- (∑₀ xs n + xs n)) (∑₀ xs n + xs n) ⟩
-  ∑₀ xs k + (- (∑₀ xs n + xs n) + (∑₀ xs n + xs n)) ≈⟨ +-congʳ (∑₀ xs k) (+-inverseˡ (∑₀ xs n + xs n)) ⟩
-  ∑₀ xs k + 0ℝ                                      ≈⟨ +-identityʳ (∑₀ xs k) ⟩
+limitShifting : ∀ xs -> ∀ k m n -> ∑ xs m k ≃ ∑ xs n k + ∑ xs m n
+limitShifting xs k zero zero = ≃-symm (+-identityʳ (∑₀ xs k))
+limitShifting xs k zero (suc n) = ≃-symm (begin
+  ∑₀ xs k - (∑₀ xs n + xs n) + (∑₀ xs n + xs n)     ≈⟨ +-assoc _ _ _ ⟩
+  ∑₀ xs k + (- (∑₀ xs n + xs n) + (∑₀ xs n + xs n)) ≈⟨ +-congʳ (∑₀ xs k) (+-inverseˡ _) ⟩
+  ∑₀ xs k + 0ℝ                                      ≈⟨ +-identityʳ _ ⟩
   ∑₀ xs k                                            ∎)
   where open ≃-Reasoning
-limitShifting xs k (suc m) (suc n) m<n = begin
-  ∑₀ xs k - (∑₀ xs m + xs m)                                       ≈⟨ ≃-symm (≃-trans
-                                                                      (+-congˡ (- (∑₀ xs m + xs m)) (+-congʳ (∑₀ xs k) (+-inverseʳ (∑₀ xs n + xs n))))
-                                                                      (+-congˡ (- (∑₀ xs m + xs m)) (+-identityʳ (∑₀ xs k)))) ⟩
-  ∑₀ xs k + (∑₀ xs n + xs n - (∑₀ xs n + xs n)) - (∑₀ xs m + xs m) ≈⟨ solve 4 (λ a b c d -> a :+ (b :+ c) :+ d := a :+ c :+ (b :+ d))
-                                                                      ≃-refl (∑₀ xs k) (∑₀ xs n + xs n) (- (∑₀ xs n + xs n)) (- (∑₀ xs m + xs m)) ⟩
-  ∑₀ xs k - (∑₀ xs n + xs n) + (∑₀ xs n + xs n - (∑₀ xs m + xs m))  ∎
+limitShifting xs k (suc m) zero = +-congʳ (∑₀ xs k) (≃-symm (+-identityˡ _))
+limitShifting xs k (suc m) (suc n) = ≃-symm (begin
+  ∑₀ xs k - (∑₀ xs n + xs n) + (∑₀ xs n + xs n - (∑₀ xs m + xs m)) ≈⟨ solve 4 (λ a b c d ->
+                                                                      a :+ b :+ (c :+ d) := a :+ d :+ (c :+ b))
+                                                                      ≃-refl (∑₀ xs k) (- (∑₀ xs n + xs n))
+                                                                      (∑₀ xs n + xs n) (- (∑₀ xs m + xs m)) ⟩
+  ∑₀ xs k - (∑₀ xs m + xs m) + (∑₀ xs n + xs n - (∑₀ xs n + xs n)) ≈⟨ +-congʳ (∑₀ xs k - (∑₀ xs m + xs m))
+                                                                      (+-inverseʳ (∑₀ xs n + xs n)) ⟩
+  ∑₀ xs k - (∑₀ xs m + xs m) + 0ℝ                                  ≈⟨ +-identityʳ _ ⟩
+  ∑₀ xs k - (∑₀ xs m + xs m)                                        ∎)
   where
     open ≃-Reasoning
     open ℝ-+-*-Solver
 
-{-
-∑ₘᵗxₖ
-m<n :
-∑ₘᵗxₖ =  ∑ₙᵗxₖ + ∑ₘⁿ xₖ
+lowerLimitShiftPreservesConvergence : ∀ xs -> (∃ λ n -> (SeriesOf xs From n) isConvergent) -> ∀ m -> (SeriesOf xs From m) isConvergent
+lowerLimitShiftPreservesConvergence xs (n , (ℓ , con* hyp)) m = ℓ + ∑ xs m n , xₙ≃yₙ∧xₙ→x₀⇒yₙ→x₀ (λ {(suc k-1) -> let k = suc k-1 in
+                                 ≃-symm (limitShifting xs k m n)}) (ℓ + ∑ xs m n ,
+                                 xₙ+yₙ→x₀+y₀ {SeriesOf xs From n} {λ r -> ∑ xs m n} (ℓ , con* hyp) (∑ xs m n , xₙ≃c⇒xₙ→c (λ {(suc r-1) -> ≃-refl})))
 
-m>n:
-∑ₙᵗxₖ = ∑ₘᵗxₖ + ∑ₙᵐxₖ
-∑ₘᵗxₖ = ∑ₘᵗxₖ + ∑ₙᵗxₖ - ∑ₙᵗxₖ
-      = ∑ₘᵗxₖ + ∑ₙᵗxₖ - (∑ₘᵗxₖ + ∑ₙᵐxₖ)
-      = ∑ₙᵗxₖ - ∑ₙᵐxₖ
--}
-lowerLimitShiftPreservesConvergence : ∀ xs -> ∀ n -> (SeriesOf xs From n) isConvergent ->
-                                 ∀ m -> (SeriesOf xs From m) isConvergent
-lowerLimitShiftPreservesConvergence xs n (ℓ , con* hyp) m with ℕP.<-cmp m n
-... | tri< m<n ¬m≡n ¬m>n = ℓ + ∑ xs m n , xₙ≃yₙ∧xₙ→x₀⇒yₙ→x₀ (λ {(suc k-1) -> ≃-symm (limitShifting xs (suc k-1) m n m<n)})
-                           (ℓ + ∑ xs m n , xₙ+yₙ→x₀+y₀ {SeriesOf xs From n} {λ k -> ∑ xs m n} (ℓ , con* hyp) (∑ xs m n , xₙ≃c⇒xₙ→c (λ {(suc k-1) -> ≃-refl})))
-... | tri≈ ¬m<n refl ¬m>n = ℓ , con* hyp
-... | tri> ¬m<n ¬m≡n m>n = ℓ - ∑ xs n m , xₙ≃yₙ∧xₙ→x₀⇒yₙ→x₀ (λ {(suc k-1) -> let k = suc k-1 in begin
-  ∑ xs n k - ∑ xs n m            ≈⟨ +-congˡ (- ∑ xs n m) (limitShifting xs k n m m>n) ⟩
-  ∑ xs m k + ∑ xs n m - ∑ xs n m ≈⟨ ≃-trans
-                                    (+-assoc (∑ xs m k) (∑ xs n m) (- ∑ xs n m))
-                                    (≃-trans (+-congʳ (∑ xs m k) (+-inverseʳ (∑ xs n m)))
-                                    (+-identityʳ (∑ xs m k))) ⟩
-  ∑ xs m k                        ∎})
-                           (ℓ - ∑ xs n m , xₙ+yₙ→x₀+y₀ {SeriesOf xs From n} {λ k -> - ∑ xs n m}
-                           (ℓ , con* hyp) (- ∑ xs n m , xₙ≃c⇒xₙ→c (λ {(suc k-1) -> ≃-refl})))
-  where open ≃-Reasoning
-
---∀ε>0 ∃N∈ℕ ∀n>m≥N (∣xₘ₊₁ + ⋯ + ∣ ≤ ε)
 cauchyConvergenceTest-if : ∀ xs -> SeriesOf xs isConvergent ->
-                           ∀ k -> {k≢0 : k ≢0} -> ∃ λ Nₖ-1 -> ∀ m n -> m ℕ.≥ suc Nₖ-1 -> n ℕ.≥ suc Nₖ-1 -> n ℕ.> m ->
+                           ∀ k -> {k≢0 : k ≢0} -> ∃ λ Nₖ-1 -> ∀ m n -> m ℕ.≥ suc Nₖ-1 -> n ℕ.≥ suc Nₖ-1 ->
                            ∣ ∑ xs m n ∣ ≤ ((+ 1 / k) {k≢0}) ⋆
-cauchyConvergenceTest-if xs hyp (suc k-1) = {!!}
+cauchyConvergenceTest-if xs (ℓ , con* hyp) (suc k-1) = let k = suc k-1; N₂ₖ = suc (proj₁ (hyp (2 ℕ.* k))) in
+                                                       ℕ.pred N₂ₖ , λ {(suc m-1) (suc n-1) m≥N₂ₖ n≥N₂ₖ ->
+                                                       let m = suc m-1; n = suc n-1 in begin
+  ∣ ∑₀ xs n - ∑₀ xs m ∣                     ≈⟨ ∣-∣-cong (≃-symm (≃-trans (+-congʳ (∑₀ xs n - ∑₀ xs m) (+-inverseʳ ℓ)) (+-identityʳ _))) ⟩
+  ∣ ∑₀ xs n - ∑₀ xs m + (ℓ - ℓ) ∣            ≈⟨ ∣-∣-cong (ℝsolve 4 (λ a b c d -> a +: b +: (c +: d) =: a +: d +: (c +: b))
+                                               ≃-refl (∑₀ xs n) (- ∑₀ xs m) ℓ (- ℓ)) ⟩
+  ∣ ∑₀ xs n - ℓ + (ℓ - ∑₀ xs m) ∣            ≤⟨ ∣x+y∣≤∣x∣+∣y∣ (∑₀ xs n - ℓ) (ℓ - ∑₀ xs m) ⟩
+  ∣ ∑₀ xs n - ℓ ∣ + ∣ ℓ - ∑₀ xs m ∣          ≤⟨ +-mono-≤
+                                               (proj₂ (hyp (2 ℕ.* k)) n n≥N₂ₖ)
+                                               (≤-respˡ-≃ (∣x-y∣≃∣y-x∣ (∑₀ xs m) ℓ) (proj₂ (hyp (2 ℕ.* k)) m m≥N₂ₖ)) ⟩
+  (+ 1 / (2 ℕ.* k)) ⋆ + (+ 1 / (2 ℕ.* k)) ⋆ ≈⟨ ≃-trans
+                                               (≃-symm (⋆-distrib-+ (+ 1 / (2 ℕ.* k)) (+ 1 / (2 ℕ.* k))))
+                                               (⋆-cong (ℚ.*≡* (solve 1 (λ k ->
+                                               (con (+ 1) :* (con (+ 2) :* k) :+ con (+ 1) :* (con (+ 2) :* k)) :* k :=
+                                               con (+ 1) :* (con (+ 2) :* k :* (con (+ 2) :* k)))
+                                               refl (+ k)))) ⟩
+  (+ 1 / k) ⋆                                ∎}
+  where
+    open ≤-Reasoning
+    open ℝ-+-*-Solver using ()
+      renaming
+        ( solve to ℝsolve
+        ; _:+_  to _+:_
+        ; _:=_  to _=:_
+        )
+    open ℤ-Solver.+-*-Solver
 
 cauchyConvergenceTest-onlyif : ∀ xs ->
-                               (∀ k -> {k≢0 : k ≢0} -> ∃ λ Nₖ-1 -> ∀ m n -> m ℕ.≥ suc Nₖ-1 -> n ℕ.≥ suc Nₖ-1 -> n ℕ.> m ->
+                               (∀ k -> {k≢0 : k ≢0} -> ∃ λ Nₖ-1 -> ∀ m n -> m ℕ.≥ suc Nₖ-1 -> n ℕ.≥ suc Nₖ-1 ->
                                        ∣ ∑ xs m n ∣ ≤ ((+ 1 / k) {k≢0}) ⋆) ->
                                SeriesOf xs isConvergent
-cauchyConvergenceTest-onlyif xs hyp = {!!}
-{-
-Suppose ∑xₙ→ℓ for some ℓ∈ℝ. Let k∈ℕ. Then there is Nₖ∈ℕ s.t. m ≥ Nₖ implies ∣∑ᵐxₙ - ℓ∣ ≤ (2k)⁻¹. 
-Let m > Nₖ. Then:
-  ∣xₘ∣ = ∣∑ᵐxₙ - ∑ᵐ⁻¹xₙ - ℓ + ℓ∣
-       = ∣∑ᵐxₙ - ℓ∣ + ∣∑ᵐ̂⁻¹xₙ - ℓ∣
-       ≤ (2k)⁻¹ + (2k)⁻¹
-       = k⁻¹,
-so ∣xₘ∣ ≤ k⁻¹. Hence (xₙ) → 0.                                                                □
--}
+cauchyConvergenceTest-onlyif xs hyp = cauchy⇒convergent (cauchy* (λ {(suc k-1) -> let k = suc k-1; Mₖ = suc (proj₁ (hyp k)) in
+                                      ℕ.pred Mₖ , λ {(suc m-1) (suc n-1) m≥Mₖ n≥Mₖ -> let m = suc m-1; n = suc n-1 in begin
+  ∣ ∑ xs 0 m - ∑ xs 0 n ∣                   ≈⟨ ≃-refl ⟩
+  ∣ ∑ xs n m ∣                              ≤⟨ proj₂ (hyp k) n m n≥Mₖ m≥Mₖ ⟩
+  (+ 1 / k) ⋆                                ∎}}))
+  where
+    open ≤-Reasoning
+    open ℤ-Solver.+-*-Solver
+
 ∑xₙisConvergent⇒xₙ→0 : ∀ xs -> SeriesOf xs isConvergent -> xs ConvergesTo 0ℝ
-∑xₙisConvergent⇒xₙ→0 xs (ℓ , con* ∑xₙ→ℓ) = {!!}
+∑xₙisConvergent⇒xₙ→0 xs (ℓ , con* ∑xₙ→ℓ) = con* (λ {(suc k-1) -> let k = suc k-1; N₂ₖ = suc (proj₁ (∑xₙ→ℓ (2 ℕ.* k))) in
+                                          ℕ.pred N₂ₖ , λ {(suc n-1) n≥N₂ₖ -> let n = suc n-1; n+1 = suc n in begin
+  ∣ xs n - 0ℝ ∣                             ≈⟨ ∣-∣-cong (+-congʳ (xs n) (≃-symm (≃-trans (+-inverseʳ ℓ) 0≃-0))) ⟩
+  ∣ xs n + (ℓ - ℓ)∣                          ≈⟨ ∣-∣-cong (≃-trans
+                                               (+-congˡ (ℓ - ℓ) (≃-symm (≃-trans (+-congˡ (xs n) (+-inverseʳ (∑₀ xs n))) (+-identityˡ (xs n)))))
+                                               (ℝsolve 6 (λ a b c d e f ->
+                                               a +: b +: c +: d +: (e +: f) =: (a +: b +: d +: f +: (e +: c)))
+                                               ≃-refl (∑₀ xs n-1) (xs n-1) (- (∑₀ xs n-1 + xs n-1)) (xs n) ℓ (- ℓ))) ⟩
+  ∣ ∑₀ xs n+1 - ℓ + (ℓ - ∑₀ xs n) ∣          ≤⟨ ∣x+y∣≤∣x∣+∣y∣ (∑₀ xs n+1 - ℓ) (ℓ - ∑₀ xs n) ⟩
+  ∣ ∑₀ xs n+1 - ℓ ∣ + ∣ ℓ - ∑₀ xs n ∣        ≤⟨ +-mono-≤
+                                               (proj₂ (∑xₙ→ℓ (2 ℕ.* k)) n+1 (ℕP.≤-trans n≥N₂ₖ (ℕP.n≤1+n n)))
+                                               (≤-respˡ-≃ (∣x-y∣≃∣y-x∣ (∑₀ xs n) ℓ) (proj₂ (∑xₙ→ℓ (2 ℕ.* k)) n n≥N₂ₖ)) ⟩
+  (+ 1 / (2 ℕ.* k)) ⋆ + (+ 1 / (2 ℕ.* k)) ⋆ ≈⟨ ≃-trans
+                                               (≃-symm (⋆-distrib-+ (+ 1 / (2 ℕ.* k)) (+ 1 / (2 ℕ.* k))))
+                                               (⋆-cong (ℚ.*≡* (solve 1 (λ k ->
+                                               (con (+ 1) :* (con (+ 2) :* k) :+ con (+ 1) :* (con (+ 2) :* k)) :* k :=
+                                               con (+ 1) :* (con (+ 2) :* k :* (con (+ 2) :* k)))
+                                               refl (+ k)))) ⟩
+  (+ 1 / k) ⋆                                ∎}})
+  where
+    open ≤-Reasoning
+    open ℝ-+-*-Solver using ()
+      renaming
+        ( solve to ℝsolve
+        ; _:+_  to _+:_
+        ; _:=_  to _=:_
+        )
+    open ℤ-Solver.+-*-Solver
+
+SeriesOf_ConvergesAbsolutely : (ℕ -> ℝ) -> Set
+SeriesOf xs ConvergesAbsolutely = SeriesOf (λ k -> ∣ xs k ∣) isConvergent
+
+{-
+Changing termination depth doesn't help fix this weird lem recursion problem (tried different depths up to 10).
+-}
+∑-cong : ∀ {xs ys : ℕ -> ℝ} -> (∀ n -> xs n ≃ ys n) -> ∀ m n -> ∑ xs m n ≃ ∑ ys m n
+{-∑-cong {xs} {ys} xₙ≃yₙ zero zero = ≃-refl
+∑-cong {xs} {ys} xₙ≃yₙ zero (suc n) = +-cong (∑-cong xₙ≃yₙ 0 n) (xₙ≃yₙ n)-}
+∑-cong {xs} {ys} xₙ≃yₙ 0 n = lem n
+  where
+    lem : ∀ n -> ∑ xs 0 n ≃ ∑ ys 0 n
+    lem 0 = ≃-refl
+    lem (suc n) = +-cong (lem n) (xₙ≃yₙ n)
+∑-cong {xs} {ys} xₙ≃yₙ (suc m) n = +-cong (∑-cong xₙ≃yₙ 0 n) (-‿cong (∑-cong xₙ≃yₙ 0 (suc m)))
+
+{-
+Sometimes it's easier to use ∑ᵀ instead of ∑ that gives
+            ∑ᵢ₌ₖⁿ xᵢ = xₖ + ⋯ + xₙ
+instead of
+            ∑ᵢ₌ₖⁿ xᵢ = ∑ᵢ₌₀ⁿ xᵢ - ∑ᵢ₌₀ᵏ xᵢ
+when k ≤ n. 
+
+As an example, consider the triangle inequality proof for ∑ below.
+
+Note that ∑ᵀ requires i≤n, which isn't what we want in general. Moreover, 
+∑ᵀ uses a somewhat complex with clause, so it's annoying to prove things about.
+Hence the alternative definition.
+-}
+∑ᵀ : (ℕ -> ℝ) -> (i n : ℕ) -> i ℕ.≤ n -> ℝ
+∑ᵀ xs i n i≤n with ≤⇒≡∨< i n i≤n
+... | inj₁ refl = 0ℝ
+∑ᵀ xs i (suc n-1) i≤n | inj₂ (ℕ.s≤s i<n) = ∑ᵀ xs i n-1 i<n + xs n-1
+
+∑-to-∑ᵀ : ∀ (xs : ℕ -> ℝ) -> ∀ m n -> (m≤n : m ℕ.≤ n) -> ∑ xs m n ≃ ∑ᵀ xs m n m≤n
+∑-to-∑ᵀ xs zero n ℕ.z≤n = lem n
+  where
+    lem : ∀ n -> ∑₀ xs n ≃ ∑ᵀ xs 0 n ℕ.z≤n
+    lem 0 = ≃-refl
+    lem (suc n) with ≤⇒≡∨< 0 (suc n) ℕ.z≤n
+    ... | inj₂ 0<n = +-congˡ (xs n) (lem n)
+∑-to-∑ᵀ xs (suc m-1) n m≤n with ≤⇒≡∨< (suc m-1) n m≤n
+... | inj₁ refl = +-inverseʳ (∑₀ xs (suc m-1))
+∑-to-∑ᵀ xs (suc m-1) (suc n-1) m≤n | inj₂ (ℕ.s≤s m<n) = begin
+  ∑₀ xs n-1 + xs n-1 - (∑₀ xs m-1 + xs m-1) ≈⟨ solve 3 (λ a b c -> a :+ b :+ c := a :+ c :+ b)
+                                               ≃-refl (∑₀ xs n-1) (xs n-1) (- (∑₀ xs m-1 + xs m-1)) ⟩
+  ∑₀ xs n-1 - (∑₀ xs m-1 + xs m-1) + xs n-1 ≈⟨ +-congˡ (xs n-1) (∑-to-∑ᵀ xs (suc m-1) n-1 m<n) ⟩
+  ∑ᵀ xs (suc m-1) n-1 m<n + xs n-1           ∎
+  where
+    open ≃-Reasoning
+    open ℝ-+-*-Solver
+
+∑ᵀ-triangle-inequality : ∀ (xs : ℕ -> ℝ) -> ∀ m n -> (m≤n : m ℕ.≤ n) -> ∣ ∑ᵀ xs m n m≤n ∣ ≤ ∑ᵀ (λ k -> ∣ xs k ∣) m n m≤n
+∑ᵀ-triangle-inequality xs m n m≤n with ≤⇒≡∨< m n m≤n
+... | inj₁ refl = ≤-reflexive (≃-reflexive (λ {(suc k-1) -> ℚP.≃-refl}))
+∑ᵀ-triangle-inequality xs m (suc n-1) m≤n | inj₂ (ℕ.s≤s m<n) = let n = suc n-1 in begin
+  ∣ ∑ᵀ xs m n-1 m<n + xs n-1 ∣                ≤⟨ ∣x+y∣≤∣x∣+∣y∣ (∑ᵀ xs m n-1 m<n) (xs n-1) ⟩
+  ∣ ∑ᵀ xs m n-1 m<n ∣ + ∣ xs n-1 ∣            ≤⟨ +-monoˡ-≤ ∣ xs n-1 ∣ (∑ᵀ-triangle-inequality xs m n-1 m<n) ⟩
+  ∑ᵀ (λ k -> ∣ xs k ∣) m n-1 m<n + ∣ xs n-1 ∣  ∎
+  where open ≤-Reasoning
+
+{-
+Note that m ≤ n is required since, if m > n, then ∑ essentially flips m and n and may return a negative number.
+-}
+∑-triangle-inequality : ∀ (xs : ℕ -> ℝ) -> ∀ m n -> m ℕ.≤ n -> ∣ ∑ xs m n ∣ ≤ ∑ (λ k -> ∣ xs k ∣) m n
+∑-triangle-inequality xs m n m≤n = begin
+  ∣ ∑ xs m n ∣                 ≈⟨ ∣-∣-cong (∑-to-∑ᵀ xs m n m≤n) ⟩
+  ∣ ∑ᵀ xs m n m≤n ∣            ≤⟨ ∑ᵀ-triangle-inequality xs m n m≤n ⟩
+  ∑ᵀ (λ k -> ∣ xs k ∣) m n m≤n ≈⟨ ≃-symm (∑-to-∑ᵀ (λ k -> ∣ xs k ∣) m n m≤n) ⟩
+  ∑ (λ k -> ∣ xs k ∣) m n       ∎
+  where open ≤-Reasoning
+
+∑₀-mono-≤ : ∀ {xs ys} -> (∀ n -> xs n ≤ ys n) -> ∀ n -> ∑₀ xs n ≤ ∑₀ ys n
+∑₀-mono-≤ {xs} {ys} xₙ≤yₙ 0 = ≤-refl
+∑₀-mono-≤ {xs} {ys} xₙ≤yₙ (suc n) = +-mono-≤ (∑₀-mono-≤ xₙ≤yₙ n) (xₙ≤yₙ n)
+
+∑ᵀ-mono-≤ : ∀ {xs ys} -> (∀ n -> xs n ≤ ys n) -> ∀ m n -> (m≤n : m ℕ.≤ n) -> ∑ᵀ xs m n m≤n ≤ ∑ᵀ ys m n m≤n
+∑ᵀ-mono-≤ {xs} {ys} xₙ≤yₙ m n m≤n with ≤⇒≡∨< m n m≤n
+... | inj₁ refl = ≤-refl
+∑ᵀ-mono-≤ {xs} {ys} xₙ≤yₙ m (suc n-1) m≤n | inj₂ (ℕ.s≤s m<n) = +-mono-≤ (∑ᵀ-mono-≤ xₙ≤yₙ m n-1 m<n) (xₙ≤yₙ n-1)
+
+∑-mono-≤ : ∀ {xs ys} -> (∀ n -> xs n ≤ ys n) -> ∀ m n -> m ℕ.≤ n -> ∑ xs m n ≤ ∑ ys m n
+∑-mono-≤ {xs} {ys} xₙ≤yₙ m n m≤n = begin
+  ∑ xs m n      ≈⟨ ∑-to-∑ᵀ xs m n m≤n ⟩
+  ∑ᵀ xs m n m≤n ≤⟨ ∑ᵀ-mono-≤ xₙ≤yₙ m n m≤n ⟩
+  ∑ᵀ ys m n m≤n ≈⟨ ≃-symm (∑-to-∑ᵀ ys m n m≤n) ⟩
+  ∑ ys m n       ∎
+  where open ≤-Reasoning
+
+neg-flips-∑ : ∀ (xs : ℕ -> ℝ) -> ∀ m n -> - ∑ xs m n ≃ ∑ xs n m
+neg-flips-∑ xs 0 0 = ≃-symm 0≃-0
+neg-flips-∑ xs 0 (suc n) = ≃-symm (+-identityˡ _)
+neg-flips-∑ xs (suc m) zero = ≃-trans (-‿cong (+-identityˡ _)) (neg-involutive (∑₀ xs (suc m)))
+neg-flips-∑ xs (suc m) (suc n) = -[x-y]≃y-x (∑₀ xs (suc n)) (∑₀ xs (suc m))
+
+cauchy-convergence : ∀ {xs : ℕ -> ℝ} ->
+                          (∀ k -> {k≢0 : k ≢0} -> ∃ λ Nₖ-1 -> ∀ m n -> m ℕ.≥ n -> m ℕ.≥ suc Nₖ-1 -> n ℕ.≥ suc Nₖ-1 -> ∣ xs m - xs n ∣ ≤ ((+ 1 / k) {k≢0}) ⋆) ->
+                          xs isConvergent
+cauchy-convergence {xs} hyp = cauchy⇒convergent (cauchy* λ {(suc k-1) -> let k = suc k-1; Mₖ = suc (proj₁ (hyp k)) in
+                              ℕ.pred Mₖ , λ {(suc m-1) (suc n-1) m≥Mₖ n≥Mₖ -> let m = suc m-1; n = suc n-1 in
+                              [ (λ n≤m -> proj₂ (hyp k) m n n≤m m≥Mₖ n≥Mₖ) ,
+                                (λ m≤n -> ≤-respˡ-≃ (∣x-y∣≃∣y-x∣ (xs n) (xs m)) (proj₂ (hyp k) n m m≤n n≥Mₖ m≥Mₖ)) ]′
+                              (ℕP.≤-total n m)}})
+
+proposition-3-5 : ∀ {xs ys : ℕ -> ℝ} -> SeriesOf ys isConvergent -> (∀ n -> NonNegative (ys n)) -> (∀ n -> ∣ xs n ∣ ≤ ys n) -> SeriesOf xs isConvergent
+proposition-3-5 {xs} {ys} ∑ysCon 0≤yₙ ∣xₙ∣≤yₙ = cauchy-convergence (λ {(suc k-1) ->
+                                                         let k = suc k-1; ∑ysCauchy = cauchyConvergenceTest-if ys ∑ysCon k
+                                                               ; Nₖ = suc (proj₁ ∑ysCauchy) in
+                                                         ℕ.pred Nₖ , λ {(suc m-1) (suc n-1) m≥n m≥Nₖ n≥Nₖ -> let m = suc m-1; n = suc n-1 in
+                                                         begin
+  ∣ ∑ xs n m ∣            ≤⟨ ∑-triangle-inequality xs n m m≥n ⟩
+  ∑ (λ r -> ∣ xs r ∣) n m ≤⟨ ∑-mono-≤ ∣xₙ∣≤yₙ n m m≥n ⟩
+  ∑ ys n m                ≤⟨ x≤∣x∣ ⟩
+  ∣ ∑ ys n m ∣            ≤⟨ proj₂ ∑ysCauchy n m n≥Nₖ m≥Nₖ ⟩
+  (+ 1 / k) ⋆              ∎}})
+  where open ≤-Reasoning
+    
