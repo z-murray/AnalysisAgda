@@ -30,6 +30,7 @@ import Data.Rational.Unnormalised.Solver as ℚ-Solver
 import Data.Integer.Solver as ℤ-Solver
 open import Data.List
 open import RealsRefactored
+open import Function.Structures {_} {_} {_} {_} {ℕ} _≡_ {ℕ} _≡_
 
 open ℚᵘ
 open ℝ
@@ -967,4 +968,137 @@ proposition-3-5 {xs} {ys} ∑ysCon 0≤yₙ ∣xₙ∣≤yₙ = cauchy-convergen
   ∣ ∑ ys n m ∣            ≤⟨ proj₂ ∑ysCauchy n m n≥Nₖ m≥Nₖ ⟩
   (+ 1 / k) ⋆              ∎}})
   where open ≤-Reasoning
-    
+
+absolute⇒isConvergent : ∀ {xs : ℕ -> ℝ} -> SeriesOf xs ConvergesAbsolutely -> SeriesOf xs isConvergent
+absolute⇒isConvergent {xs} hyp = proposition-3-5 hyp (λ n -> nonNeg∣x∣ (xs n)) (λ n -> ≤-refl)
+
+lim : {xs : ℕ -> ℝ} -> xs isConvergent -> ℝ
+lim {xs} (ℓ , hyp) = ℓ
+
+reordering : ∀ {xs : ℕ -> ℝ} -> (hyp : SeriesOf xs ConvergesAbsolutely) ->
+             ∀ {f : ℕ -> ℕ} -> IsBijection f -> SeriesOf (λ n -> xs (f n)) ConvergesTo lim (absolute⇒isConvergent hyp)
+reordering {xs} hyp {f} fBi = {!!}
+
+data _DivergesBy_ : REL (ℕ -> ℝ) ℝ 0ℓ where
+  div* : {f : ℕ -> ℝ} -> {ε : ℝ} -> Positive ε ->
+         (∀ k -> {k≢0 : k ≢0} -> (∃ λ m -> ∃ λ n -> m ℕ.≥ k × n ℕ.≥ k × ∣ f m - f n ∣ ≥ ε)) ->
+         f DivergesBy ε
+
+_isDivergent : (ℕ -> ℝ) -> Set
+f isDivergent = ∃ λ ε -> f DivergesBy ε
+
+<⇒≱ : _<_ ⇒ _≱_
+<⇒≱ {x} {y} (pos* (n-1 , x<y)) (nonNeg* x≥y) = let n = suc n-1 in ℚP.<-irrefl-≡ refl (begin-strict
+  + 1 / n                                         <⟨ x<y ⟩
+  seq y (2 ℕ.* n) ℚ.- seq x (2 ℕ.* n)             ≈⟨ ℚP.≃-sym (ℚP.neg-involutive (seq y (2 ℕ.* n) ℚ.- seq x (2 ℕ.* n))) ⟩
+  ℚ.- (ℚ.- (seq y (2 ℕ.* n) ℚ.- seq x (2 ℕ.* n))) ≈⟨ solve 2 (λ x y -> :- (:- (y :- x)) := :- (x :- y))
+                                                     ℚP.≃-refl (seq x (2 ℕ.* n)) (seq y (2 ℕ.* n)) ⟩
+  ℚ.- (seq x (2 ℕ.* n) ℚ.- seq y (2 ℕ.* n))       ≤⟨ ℚP.neg-mono-≤ (x≥y n) ⟩
+  ℚ.- (ℚ.- (+ 1 / n))                             ≈⟨ ℚP.neg-involutive (+ 1 / n) ⟩
+  + 1 / n                                          ∎)
+  where
+    open ℚP.≤-Reasoning
+    open ℚ-Solver.+-*-Solver
+
+<-irrefl : Irreflexive _≃_ _<_
+<-irrefl {x} {y} (*≃* x≃y) (pos* (n-1 , x<y)) = let n = suc n-1 in ℚP.<-irrefl ℚP.≃-refl (begin-strict
+  + 1 / n                                   <⟨ x<y ⟩
+  seq y (2 ℕ.* n) ℚ.- seq x (2 ℕ.* n)       ≤⟨ p≤∣p∣ (seq y (2 ℕ.* n) ℚ.- seq x (2 ℕ.* n)) ⟩
+  ℚ.∣ seq y (2 ℕ.* n) ℚ.- seq x (2 ℕ.* n) ∣ ≈⟨ ∣p-q∣≃∣q-p∣ (seq y (2 ℕ.* n)) (seq x (2 ℕ.* n)) ⟩
+  ℚ.∣ seq x (2 ℕ.* n) ℚ.- seq y (2 ℕ.* n) ∣ ≤⟨ x≃y (2 ℕ.* n) ⟩
+  + 2 / (2 ℕ.* n)                           ≈⟨ ℚ.*≡* (sym (ℤP.*-identityˡ (+ 2 ℤ.* + n))) ⟩
+  + 1 / n                                    ∎)
+  where open ℚP.≤-Reasoning
+
+cauchy-getter : ∀ {xs} -> xs isCauchy ->
+                ∀ k -> {k≢0 : k ≢0} -> ∃ λ Mₖ-1 -> ∀ m n -> m ℕ.≥ suc Mₖ-1 -> n ℕ.≥ suc Mₖ-1 ->
+                ∣ xs m - xs n ∣ ≤ ((+ 1 / k) {k≢0}) ⋆
+cauchy-getter {xs} (cauchy* hyp) = hyp
+
+¬[isConvergent∧isDivergent] : ∀ xs -> ¬ (xs isConvergent × xs isDivergent)
+¬[isConvergent∧isDivergent] xs (hyp1 , ε , div* posε hyp2) = let fromdiv = archimedean-ℝ₂ posε; k = suc (proj₁ fromdiv)
+                                                                                    ; fromhyp1 = cauchy-getter (convergent⇒cauchy hyp1) k
+                                                                                    ; Nₖ = suc (proj₁ fromhyp1)
+                                                                                    ; m = proj₁ (hyp2 Nₖ)
+                                                                                    ; n = proj₁ (proj₂ (hyp2 Nₖ)) in
+                                                                        <-irrefl ≃-refl (begin-strict
+  (+ 1 / k) ⋆     <⟨ proj₂ fromdiv ⟩
+  ε               ≤⟨ proj₂ (proj₂ (proj₂ (proj₂ (hyp2 Nₖ)))) ⟩
+  ∣ xs m - xs n ∣ ≤⟨ proj₂ fromhyp1 m n
+                     (proj₁ (proj₂ (proj₂ (hyp2 Nₖ))))
+                     (proj₁ (proj₂ (proj₂ (proj₂ (hyp2 Nₖ))))) ⟩
+  (+ 1 / k) ⋆      ∎)
+  where open ≤-Reasoning
+
+{-
+Have: ∀ N ∃ m,n≥N (∣yₘ - yₙ∣ ≥ ε)
+      ∃ N ∀ n≥N (xₙ ≥ yₙ)
+WTS: ∃ ε ∀ N ∃ m,n≥N (∣xₘ - xₙ∣ ≥ ε)
+
+Let N∈ℕ s.t. ∀n≥N we have xₙ ≥ yₙ. Then there is m,n≥N s.t. ∣yₘ - yₙ∣ ≥ ε.
+∣xₘ - xₙ∣ ≥ xₘ - xₙ
+          ≥ yₘ - xₙ
+          
+-}
+comparison-test-divergence : ∀ {xs ys} -> SeriesOf ys isDivergent ->
+                             (∃ λ N-1 -> ∀ n -> n ℕ.≥ suc N-1 -> xs n ≥ ys n) ->
+                             SeriesOf xs isDivergent
+comparison-test-divergence {xs} {ys} ysDiv xₙ≥yₙ = {!!}
+
+pow : ℝ -> ℕ -> ℝ
+pow x 0 = 1ℝ
+pow x (suc n) = pow x n * x
+
+xⁿxᵐ≃xⁿ⁺ᵐ : ∀ x -> ∀ n m -> (pow x n) * (pow x m) ≃ pow x (n ℕ.+ m)
+xⁿxᵐ≃xⁿ⁺ᵐ x zero m = *-identityˡ (pow x m)
+xⁿxᵐ≃xⁿ⁺ᵐ x (suc n) m = begin
+  pow x n * x * pow x m   ≈⟨ ≃-trans (≃-trans
+                             (*-assoc (pow x n) x (pow x m))
+                             (*-congˡ (*-comm x (pow x m))))
+                             (≃-symm (*-assoc (pow x n) (pow x m) x)) ⟩
+  pow x n * pow x m * x   ≈⟨ *-congʳ (xⁿxᵐ≃xⁿ⁺ᵐ x n m) ⟩
+  pow x (n ℕ.+ m) * x     ≈⟨ ≃-refl ⟩
+  pow x (1 ℕ.+ (n ℕ.+ m)) ≡⟨ cong (λ k -> pow x k) (sym (ℕP.+-assoc 1 n m)) ⟩
+  pow x ((1 ℕ.+ n) ℕ.+ m)  ∎
+  where open ≃-Reasoning
+
+geometric-series : ∀ {r} -> (- 1ℝ) < r < 1ℝ -> SeriesOf (λ n -> pow r n) ConvergesTo ((1ℝ - r) ⁻¹) {!!}
+geometric-series {r} -1<r<1 = {!!}
+  where
+    open ≤-Reasoning
+    1-r≄0 : (1ℝ - r) ≄0
+    1-r≄0 = {!!}
+    [1-r]⁻¹ = ((1ℝ - r) ⁻¹) 1-r≄0
+    rⁱ = λ i -> pow r i
+    lem : ∀ n -> {n ≢0} -> ∑₀ rⁱ n ≃ (1ℝ - pow r n) * [1-r]⁻¹
+    lem (suc zero) = begin-equality
+      0ℝ + 1ℝ                 ≈⟨ +-identityˡ 1ℝ ⟩
+      1ℝ                      ≈⟨ ≃-symm (*-inverseʳ (1ℝ - r) 1-r≄0) ⟩
+      (1ℝ - r) * [1-r]⁻¹      ≈⟨ *-congʳ (+-congʳ 1ℝ (-‿cong (≃-symm (*-identityˡ r)))) ⟩
+      (1ℝ - 1ℝ * r) * [1-r]⁻¹  ∎
+    lem (suc (suc n-1)) = let n = suc n-1; 1+n = suc n in begin-equality
+      ∑₀ rⁱ n + pow r n                                                     ≈⟨ +-cong (lem n) (≃-symm (≃-trans
+                                                                               (*-congˡ (*-inverseʳ (1ℝ - r) 1-r≄0))
+                                                                               (*-identityʳ (pow r n)))) ⟩
+      (1ℝ - pow r n) * [1-r]⁻¹ + pow r n * ((1ℝ - r) * [1-r]⁻¹)             ≈⟨ +-congʳ ((1ℝ - pow r n) * [1-r]⁻¹) {!!} ⟩
+      (1ℝ - pow r n) * [1-r]⁻¹ + (pow r n * 1ℝ + pow r n * (- r)) * [1-r]⁻¹ ≈⟨ {!!} ⟩
+      (1ℝ - pow r n) * [1-r]⁻¹ + (pow r n - pow r 1+n) * [1-r]⁻¹            ≈⟨ {!!} ⟩
+      (1ℝ - pow r n + (pow r n - pow r 1+n)) * [1-r]⁻¹                      ≈⟨ {!!} ⟩
+      (1ℝ + 0ℝ - pow r 1+n) * [1-r]⁻¹                                       ≈⟨ {!!} ⟩
+      (1ℝ - pow r 1+n) * [1-r]⁻¹                                             ∎
+
+{-
+Proposition:
+  Let c∈ℝ⁺ and let t∈ℕ. if c < 1 and 
+(1)                        ∣xₙ₊₁∣ ≤ c∣xₙ∣                (n ≥ t),
+then ∑xᵢ converges.
+Proof:
+  Suppose c < 1 and (1) hold. Then
+                        ∣xₙ∣ ≤ c∣xₜ∣ ≤ cⁿ⁻ᵗ∣xₜ∣           (n ≥ t).
+WTS ∣xₜ∣∑ᵢ₌ₜ̂̂ cⁱ⁻ᵗ = ∣xₜ∣∑ᵢ₌₀ cⁱ converges. We have:
+ 
+
+-}
+proposition-3-6-1 : ∀ {xs : ℕ -> ℝ} -> ∀ {c} -> Positive c -> ∀ N -> {N ≢0} ->
+                  c < 1ℝ -> (∀ n -> n ℕ.≥ N -> ∣ xs (suc n) ∣ ≤ c * ∣ xs n ∣) -> SeriesOf xs isConvergent
+proposition-3-6-1 {xs} {c} posc (suc N-1) c<1 hyp = {!!}
