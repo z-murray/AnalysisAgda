@@ -501,35 +501,104 @@ xₙ≃c⇒xₙ→c {xs} {c} hyp = con* (λ {(suc k-1) -> let k = suc k-1 in 0 ,
   (+ 1 / k) ⋆   ∎}})
   where open ≤-Reasoning
 
-archimedean-ℝ₂ : ∀ {x} -> Positive x -> ∃ λ n-1 -> (+ 1 / (suc n-1)) ⋆ < x
-archimedean-ℝ₂ {x} posx = {!!}
+x<y∧posx,y⇒y⁻¹<x⁻¹ : ∀ {x y} -> x < y -> (x≄0 : x ≄0) -> (y≄0 : y ≄0) -> Positive x -> Positive y ->
+                     (y ⁻¹) y≄0 < (x ⁻¹) x≄0
+x<y∧posx,y⇒y⁻¹<x⁻¹ {x} {y} x<y x≄0 y≄0 posx posy = let x⁻¹ = (x ⁻¹) x≄0; y⁻¹ = (y ⁻¹) y≄0 in
+                   begin-strict
+  y⁻¹             ≈⟨ ≃-symm (≃-trans (*-congʳ (*-inverseʳ x x≄0)) (*-identityˡ y⁻¹)) ⟩
+  x * x⁻¹ * y⁻¹   <⟨ *-monoˡ-<-pos {y⁻¹} (posx⇒posx⁻¹ {y} y≄0 posy)
+                     (*-monoˡ-<-pos {x⁻¹} (posx⇒posx⁻¹ {x} x≄0 posx) x<y) ⟩
+  y * x⁻¹ * y⁻¹   ≈⟨ ≃-trans (*-congʳ (*-comm y x⁻¹)) (*-assoc x⁻¹ y y⁻¹) ⟩
+  x⁻¹ * (y * y⁻¹) ≈⟨ ≃-trans (*-congˡ (*-inverseʳ y y≄0)) (*-identityʳ x⁻¹) ⟩
+  x⁻¹              ∎
+  where open ≤-Reasoning
 
-{-
-Proposition:
-  If x and y are nonzero, then so is x * y.
-Proof:
-  Let x,y∈ℝ such that x ≠ 0 and y ≠ 0. We must show that x * y ≠ 0. We have x < 0 ∨ 0 < x and
-y < 0 ∨ 0 < y. 
-Case 1: Suppose x > 0 and y > 0. Then x * y > 0.
-Case 2: Suppose x > 0 and y < 0. Then x * y < 0.
-Case 3: Suppose x < 0 and y < 0. Then -x > 0 and -y > 0, so x * y = -x * -y > 0. 
-Case 4: Similar to case 2.                                                                   □
--}
+<⇒≱ : _<_ ⇒ _≱_
+<⇒≱ {x} {y} (pos* (n-1 , x<y)) (nonNeg* x≥y) = let n = suc n-1 in ℚP.<-irrefl-≡ refl (begin-strict
+  + 1 / n                                         <⟨ x<y ⟩
+  seq y (2 ℕ.* n) ℚ.- seq x (2 ℕ.* n)             ≈⟨ ℚP.≃-sym (ℚP.neg-involutive (seq y (2 ℕ.* n) ℚ.- seq x (2 ℕ.* n))) ⟩
+  ℚ.- (ℚ.- (seq y (2 ℕ.* n) ℚ.- seq x (2 ℕ.* n))) ≈⟨ solve 2 (λ x y -> :- (:- (y :- x)) := :- (x :- y))
+                                                     ℚP.≃-refl (seq x (2 ℕ.* n)) (seq y (2 ℕ.* n)) ⟩
+  ℚ.- (seq x (2 ℕ.* n) ℚ.- seq y (2 ℕ.* n))       ≤⟨ ℚP.neg-mono-≤ (x≥y n) ⟩
+  ℚ.- (ℚ.- (+ 1 / n))                             ≈⟨ ℚP.neg-involutive (+ 1 / n) ⟩
+  + 1 / n                                          ∎)
+  where
+    open ℚP.≤-Reasoning
+    open ℚ-Solver.+-*-Solver
+
+<-irrefl : Irreflexive _≃_ _<_
+<-irrefl {x} {y} (*≃* x≃y) (pos* (n-1 , x<y)) = let n = suc n-1 in ℚP.<-irrefl ℚP.≃-refl (begin-strict
+  + 1 / n                                   <⟨ x<y ⟩
+  seq y (2 ℕ.* n) ℚ.- seq x (2 ℕ.* n)       ≤⟨ p≤∣p∣ (seq y (2 ℕ.* n) ℚ.- seq x (2 ℕ.* n)) ⟩
+  ℚ.∣ seq y (2 ℕ.* n) ℚ.- seq x (2 ℕ.* n) ∣ ≈⟨ ∣p-q∣≃∣q-p∣ (seq y (2 ℕ.* n)) (seq x (2 ℕ.* n)) ⟩
+  ℚ.∣ seq x (2 ℕ.* n) ℚ.- seq y (2 ℕ.* n) ∣ ≤⟨ x≃y (2 ℕ.* n) ⟩
+  + 2 / (2 ℕ.* n)                           ≈⟨ ℚ.*≡* (sym (ℤP.*-identityˡ (+ 2 ℤ.* + n))) ⟩
+  + 1 / n                                    ∎)
+  where open ℚP.≤-Reasoning
+
+p⋆≄0⇒∣↥p∣≢0 : ∀ p -> (p ⋆) ≄0 -> ℤ.∣ ↥ p ∣ ≢0
+p⋆≄0⇒∣↥p∣≢0 (mkℚᵘ (+_ zero) d-1) (inj₁ p⋆<0) = let d = suc d-1 in <-irrefl (≃-reflexive (λ {(suc n-1) -> ℚ.*≡* (sym (ℤP.*-zeroˡ (+ d)))})) p⋆<0
+p⋆≄0⇒∣↥p∣≢0 (mkℚᵘ +[1+ n ] denominator-2) (inj₁ p⋆<0) = _
+p⋆≄0⇒∣↥p∣≢0 (mkℚᵘ (-[1+_] n) denominator-2) (inj₁ p⋆<0) = _
+p⋆≄0⇒∣↥p∣≢0 (mkℚᵘ (+_ zero) d-1) (inj₂ 0<p⋆) = let d = suc d-1 in <-irrefl (≃-reflexive (λ {(suc n-1) -> ℚ.*≡* (ℤP.*-zeroˡ (+ d))})) 0<p⋆
+p⋆≄0⇒∣↥p∣≢0 (mkℚᵘ +[1+ n ] denominator-2) (inj₂ 0<p⋆) = _
+p⋆≄0⇒∣↥p∣≢0 (mkℚᵘ (-[1+_] n) denominator-2) (inj₂ 0<p⋆) = _
+
+∣↥p∣≢0⇒p⋆≄0 : ∀ p -> ℤ.∣ ↥ p ∣ ≢0 -> (p ⋆) ≄0
+∣↥p∣≢0⇒p⋆≄0 (mkℚᵘ +[1+ n ] d-1) ∣↥p∣≢0 = inj₂ (p<q⇒p⋆<q⋆ 0ℚᵘ (+[1+ n ] / (suc d-1)) (ℚP.positive⁻¹ _))
+∣↥p∣≢0⇒p⋆≄0 (mkℚᵘ (-[1+_] n) d-1) ∣↥p∣≢0 = inj₁ (p<q⇒p⋆<q⋆ (-[1+_] n / (suc d-1)) 0ℚᵘ (ℚP.negative⁻¹ _))
+
+⁻¹-involutive : ∀ {x} -> (x≄0 : x ≄0) ->
+                (((x ⁻¹) x≄0) ⁻¹) ([ (λ x<0 -> inj₁ (x<0⇒x⁻¹<0 {x} x≄0 x<0)) , (λ 0<x -> inj₂ (0<x⇒0<x⁻¹ {x} x≄0 0<x))]′ x≄0) ≃ x
+⁻¹-involutive {x} x≄0 = let x⁻¹ = (x ⁻¹) x≄0
+                                ; x⁻¹≄0 = [ (λ x<0 -> inj₁ (x<0⇒x⁻¹<0 {x} x≄0 x<0)) , (λ 0<x -> inj₂ (0<x⇒0<x⁻¹ {x} x≄0 0<x))]′ x≄0 in
+                        ≃-symm (⁻¹-unique x x⁻¹ x⁻¹≄0 (*-inverseʳ x x≄0))
+  where open ≃-Reasoning
+
+⋆-distrib-⁻¹ : ∀ p -> (p⋆≄0 : (p ⋆) ≄0) -> ((p ⋆) ⁻¹) p⋆≄0 ≃ ((ℚ.1/ p) {p⋆≄0⇒∣↥p∣≢0 p p⋆≄0}) ⋆
+⋆-distrib-⁻¹ p p⋆≄0 = let p⁻¹ = (ℚ.1/ p) {p⋆≄0⇒∣↥p∣≢0 p p⋆≄0}; p⋆⁻¹ = ((p ⋆) ⁻¹) p⋆≄0 in
+                      ≃-symm (⁻¹-unique (p⁻¹ ⋆) (p ⋆) p⋆≄0 (begin
+  p⁻¹ ⋆ * p ⋆   ≈⟨ ≃-symm (⋆-distrib-* p⁻¹ p) ⟩
+  (p⁻¹ ℚ.* p) ⋆ ≈⟨ ⋆-cong (ℚP.*-inverseˡ p {p⋆≄0⇒∣↥p∣≢0 p p⋆≄0}) ⟩
+  1ℝ             ∎))
+  where open ≃-Reasoning
+
+archimedean-ℝ₂ : ∀ {x} -> Positive x -> ∃ λ n-1 -> (+ 1 / (suc n-1)) ⋆ < x
+archimedean-ℝ₂ {x} posx = let x≄0 = inj₂ (posx⇒0<x posx); x⁻¹ = (x ⁻¹) x≄0; arch = archimedean-ℝ x⁻¹
+                                  ; x⁻¹≄0 = [ (λ x<0 -> inj₁ (x<0⇒x⁻¹<0 {x} x≄0 x<0)) , (λ 0<x -> inj₂ (0<x⇒0<x⁻¹ {x} x≄0 0<x))]′ x≄0
+                                  ; n = suc (proj₁ arch) in
+                          ℕ.pred n , <-respˡ-≃ (⋆-distrib-⁻¹ (+ n / 1) (∣↥p∣≢0⇒p⋆≄0 (+ n / 1) _))
+                          (<-respʳ-≃ {_} {(x⁻¹ ⁻¹) x⁻¹≄0} {x} (⁻¹-involutive {x} x≄0)
+                          (x<y∧posx,y⇒y⁻¹<x⁻¹ {x⁻¹} {(+ n / 1) ⋆} (proj₂ arch) x⁻¹≄0 (∣↥p∣≢0⇒p⋆≄0 (+ n / 1) _) (posx⇒posx⁻¹ {x} x≄0 posx)
+                          (0<x⇒posx (p<q⇒p⋆<q⋆ 0ℚᵘ (+ n / 1) (ℚP.positive⁻¹ _)))))
+  where open ≤-Reasoning
 
 negx,y⇒posx*y : ∀ {x y} -> Negative x -> Negative y -> Positive (x * y)
-negx,y⇒posx*y {x} {y} negx negy = {!!}
+negx,y⇒posx*y {x} {y} negx negy = pos-cong (begin
+  (- x) * (- y) ≈⟨ ≃-symm (neg-distribˡ-* x (- y)) ⟩
+  - (x * (- y)) ≈⟨ ≃-symm (-‿cong (neg-distribʳ-* x y)) ⟩
+  - (- (x * y)) ≈⟨ neg-involutive (x * y) ⟩
+  x * y          ∎)
+  (posx,y⇒posx*y negx negy)
+  where open ≃-Reasoning
 
 negx∧posy⇒negx*y : ∀ {x y} -> Negative x -> Positive y -> Negative (x * y)
-negx∧posy⇒negx*y {x} {y} negx posy = {!!}
+negx∧posy⇒negx*y {x} {y} negx posy = pos-cong (≃-symm (neg-distribˡ-* x y)) (posx,y⇒posx*y negx posy)
 
 x≄0∧y≄0⇒x*y≄0 : ∀ {x y} -> x ≄0 -> y ≄0 -> (x * y) ≄0
-x≄0∧y≄0⇒x*y≄0 {x} {y} x≄0 y≄0 = [ [ y<0∧x<0 , {!!} ]′ y≄0 , [ {!!} , 0<y∧0<x ]′ y≄0 ]′ x≄0
+x≄0∧y≄0⇒x*y≄0 {x} {y} x≄0 y≄0 = [ [ y<0∧x<0 , 0<y∧x<0 ]′ y≄0 , [ y<0∧0<x , 0<y∧0<x ]′ y≄0 ]′ x≄0
   where
+    y<0∧x<0 : y < 0ℝ -> x < 0ℝ -> (x * y) ≄0
+    y<0∧x<0 y<0 x<0 = inj₂ (posx⇒0<x (negx,y⇒posx*y (x<0⇒negx x<0) (x<0⇒negx y<0)))
+
+    0<y∧x<0 : 0ℝ < y -> x < 0ℝ -> (x * y) ≄0
+    0<y∧x<0 0<y x<0 = inj₁ (negx⇒x<0 (negx∧posy⇒negx*y (x<0⇒negx x<0) (0<x⇒posx 0<y)))
+
+    y<0∧0<x : y < 0ℝ -> 0ℝ < x -> (x * y) ≄0
+    y<0∧0<x y<0 0<x = inj₁ (<-respˡ-≃ (*-comm y x) (negx⇒x<0 (negx∧posy⇒negx*y (x<0⇒negx y<0) (0<x⇒posx 0<x))))
+
     0<y∧0<x : 0ℝ < y -> 0ℝ < x -> (x * y) ≄0
     0<y∧0<x 0<y 0<x = inj₂ (posx⇒0<x (posx,y⇒posx*y (0<x⇒posx 0<x) (0<x⇒posx 0<y)))
-
-    y<0∧x<0 : y < 0ℝ -> x < 0ℝ -> (x * y) ≄0
-    y<0∧x<0 y<0 x<0 = inj₂ (posx⇒0<x (negx,y⇒posx*y {!!} {!!}))
 
 {-
 Proposition:
@@ -987,29 +1056,6 @@ data _DivergesBy_ : REL (ℕ -> ℝ) ℝ 0ℓ where
 _isDivergent : (ℕ -> ℝ) -> Set
 f isDivergent = ∃ λ ε -> f DivergesBy ε
 
-<⇒≱ : _<_ ⇒ _≱_
-<⇒≱ {x} {y} (pos* (n-1 , x<y)) (nonNeg* x≥y) = let n = suc n-1 in ℚP.<-irrefl-≡ refl (begin-strict
-  + 1 / n                                         <⟨ x<y ⟩
-  seq y (2 ℕ.* n) ℚ.- seq x (2 ℕ.* n)             ≈⟨ ℚP.≃-sym (ℚP.neg-involutive (seq y (2 ℕ.* n) ℚ.- seq x (2 ℕ.* n))) ⟩
-  ℚ.- (ℚ.- (seq y (2 ℕ.* n) ℚ.- seq x (2 ℕ.* n))) ≈⟨ solve 2 (λ x y -> :- (:- (y :- x)) := :- (x :- y))
-                                                     ℚP.≃-refl (seq x (2 ℕ.* n)) (seq y (2 ℕ.* n)) ⟩
-  ℚ.- (seq x (2 ℕ.* n) ℚ.- seq y (2 ℕ.* n))       ≤⟨ ℚP.neg-mono-≤ (x≥y n) ⟩
-  ℚ.- (ℚ.- (+ 1 / n))                             ≈⟨ ℚP.neg-involutive (+ 1 / n) ⟩
-  + 1 / n                                          ∎)
-  where
-    open ℚP.≤-Reasoning
-    open ℚ-Solver.+-*-Solver
-
-<-irrefl : Irreflexive _≃_ _<_
-<-irrefl {x} {y} (*≃* x≃y) (pos* (n-1 , x<y)) = let n = suc n-1 in ℚP.<-irrefl ℚP.≃-refl (begin-strict
-  + 1 / n                                   <⟨ x<y ⟩
-  seq y (2 ℕ.* n) ℚ.- seq x (2 ℕ.* n)       ≤⟨ p≤∣p∣ (seq y (2 ℕ.* n) ℚ.- seq x (2 ℕ.* n)) ⟩
-  ℚ.∣ seq y (2 ℕ.* n) ℚ.- seq x (2 ℕ.* n) ∣ ≈⟨ ∣p-q∣≃∣q-p∣ (seq y (2 ℕ.* n)) (seq x (2 ℕ.* n)) ⟩
-  ℚ.∣ seq x (2 ℕ.* n) ℚ.- seq y (2 ℕ.* n) ∣ ≤⟨ x≃y (2 ℕ.* n) ⟩
-  + 2 / (2 ℕ.* n)                           ≈⟨ ℚ.*≡* (sym (ℤP.*-identityˡ (+ 2 ℤ.* + n))) ⟩
-  + 1 / n                                    ∎)
-  where open ℚP.≤-Reasoning
-
 cauchy-getter : ∀ {xs} -> xs isCauchy ->
                 ∀ k -> {k≢0 : k ≢0} -> ∃ λ Mₖ-1 -> ∀ m n -> m ℕ.≥ suc Mₖ-1 -> n ℕ.≥ suc Mₖ-1 ->
                 ∣ xs m - xs n ∣ ≤ ((+ 1 / k) {k≢0}) ⋆
@@ -1062,7 +1108,53 @@ xⁿxᵐ≃xⁿ⁺ᵐ x (suc n) m = begin
   pow x ((1 ℕ.+ n) ℕ.+ m)  ∎
   where open ≃-Reasoning
 
-geometric-series : ∀ {r} -> (- 1ℝ) < r < 1ℝ -> SeriesOf (λ n -> pow r n) ConvergesTo ((1ℝ - r) ⁻¹) {!!}
+{-
+rⁿ = r²ᵐ⁺¹ 
+   = rᵐrᵐr
+   < rᵐrᵐ
+   < (k-1)⁻¹ * (k-1)⁻¹
+   ≤ k⁻¹.
+
+rⁿ ≤ 2⁻¹?
+
+rⁿ = rᵐrᵐr
+   ≤ k⁻²r
+   ≤ 2k⁻²
+   = 2/k²
+   
+2/k² ≤ 1/(k+1)
+<->
+2k + 2 ≤ k²
+
+Proof does not work. Consider k = 2. Then, for the even case (for example), we have:
+rⁿ = r²ᵐ
+   = rᵐrᵐ
+   ≤ (k-1)⁻¹ * (k-1)⁻¹
+   = 1 * 1
+   = 1
+   ≰ 2⁻¹ = k⁻¹.
+So the proof fails.
+-}
+∣r∣<1⇒rⁿ→0 : ∀ {r} -> ∣ r ∣ < 1ℝ -> (λ n -> pow r n) ConvergesTo 0ℝ
+∣r∣<1⇒rⁿ→0 {r} ∣r∣<1 = {!!}
+  where
+    open ≤-Reasoning
+    power-helper : ∀ n -> {n ≢0} -> ∃ λ m -> n ≡ m ℕ.+ m ⊎ n ≡ suc (2 ℕ.* m)
+    power-helper 1 = 0 , inj₂ refl
+    power-helper (suc (suc n-2)) = let n-1 = suc n-2; n = suc n-1 in
+                                   {!!}
+
+    lem : ∀ k -> {k≢0 : k ≢0} -> ∃ λ Nₖ-1 -> ∀ n -> n ℕ.≥ suc Nₖ-1 -> pow ∣ r ∣ n ≤ ((+ 1 / k) {k≢0}) ⋆
+    lem 1 = 0 , λ { 1 n≥1 → ≤-respˡ-≃ (≃-symm (*-identityˡ ∣ r ∣)) (<⇒≤ ∣r∣<1) ;
+                (suc (suc n-2)) n≥1 → let n-1 = suc n-2; n = suc n-1 in {!!}}
+    lem (suc (suc k-2)) = {!!} , {!!}
+      where
+        k-1 = suc k-2
+        k = suc k-1
+        Nₖ = suc (proj₁ (lem k-1))
+        Mₖ = 2 ℕ.* Nₖ
+
+{-geometric-series : ∀ {r} -> (- 1ℝ) < r < 1ℝ -> SeriesOf (λ n -> pow r n) ConvergesTo ((1ℝ - r) ⁻¹) {!!}
 geometric-series {r} -1<r<1 = {!!}
   where
     open ≤-Reasoning
@@ -1085,7 +1177,7 @@ geometric-series {r} -1<r<1 = {!!}
       (1ℝ - pow r n) * [1-r]⁻¹ + (pow r n - pow r 1+n) * [1-r]⁻¹            ≈⟨ {!!} ⟩
       (1ℝ - pow r n + (pow r n - pow r 1+n)) * [1-r]⁻¹                      ≈⟨ {!!} ⟩
       (1ℝ + 0ℝ - pow r 1+n) * [1-r]⁻¹                                       ≈⟨ {!!} ⟩
-      (1ℝ - pow r 1+n) * [1-r]⁻¹                                             ∎
+      (1ℝ - pow r 1+n) * [1-r]⁻¹                                             ∎-}
 
 {-
 Proposition:
@@ -1096,8 +1188,6 @@ Proof:
   Suppose c < 1 and (1) hold. Then
                         ∣xₙ∣ ≤ c∣xₜ∣ ≤ cⁿ⁻ᵗ∣xₜ∣           (n ≥ t).
 WTS ∣xₜ∣∑ᵢ₌ₜ̂̂ cⁱ⁻ᵗ = ∣xₜ∣∑ᵢ₌₀ cⁱ converges. We have:
- 
-
 -}
 proposition-3-6-1 : ∀ {xs : ℕ -> ℝ} -> ∀ {c} -> Positive c -> ∀ N -> {N ≢0} ->
                   c < 1ℝ -> (∀ n -> n ℕ.≥ N -> ∣ xs (suc n) ∣ ≤ c * ∣ xs n ∣) -> SeriesOf xs isConvergent
