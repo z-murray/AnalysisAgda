@@ -563,101 +563,6 @@ p⋆≄0⇒∣↥p∣≢0 (mkℚᵘ (-[1+_] n) denominator-2) (inj₂ 0<p⋆) = 
   1ℝ             ∎))
   where open ≃-Reasoning
 
-archimedean-ℝ₂ : ∀ {x} -> Positive x -> ∃ λ n-1 -> (+ 1 / (suc n-1)) ⋆ < x
-archimedean-ℝ₂ {x} posx = let x≄0 = inj₂ (posx⇒0<x posx); x⁻¹ = (x ⁻¹) x≄0; arch = archimedean-ℝ x⁻¹
-                                  ; x⁻¹≄0 = [ (λ x<0 -> inj₁ (x<0⇒x⁻¹<0 {x} x≄0 x<0)) , (λ 0<x -> inj₂ (0<x⇒0<x⁻¹ {x} x≄0 0<x))]′ x≄0
-                                  ; n = suc (proj₁ arch) in
-                          ℕ.pred n , <-respˡ-≃ (⋆-distrib-⁻¹ (+ n / 1) (∣↥p∣≢0⇒p⋆≄0 (+ n / 1) _))
-                          (<-respʳ-≃ {_} {(x⁻¹ ⁻¹) x⁻¹≄0} {x} (⁻¹-involutive {x} x≄0)
-                          (x<y∧posx,y⇒y⁻¹<x⁻¹ {x⁻¹} {(+ n / 1) ⋆} (proj₂ arch) x⁻¹≄0 (∣↥p∣≢0⇒p⋆≄0 (+ n / 1) _) (posx⇒posx⁻¹ {x} x≄0 posx)
-                          (0<x⇒posx (p<q⇒p⋆<q⋆ 0ℚᵘ (+ n / 1) (ℚP.positive⁻¹ _)))))
-  where open ≤-Reasoning
-
-negx,y⇒posx*y : ∀ {x y} -> Negative x -> Negative y -> Positive (x * y)
-negx,y⇒posx*y {x} {y} negx negy = pos-cong (begin
-  (- x) * (- y) ≈⟨ ≃-symm (neg-distribˡ-* x (- y)) ⟩
-  - (x * (- y)) ≈⟨ ≃-symm (-‿cong (neg-distribʳ-* x y)) ⟩
-  - (- (x * y)) ≈⟨ neg-involutive (x * y) ⟩
-  x * y          ∎)
-  (posx,y⇒posx*y negx negy)
-  where open ≃-Reasoning
-
-negx∧posy⇒negx*y : ∀ {x y} -> Negative x -> Positive y -> Negative (x * y)
-negx∧posy⇒negx*y {x} {y} negx posy = pos-cong (≃-symm (neg-distribˡ-* x y)) (posx,y⇒posx*y negx posy)
-
-x≄0∧y≄0⇒x*y≄0 : ∀ {x y} -> x ≄0 -> y ≄0 -> (x * y) ≄0
-x≄0∧y≄0⇒x*y≄0 {x} {y} x≄0 y≄0 = [ [ y<0∧x<0 , 0<y∧x<0 ]′ y≄0 , [ y<0∧0<x , 0<y∧0<x ]′ y≄0 ]′ x≄0
-  where
-    y<0∧x<0 : y < 0ℝ -> x < 0ℝ -> (x * y) ≄0
-    y<0∧x<0 y<0 x<0 = inj₂ (posx⇒0<x (negx,y⇒posx*y (x<0⇒negx x<0) (x<0⇒negx y<0)))
-
-    0<y∧x<0 : 0ℝ < y -> x < 0ℝ -> (x * y) ≄0
-    0<y∧x<0 0<y x<0 = inj₁ (negx⇒x<0 (negx∧posy⇒negx*y (x<0⇒negx x<0) (0<x⇒posx 0<y)))
-
-    y<0∧0<x : y < 0ℝ -> 0ℝ < x -> (x * y) ≄0
-    y<0∧0<x y<0 0<x = inj₁ (<-respˡ-≃ (*-comm y x) (negx⇒x<0 (negx∧posy⇒negx*y (x<0⇒negx y<0) (0<x⇒posx 0<x))))
-
-    0<y∧0<x : 0ℝ < y -> 0ℝ < x -> (x * y) ≄0
-    0<y∧0<x 0<y 0<x = inj₂ (posx⇒0<x (posx,y⇒posx*y (0<x⇒posx 0<x) (0<x⇒posx 0<y)))
-
-{-
-Proposition:
-  If xₙ ≠ 0 for all n∈ℕ, x₀ ≠ 0, and (xₙ)→x₀, then (xₙ⁻¹)→x₀⁻¹.
-Proof:
-  We must show that, for all k∈ℕ, there is Nₖ∈ℕ such that
-                         ∣xₙ⁻¹ - x₀⁻¹∣ ≤ k⁻¹.
-By the Archimedean Property, there is r∈ℕ such that r⁻¹ < 2⁻¹∣x₀∣ since ∣x₀∣ > 0.
-Then for some n₀∈ℕ, we have
-                         ∣xₙ - x₀∣ ≤ r⁻¹ < 2⁻¹∣x₀∣            (n ≥ n₀).
-Let k∈ℕ. Then there is m₀∈ℕ such that 
-                   ∣xₙ - x₀∣ ≤ k⁻¹ < (2k)⁻¹∣x₀∣²              (n ≥ m₀).
-Let Nₖ = max{m₀, n₀} and let n ≥ N. We have:
-        ∣xₙ⁻¹ - x₀⁻¹∣ = ∣xₙ∣⁻¹ * ∣x₀∣⁻¹ * ∣xₙ - x₀∣
-                      < 2∣x₀∣⁻¹ * ∣x₀∣⁻¹ * ∣xₙ - x₀∣ since n ≥ n₀
-                      ≤ 2∣x₀∣⁻¹ * ∣x₀∣⁻¹ * (2k)⁻¹∣x₀∣²
-                      = k⁻¹.
-Hence ∣xₙ⁻¹ - x₀⁻¹∣ ≤ k⁻¹ for all n ≥ N.                                       □
--}
-xₙ≄0∧x₀≄0⇒xₙ⁻¹→x₀⁻¹ : ∀ {xs : ℕ -> ℝ} -> ∀ {x₀ : ℝ} -> xs ConvergesTo x₀ -> (xₙ≄0 : ∀ n -> xs n ≄0) -> (x₀≄0 : x₀ ≄0) ->
-                      (λ n -> (xs n ⁻¹) (xₙ≄0 n)) ConvergesTo (x₀ ⁻¹) x₀≄0
-xₙ≄0∧x₀≄0⇒xₙ⁻¹→x₀⁻¹ {xs} {x₀} (con* xₙ→x₀) xₙ≄0 x₀≄0 = con* main
-  where
-    open ≤-Reasoning
-    main : ∀ k -> {k≢0 : k ≢0} -> ∃ λ Nₖ-1 -> ∀ n -> n ℕ.≥ suc Nₖ-1 ->
-           ∣ (xs n ⁻¹) (xₙ≄0 n) - (x₀ ⁻¹) x₀≄0 ∣ ≤ ((+ 1 / k) {k≢0}) ⋆
-    main (suc k-1) = ℕ.pred Nₖ , sub
-      where
-        k = suc k-1
-        Nₖ = suc (proj₁ (xₙ→x₀ k))
-        arch = archimedean-ℝ₂ {(+ 1 / 2) ⋆ * ∣ x₀ ∣} (posx,y⇒posx*y (posp⇒posp⋆ (+ 1 / 2) _) (x≄0⇒pos∣x∣ x₀≄0))
-        r = suc (proj₁ arch)
-        sub : ∀ n -> n ℕ.≥ Nₖ ->
-              ∣ (xs n ⁻¹) (xₙ≄0 n) - (x₀ ⁻¹) x₀≄0 ∣ ≤ (+ 1 / k) ⋆
-        sub (suc n-1) n≥Nₖ = {!!}
-          where
-            n = suc n-1
-            xₙ = xs n
-            xₙ⁻¹ = (xₙ ⁻¹) (xₙ≄0 n)
-            x₀⁻¹ = (x₀ ⁻¹) x₀≄0
-            ∣xₙ∣⁻¹ = (∣ xₙ ∣ ⁻¹) (inj₂ (posx⇒0<x (x≄0⇒pos∣x∣ (xₙ≄0 n))))
-            ∣x₀∣⁻¹ = (∣ x₀ ∣ ⁻¹) (inj₂ (posx⇒0<x (x≄0⇒pos∣x∣ x₀≄0)))
-
-        {-
-          By the Archimedean Property, there is r∈ℕ such that r⁻¹ < 2⁻¹∣x₀∣ since ∣x₀∣ > 0.
-          Then for some n₀∈ℕ, we have
-                         ∣xₙ - x₀∣ ≤ r⁻¹ < 2⁻¹∣x₀∣            (n ≥ n₀).
-          2⁻¹∣x₀∣ = ∣x₀∣ - 2⁻¹∣x₀∣
-                  < ∣x₀∣ - ∣xₙ - x₀∣
-                  = ∣x₀∣ - ∣x₀ - xₙ∣
-                  ≤ ∣x₀∣ - ∣x₀∣ - ∣xₙ∣
-                  = -∣xₙ∣
-                  ≤ ∣-∣xₙ∣∣
-                  = ∣∣xₙ∣∣
-                  = ∣xₙ∣.
-        -}
-            2⁻¹∣x₀∣<∣xₙ∣ : (+ 1 / 2) ⋆ * ∣ x₀ ∣ < ∣ xₙ ∣
-            2⁻¹∣x₀∣<∣xₙ∣ = begin-strict {!!}
-
 0≤y-x⇒x≤y : ∀ {x y} -> 0ℝ ≤ y - x -> x ≤ y
 0≤y-x⇒x≤y {x} {y} 0≤y-x = nonNeg-cong (≃-trans (+-congʳ (y - x) (≃-symm 0≃-0)) (+-identityʳ (y - x))) 0≤y-x
 
@@ -724,6 +629,262 @@ x≤z∧y≤z⇒x⊔y≤z {x} {y} {z} x≤z y≤z = lemma-2-8-2-onlyif lem
       ∣ y ∣ - ∣ x ∣     ≤⟨ left y x ⟩
       ∣ y - x ∣         ≈⟨ ∣x-y∣≃∣y-x∣ y x ⟩
       ∣ x - y ∣          ∎
+
+archimedean-ℝ₂ : ∀ {x} -> Positive x -> ∃ λ n-1 -> (+ 1 / (suc n-1)) ⋆ < x
+archimedean-ℝ₂ {x} posx = let x≄0 = inj₂ (posx⇒0<x posx); x⁻¹ = (x ⁻¹) x≄0; arch = archimedean-ℝ x⁻¹
+                                  ; x⁻¹≄0 = [ (λ x<0 -> inj₁ (x<0⇒x⁻¹<0 {x} x≄0 x<0)) , (λ 0<x -> inj₂ (0<x⇒0<x⁻¹ {x} x≄0 0<x))]′ x≄0
+                                  ; n = suc (proj₁ arch) in
+                          ℕ.pred n , <-respˡ-≃ (⋆-distrib-⁻¹ (+ n / 1) (∣↥p∣≢0⇒p⋆≄0 (+ n / 1) _))
+                          (<-respʳ-≃ {_} {(x⁻¹ ⁻¹) x⁻¹≄0} {x} (⁻¹-involutive {x} x≄0)
+                          (x<y∧posx,y⇒y⁻¹<x⁻¹ {x⁻¹} {(+ n / 1) ⋆} (proj₂ arch) x⁻¹≄0 (∣↥p∣≢0⇒p⋆≄0 (+ n / 1) _) (posx⇒posx⁻¹ {x} x≄0 posx)
+                          (0<x⇒posx (p<q⇒p⋆<q⋆ 0ℚᵘ (+ n / 1) (ℚP.positive⁻¹ _)))))
+  where open ≤-Reasoning
+
+abstract
+  fast-archimedean-ℝ₂ : ∀ {x} -> Positive x -> ∃ λ n-1 -> (+ 1 / (suc n-1)) ⋆ < x
+  fast-archimedean-ℝ₂ = archimedean-ℝ₂
+
+negx,y⇒posx*y : ∀ {x y} -> Negative x -> Negative y -> Positive (x * y)
+negx,y⇒posx*y {x} {y} negx negy = pos-cong (begin
+  (- x) * (- y) ≈⟨ ≃-symm (neg-distribˡ-* x (- y)) ⟩
+  - (x * (- y)) ≈⟨ ≃-symm (-‿cong (neg-distribʳ-* x y)) ⟩
+  - (- (x * y)) ≈⟨ neg-involutive (x * y) ⟩
+  x * y          ∎)
+  (posx,y⇒posx*y negx negy)
+  where open ≃-Reasoning
+
+negx∧posy⇒negx*y : ∀ {x y} -> Negative x -> Positive y -> Negative (x * y)
+negx∧posy⇒negx*y {x} {y} negx posy = pos-cong (≃-symm (neg-distribˡ-* x y)) (posx,y⇒posx*y negx posy)
+
+x≄0∧y≄0⇒x*y≄0 : ∀ {x y} -> x ≄0 -> y ≄0 -> (x * y) ≄0
+x≄0∧y≄0⇒x*y≄0 {x} {y} x≄0 y≄0 = [ [ y<0∧x<0 , 0<y∧x<0 ]′ y≄0 , [ y<0∧0<x , 0<y∧0<x ]′ y≄0 ]′ x≄0
+  where
+    y<0∧x<0 : y < 0ℝ -> x < 0ℝ -> (x * y) ≄0
+    y<0∧x<0 y<0 x<0 = inj₂ (posx⇒0<x (negx,y⇒posx*y (x<0⇒negx x<0) (x<0⇒negx y<0)))
+
+    0<y∧x<0 : 0ℝ < y -> x < 0ℝ -> (x * y) ≄0
+    0<y∧x<0 0<y x<0 = inj₁ (negx⇒x<0 (negx∧posy⇒negx*y (x<0⇒negx x<0) (0<x⇒posx 0<y)))
+
+    y<0∧0<x : y < 0ℝ -> 0ℝ < x -> (x * y) ≄0
+    y<0∧0<x y<0 0<x = inj₁ (<-respˡ-≃ (*-comm y x) (negx⇒x<0 (negx∧posy⇒negx*y (x<0⇒negx y<0) (0<x⇒posx 0<x))))
+
+    0<y∧0<x : 0ℝ < y -> 0ℝ < x -> (x * y) ≄0
+    0<y∧0<x 0<y 0<x = inj₂ (posx⇒0<x (posx,y⇒posx*y (0<x⇒posx 0<x) (0<x⇒posx 0<y)))
+
+{-
+Note: We could obviously get ∣x∣ ≄0 from x≄0 (or vice versa). However, taking in the ∣x∣⁻¹≄0 allows the user to use any
+proof that ∣x∣⁻¹ ≄0 instead of just the proof given by x≄0. If we have two distinct proofs of x ≄0,
+say A and B, then (x ⁻¹) A ≡ (x ⁻¹) B does not hold by reflexivity, and probably doesn't hold in most
+cases anyway. So if the user has a different ∣x∣ ≄0 proof they'd have to apply uniqueness of inverses,
+which is more labour than supplying the ∣x∣ ≄0 proof since you have to supply a proof that 
+((∣ x ∣ ⁻¹) C) * ∣ x ∣ ≃ 1ℝ along with all of the *-cong's used to swap out ∣ x ∣ ⁻¹ A for ∣ x ∣ ⁻¹ C.
+-}
+∣x∣⁻¹≃∣x⁻¹∣ : ∀ {x} -> (∣x∣≄0 : ∣ x ∣ ≄0) -> (x≄0 : x ≄0) -> (∣ x ∣ ⁻¹) ∣x∣≄0 ≃ ∣ (x ⁻¹) x≄0 ∣
+∣x∣⁻¹≃∣x⁻¹∣ {x} ∣x∣≄0 x≄0 = {!!}
+
+x≄0⇒∣x∣≄0 : ∀ {x} -> x ≄0 -> ∣ x ∣ ≄0
+x≄0⇒∣x∣≄0 {x} x≄0 = inj₂ (pos-cong (≃-symm (≃-trans (+-congʳ ∣ x ∣ (≃-symm 0≃-0)) (+-identityʳ ∣ x ∣))) (x≄0⇒pos∣x∣ x≄0))
+
+⁻¹-distrib-* : ∀ {x y} -> (x≄0 : x ≄0) -> (y≄0 : y ≄0) -> (xy≄0 : (x * y) ≄0) -> 
+               ((x * y) ⁻¹) xy≄0 ≃ ((x ⁻¹) x≄0) * ((y ⁻¹) y≄0)
+⁻¹-distrib-* {x} {y} x≄0 y≄0 xy≄0 = {!!}
+
+ε-convergence : ∀ {xs : ℕ -> ℝ} -> (xₙ→ℓ : xs isConvergent) ->
+                ∀ ε -> Positive ε -> ∃ λ (N-1 : ℕ) -> ∀ n -> n ℕ.≥ suc N-1 -> ∣ xs n - proj₁ xₙ→ℓ ∣ < ε
+ε-convergence {xs} (ℓ , con* xₙ→ℓ) ε posε = let arch = fast-archimedean-ℝ₂ posε; k = suc (proj₁ arch); N = suc (proj₁ (xₙ→ℓ k)) in
+                                           ℕ.pred N , λ {(suc n-1) n≥N -> let n = suc n-1 in begin-strict
+  ∣ xs n - ℓ ∣ ≤⟨ proj₂ (xₙ→ℓ k) n n≥N ⟩
+  (+ 1 / k) ⋆ <⟨ proj₂ arch ⟩
+  ε            ∎}
+  where open ≤-Reasoning
+
+nonNegx⇒nonNegx⁻¹ : ∀ {x} -> NonNegative x -> (x≄0 : x ≄0) -> NonNegative ((x ⁻¹) x≄0)
+nonNegx⇒nonNegx⁻¹ {x} nonx x≄0 = {!!}
+
+{-
+Proposition:
+  If xₙ ≠ 0 for all n∈ℕ, x₀ ≠ 0, and (xₙ)→x₀, then (xₙ⁻¹)→x₀⁻¹.
+Proof:
+  We must show that, for all k∈ℕ, there is Nₖ∈ℕ such that
+                         ∣xₙ⁻¹ - x₀⁻¹∣ ≤ k⁻¹.
+By the Archimedean Property, there is r∈ℕ such that r⁻¹ < 2⁻¹∣x₀∣ since ∣x₀∣ > 0.
+Then for some n₀∈ℕ we have
+                   ∣xₙ - x₀∣ ≤ r⁻¹ < 2⁻¹∣x₀∣ < ∣x₀∣            (n ≥ n₀),
+which implies, for n ≥ n₀,
+                       ∣xₙ∣ = ∣x₀ - (x₀ - xₙ)∣
+                            ≥ ∣∣x₀∣ - ∣x₀ - xₙ∣∣
+                            = ∣x₀∣ - ∣x₀ - xₙ∣   since ∣xₙ - x₀∣ < ∣x₀∣
+                            > ∣x₀∣ - 2⁻¹∣x₀∣     since n ≥ n₀
+                            = 2⁻¹∣x₀∣.  
+Let k∈ℕ. Then there is m₀∈ℕ such that
+                      ∣xₙ - x₀∣ < (2k)⁻¹∣x₀∣²                 (n ≥ m₀)
+since ∣x₀∣ > 0. Let N = max{m₀, n₀} and let n ≥ N. We have
+         ∣xₙ⁻¹ - x₀⁻¹∣ = ∣xₙ∣⁻¹ * ∣x₀∣⁻¹ * ∣xₙ - x₀∣
+                       < 2∣x₀∣⁻¹ * ∣x₀∣⁻¹ * ∣xₙ - x₀∣ since n ≥ n₀
+                       < 2∣x₀∣⁻² * (2k)⁻¹∣x₀∣²        since n ≥ m₀
+                       = k⁻¹.
+Hence ∣xₙ⁻¹ - x₀⁻¹∣ ≤ k⁻¹ for all n ≥ N.                                        □
+
+*-mono-≤ {∣ x₀ - xₙ ∣} {(+ 1 / (2 ℕ.* k)) ⋆ * (∣ x₀ ∣ * ∣ x₀ ∣)}
+                                                         {∣xₙ∣⁻¹ * ∣x₀∣⁻¹} {2ℚᵘ ⋆ * (∣x₀∣⁻¹ * ∣x₀∣⁻¹)} 
+                                                         (nonNeg∣x∣ (x₀ - xₙ)) 
+                                                         (nonNegx,y⇒nonNegx*y {∣xₙ∣⁻¹} {∣x₀∣⁻¹} 
+                                                         (nonNegx⇒nonNegx⁻¹ {∣ xₙ ∣} (nonNeg∣x∣ xₙ) ∣xₙ∣≄0) 
+                                                         (nonNegx⇒nonNegx⁻¹ {∣ x₀ ∣} (nonNeg∣x∣ x₀) ∣x₀∣≄0)) 
+                                                         (<⇒≤ {∣ x₀ - xₙ ∣} {(+ 1 / (2 ℕ.* k)) ⋆ * (∣ x₀ ∣ * ∣ x₀ ∣)} part4) 
+                                                         (≤-respʳ-≃ {∣xₙ∣⁻¹ * ∣x₀∣⁻¹} {2ℚᵘ ⋆ * ∣x₀∣⁻¹ * ∣x₀∣⁻¹} {2ℚᵘ ⋆ * (∣x₀∣⁻¹ * ∣x₀∣⁻¹)}
+                                                         (*-assoc (2ℚᵘ ⋆) ∣x₀∣⁻¹ ∣x₀∣⁻¹) 
+                                                         (<⇒≤ {∣xₙ∣⁻¹ * ∣x₀∣⁻¹} {2ℚᵘ ⋆ * ∣x₀∣⁻¹ * ∣x₀∣⁻¹}
+                                                         (*-monoˡ-<-pos {∣x₀∣⁻¹} (posx⇒posx⁻¹ {∣ x₀ ∣} ∣x₀∣≄0 (x≄0⇒pos∣x∣ {x₀} x₀≄0)) part3)))
+-}
+abstract
+  xₙ≄0∧x₀≄0⇒xₙ⁻¹→x₀⁻¹ : ∀ {xs : ℕ -> ℝ} -> ∀ {x₀ : ℝ} -> xs ConvergesTo x₀ -> (xₙ≄0 : ∀ n -> xs n ≄0) -> (x₀≄0 : x₀ ≄0) ->
+                        (λ n -> (xs n ⁻¹) (xₙ≄0 n)) ConvergesTo (x₀ ⁻¹) x₀≄0
+  xₙ≄0∧x₀≄0⇒xₙ⁻¹→x₀⁻¹ {xs} {x₀} (con* xₙ→x₀) xₙ≄0 x₀≄0 = con* main
+    where
+      open ≤-Reasoning
+      open ℤ-Solver.+-*-Solver
+      main : ∀ k -> {k≢0 : k ≢0} -> ∃ λ N-1 -> ∀ n -> n ℕ.≥ suc N-1 ->
+             ∣ (xs n ⁻¹) (xₙ≄0 n) - (x₀ ⁻¹) x₀≄0 ∣ ≤ ((+ 1 / k) {k≢0}) ⋆
+      main (suc k-1) = ℕ.pred N , sub
+        where
+          arch = fast-archimedean-ℝ₂ {(+ 1 / 2) ⋆ * ∣ x₀ ∣} (posx,y⇒posx*y (posp⇒posp⋆ (+ 1 / 2) _) (x≄0⇒pos∣x∣ x₀≄0))
+          r = suc (proj₁ arch)
+          k = suc k-1
+          m₀-getter = ε-convergence (x₀ , con* xₙ→x₀) ((+ 1 / (2 ℕ.* k)) ⋆ * (∣ x₀ ∣ * ∣ x₀ ∣))
+                      (posx,y⇒posx*y (posp⇒posp⋆ (+ 1 / (2 ℕ.* k)) _)
+                      (posx,y⇒posx*y (x≄0⇒pos∣x∣ x₀≄0) (x≄0⇒pos∣x∣ x₀≄0)))
+          m₀ = suc (proj₁ m₀-getter)
+          n₀ = suc (proj₁ (xₙ→x₀ r))
+          N = m₀ ℕ.⊔ n₀
+
+        {- 
+          Possible performance bottlenecks:
+          ≃-symm
+          *-monoˡ-<-pos
+          Remaining *-congs
+        -}
+          abstract
+            sub : ∀ n -> n ℕ.≥ N -> ∣ (xs n ⁻¹) (xₙ≄0 n) - (x₀ ⁻¹) x₀≄0 ∣ ≤ (+ 1 / k) ⋆
+            sub (suc n-1) n≥N = begin
+              ∣ xₙ⁻¹ - x₀⁻¹ ∣                          ≈⟨ ≃-trans {∣ xₙ⁻¹ - x₀⁻¹ ∣} {∣xₙ∣⁻¹ * ∣x₀∣⁻¹ * ∣ x₀ - xₙ ∣} {∣ x₀ - xₙ ∣ * (∣xₙ∣⁻¹ * ∣x₀∣⁻¹)}
+                                                          (part2) (*-comm (∣xₙ∣⁻¹ * ∣x₀∣⁻¹) ∣ x₀ - xₙ ∣) ⟩
+              ∣ x₀ - xₙ ∣ * (∣xₙ∣⁻¹ * ∣x₀∣⁻¹)           ≤⟨ *-mono-≤ {∣ x₀ - xₙ ∣} {(+ 1 / (2 ℕ.* k)) ⋆ * (∣ x₀ ∣ * ∣ x₀ ∣)}
+                                                           {∣xₙ∣⁻¹ * ∣x₀∣⁻¹} {2ℚᵘ ⋆ * (∣x₀∣⁻¹ * ∣x₀∣⁻¹)} 
+                                                           (nonNeg∣x∣ (x₀ - xₙ)) 
+                                                           (nonNegx,y⇒nonNegx*y {∣xₙ∣⁻¹} {∣x₀∣⁻¹} 
+                                                           (nonNegx⇒nonNegx⁻¹ {∣ xₙ ∣} (nonNeg∣x∣ xₙ) ∣xₙ∣≄0) 
+                                                           (nonNegx⇒nonNegx⁻¹ {∣ x₀ ∣} (nonNeg∣x∣ x₀) ∣x₀∣≄0)) 
+                                                           (<⇒≤ {∣ x₀ - xₙ ∣} {(+ 1 / (2 ℕ.* k)) ⋆ * (∣ x₀ ∣ * ∣ x₀ ∣)} part4) 
+                                                           (≤-respʳ-≃ {∣xₙ∣⁻¹ * ∣x₀∣⁻¹} {2ℚᵘ ⋆ * ∣x₀∣⁻¹ * ∣x₀∣⁻¹} {2ℚᵘ ⋆ * (∣x₀∣⁻¹ * ∣x₀∣⁻¹)}
+                                                           (*-assoc (2ℚᵘ ⋆) ∣x₀∣⁻¹ ∣x₀∣⁻¹) 
+                                                           (<⇒≤ {∣xₙ∣⁻¹ * ∣x₀∣⁻¹} {2ℚᵘ ⋆ * ∣x₀∣⁻¹ * ∣x₀∣⁻¹}
+                                                           (*-monoˡ-<-pos {∣x₀∣⁻¹} (posx⇒posx⁻¹ {∣ x₀ ∣} ∣x₀∣≄0 (x≄0⇒pos∣x∣ {x₀} x₀≄0)) part3))) ⟩
+              (+ 1 / (2 ℕ.* k)) ⋆ * (∣ x₀ ∣ * ∣ x₀ ∣) *
+              (2ℚᵘ ⋆ * (∣x₀∣⁻¹ * ∣x₀∣⁻¹))                 ≈⟨ *-congˡ {(+ 1 / (2 ℕ.* k)) ⋆ * (∣ x₀ ∣ * ∣ x₀ ∣)} {2ℚᵘ ⋆ * (∣x₀∣⁻¹ * ∣x₀∣⁻¹)} {∣x₀∣⁻¹ * ∣x₀∣⁻¹ * 2ℚᵘ ⋆}
+                                                             (*-comm (2ℚᵘ ⋆) (∣x₀∣⁻¹ * ∣x₀∣⁻¹)) ⟩
+              (+ 1 / (2 ℕ.* k)) ⋆ * (∣ x₀ ∣ * ∣ x₀ ∣) *
+              (∣x₀∣⁻¹ * ∣x₀∣⁻¹ * 2ℚᵘ ⋆)                   ≈⟨ *-assoc ((+ 1 / (2 ℕ.* k)) ⋆) (∣ x₀ ∣ * ∣ x₀ ∣) (∣x₀∣⁻¹ * ∣x₀∣⁻¹ * 2ℚᵘ ⋆) ⟩
+              (+ 1 / (2 ℕ.* k)) ⋆ * (∣ x₀ ∣ * ∣ x₀ ∣ *
+              (∣x₀∣⁻¹  * ∣x₀∣⁻¹ * 2ℚᵘ ⋆))                 ≈⟨ *-congˡ {(+ 1 / (2 ℕ.* k)) ⋆} {∣ x₀ ∣ * ∣ x₀ ∣ * (∣x₀∣⁻¹ * ∣x₀∣⁻¹ * 2ℚᵘ ⋆)}
+                                                             {∣ x₀ ∣ * ∣ x₀ ∣ * (∣x₀∣⁻¹ * ∣x₀∣⁻¹) * 2ℚᵘ ⋆}
+                                                             (≃-symm (*-assoc (∣ x₀ ∣ * ∣ x₀ ∣) (∣x₀∣⁻¹ * ∣x₀∣⁻¹) (2ℚᵘ ⋆))) ⟩
+              (+ 1 / (2 ℕ.* k)) ⋆ * (∣ x₀ ∣ * ∣ x₀ ∣ *
+              (∣x₀∣⁻¹ * ∣x₀∣⁻¹) * 2ℚᵘ ⋆)                  ≈⟨ *-congˡ {(+ 1 / (2 ℕ.* k)) ⋆} {∣ x₀ ∣ * ∣ x₀ ∣ * (∣x₀∣⁻¹ * ∣x₀∣⁻¹) * 2ℚᵘ ⋆}
+                                                             {1ℝ * 2ℚᵘ ⋆} (*-congʳ {2ℚᵘ ⋆} {∣ x₀ ∣ * ∣ x₀ ∣ * (∣x₀∣⁻¹ * ∣x₀∣⁻¹)} {1ℝ} part5) ⟩
+              (+ 1 / (2 ℕ.* k)) ⋆ * (1ℝ * 2ℚᵘ ⋆)         ≈⟨ ≃-trans {(+ 1 / (2 ℕ.* k)) ⋆ * (1ℝ * 2ℚᵘ ⋆)} {(+ 1 / (2 ℕ.* k)) ⋆ * (2ℚᵘ ⋆)}
+                                                            {(+ 1 / (2 ℕ.* k) ℚ.* 2ℚᵘ) ⋆}
+                                                            (*-congˡ {(+ 1 / (2 ℕ.* k)) ⋆} (*-identityˡ (2ℚᵘ ⋆))) 
+                                                            (≃-symm (⋆-distrib-* (+ 1 / (2 ℕ.* k)) 2ℚᵘ)) ⟩
+              (+ 1 / (2 ℕ.* k) ℚ.* 2ℚᵘ) ⋆                ≈⟨ ⋆-cong {+ 1 / (2 ℕ.* k) ℚ.* 2ℚᵘ} {+ 1 / k} (ℚ.*≡* (solve 1 (λ k ->
+                                                            con (+ 1) :* con (+ 2) :* k := con (+ 1) :* (con (+ 2) :* k :* con (+ 1)))
+                                                            refl (+ k))) ⟩
+              (+ 1 / k) ⋆                                ∎
+          
+              where
+                n = suc n-1
+                xₙ = xs n
+                xₙ⁻¹ = (xₙ ⁻¹) (xₙ≄0 n)
+                x₀⁻¹ = (x₀ ⁻¹) x₀≄0
+                ∣xₙ∣≄0 = x≄0⇒∣x∣≄0 (xₙ≄0 n)
+                ∣x₀∣≄0 = x≄0⇒∣x∣≄0 x₀≄0
+                ∣xₙ∣⁻¹ = (∣ xₙ ∣ ⁻¹) ∣xₙ∣≄0
+                ∣x₀∣⁻¹ = (∣ x₀ ∣ ⁻¹) ∣x₀∣≄0
+
+                abstract
+                  2⁻¹∣x₀∣<∣xₙ∣ : (+ 1 / 2) ⋆ * ∣ x₀ ∣ < ∣ xₙ ∣
+                  2⁻¹∣x₀∣<∣xₙ∣ = begin-strict
+                    (+ 1 / 2) ⋆ * ∣ x₀ ∣            ≈⟨ ≃-refl ⟩
+                    (1ℚᵘ ℚ.- (+ 1 / 2)) ⋆ * ∣ x₀ ∣  ≈⟨ ≃-trans
+                                                       (*-congʳ {∣ x₀ ∣} (⋆-distrib-to-p⋆-q⋆ 1ℚᵘ (+ 1 / 2)))
+                                                       (*-distribʳ-+ ∣ x₀ ∣ 1ℝ (- ((+ 1 / 2) ⋆))) ⟩
+                    1ℝ * ∣ x₀ ∣ +
+                    (- ((+ 1 / 2) ⋆)) * ∣ x₀ ∣      ≈⟨ +-cong (*-identityˡ ∣ x₀ ∣) (≃-symm (neg-distribˡ-* ((+ 1 / 2) ⋆) ∣ x₀ ∣)) ⟩
+                    ∣ x₀ ∣ - (+ 1 / 2) ⋆ * ∣ x₀ ∣   <⟨ +-monoʳ-< ∣ x₀ ∣ (neg-mono-< (<-respˡ-≃ (∣x-y∣≃∣y-x∣ xₙ x₀)
+                                                       (≤-<-trans (proj₂ (xₙ→x₀ r) n (ℕP.≤-trans (ℕP.m≤n⊔m m₀ n₀) n≥N))
+                                                       (proj₂ arch)))) ⟩
+                    ∣ x₀ ∣ - ∣ x₀ - xₙ ∣            ≤⟨ x≤∣x∣ ⟩
+                    ∣ ∣ x₀ ∣ - ∣ x₀ - xₙ ∣ ∣        ≤⟨ ∣∣x∣-∣y∣∣≤∣x-y∣ x₀ (x₀ - xₙ) ⟩
+                    ∣ x₀ - (x₀ - xₙ) ∣             ≈⟨ ∣-∣-cong (≃-trans
+                                                      (+-congʳ x₀ (neg-distrib-+ x₀ (- xₙ)))
+                                                      (≃-symm (+-assoc x₀ (- x₀) (- (- xₙ))))) ⟩
+                    ∣ x₀ - x₀ - (- xₙ) ∣           ≈⟨ ∣-∣-cong (≃-trans (+-cong (+-inverseʳ x₀) (neg-involutive xₙ)) (+-identityˡ xₙ)) ⟩
+                    ∣ xₙ ∣                          ∎
+
+                  part1 : xₙ⁻¹ - x₀⁻¹ ≃ xₙ⁻¹ * x₀⁻¹ * (x₀ - xₙ)
+                  part1 = ≃-symm (begin-equality
+                    xₙ⁻¹ * x₀⁻¹ * (x₀ - xₙ)                 ≈⟨ *-distribˡ-+ (xₙ⁻¹ * x₀⁻¹) x₀ (- xₙ) ⟩
+                    xₙ⁻¹ * x₀⁻¹ * x₀ + xₙ⁻¹ * x₀⁻¹ * (- xₙ) ≈⟨ +-cong
+                                                               (≃-trans (≃-trans
+                                                                        (*-assoc xₙ⁻¹ x₀⁻¹ x₀)
+                                                                        (*-congˡ {xₙ⁻¹} (*-inverseˡ x₀ x₀≄0)))
+                                                                        (*-identityʳ xₙ⁻¹))
+                                                               (≃-symm (neg-distribʳ-* (xₙ⁻¹ * x₀⁻¹) xₙ)) ⟩
+                    xₙ⁻¹ - xₙ⁻¹ * x₀⁻¹ * xₙ                 ≈⟨ +-congʳ xₙ⁻¹ (-‿cong (≃-trans (≃-trans (≃-trans
+                                                               (*-comm (xₙ⁻¹ * x₀⁻¹) xₙ)
+                                                               (≃-symm (*-assoc xₙ xₙ⁻¹ x₀⁻¹)))
+                                                               (*-congʳ {x₀⁻¹} (*-inverseʳ xₙ (xₙ≄0 n))))
+                                                               (*-identityˡ x₀⁻¹))) ⟩
+                    xₙ⁻¹ - x₀⁻¹                              ∎)
+
+                  part2 : ∣ xₙ⁻¹ - x₀⁻¹ ∣ ≃ ∣xₙ∣⁻¹ * ∣x₀∣⁻¹ * ∣ x₀ - xₙ ∣
+                  part2 = begin-equality
+                    ∣ xₙ⁻¹ - x₀⁻¹ ∣                   ≈⟨ ∣-∣-cong part1 ⟩
+                    ∣ xₙ⁻¹ * x₀⁻¹ * (x₀ - xₙ) ∣       ≈⟨ ∣x*y∣≃∣x∣*∣y∣ (xₙ⁻¹ * x₀⁻¹) (x₀ - xₙ) ⟩
+                    ∣ xₙ⁻¹ * x₀⁻¹ ∣ * ∣ x₀ - xₙ ∣     ≈⟨ *-congʳ {∣ x₀ - xₙ ∣} (∣x*y∣≃∣x∣*∣y∣ xₙ⁻¹ x₀⁻¹) ⟩
+                    ∣ xₙ⁻¹ ∣ * ∣ x₀⁻¹ ∣ * ∣ x₀ - xₙ ∣ ≈⟨ *-congʳ {∣ x₀ - xₙ ∣} (≃-symm (*-cong
+                                                         (∣x∣⁻¹≃∣x⁻¹∣ {xₙ} ∣xₙ∣≄0 (xₙ≄0 n))
+                                                         (∣x∣⁻¹≃∣x⁻¹∣ {x₀} ∣x₀∣≄0 x₀≄0))) ⟩
+                    ∣xₙ∣⁻¹ * ∣x₀∣⁻¹ * ∣ x₀ - xₙ ∣      ∎
+
+                  part3 : ∣xₙ∣⁻¹ < 2ℚᵘ ⋆ * ∣x₀∣⁻¹
+                  part3 = let 2⁻¹≄0 = ∣↥p∣≢0⇒p⋆≄0 (+ 1 / 2) _
+                                    ; 2⁻¹∣x₀∣≄0 = x≄0∧y≄0⇒x*y≄0 {(+ 1 / 2) ⋆} {∣ x₀ ∣} 2⁻¹≄0 ∣x₀∣≄0 in begin-strict
+                        ∣xₙ∣⁻¹                                           <⟨ x<y∧posx,y⇒y⁻¹<x⁻¹ {(+ 1 / 2) ⋆ * ∣ x₀ ∣} {∣ xₙ ∣}
+                                                                            2⁻¹∣x₀∣<∣xₙ∣ 2⁻¹∣x₀∣≄0 ∣xₙ∣≄0
+                                                                            (posx,y⇒posx*y {(+ 1 / 2) ⋆} {∣ x₀ ∣}
+                                                                              (posp⇒posp⋆ (+ 1 / 2) _) (x≄0⇒pos∣x∣ {x₀} x₀≄0))
+                                                                            (x≄0⇒pos∣x∣ {xₙ} (xₙ≄0 n)) ⟩
+                        (((+ 1 / 2) ⋆ * ∣ x₀ ∣) ⁻¹) 2⁻¹∣x₀∣≄0            ≈⟨ ⁻¹-distrib-* {(+ 1 / 2) ⋆} {∣ x₀ ∣} 2⁻¹≄0 ∣x₀∣≄0 2⁻¹∣x₀∣≄0 ⟩
+                        (((+ 1 / 2) ⋆) ⁻¹) 2⁻¹≄0 * ∣x₀∣⁻¹                ≈⟨ *-congʳ {∣x₀∣⁻¹} (⋆-distrib-⁻¹ (+ 1 / 2) 2⁻¹≄0) ⟩
+                        2ℚᵘ ⋆ * ∣x₀∣⁻¹                                    ∎
+
+                  part4 : ∣ x₀ - xₙ ∣ < (+ 1 / (2 ℕ.* k)) ⋆ * (∣ x₀ ∣ * ∣ x₀ ∣)
+                  part4 = begin-strict
+                    ∣ x₀ - xₙ ∣                             ≈⟨ ∣x-y∣≃∣y-x∣ x₀ xₙ ⟩
+                    ∣ xₙ - x₀ ∣                             <⟨ proj₂ m₀-getter n (ℕP.≤-trans (ℕP.m≤m⊔n m₀ n₀) n≥N) ⟩
+                    (+ 1 / (2 ℕ.* k)) ⋆ * (∣ x₀ ∣ * ∣ x₀ ∣)   ∎
+
+                  part5 : (∣ x₀ ∣ * ∣ x₀ ∣) * (∣x₀∣⁻¹ * ∣x₀∣⁻¹) ≃ 1ℝ
+                  part5 = begin-equality
+                    (∣ x₀ ∣ * ∣ x₀ ∣) * (∣x₀∣⁻¹ * ∣x₀∣⁻¹) ≈⟨ *-assoc ∣ x₀ ∣ ∣ x₀ ∣ (∣x₀∣⁻¹ * ∣x₀∣⁻¹) ⟩
+                    ∣ x₀ ∣ * (∣ x₀ ∣ * (∣x₀∣⁻¹ * ∣x₀∣⁻¹)) ≈⟨ *-congˡ {∣ x₀ ∣} {∣ x₀ ∣ * (∣x₀∣⁻¹ * ∣x₀∣⁻¹)} {1ℝ * ∣x₀∣⁻¹}
+                                                             (≃-trans (≃-symm (*-assoc ∣ x₀ ∣ ∣x₀∣⁻¹ ∣x₀∣⁻¹))
+                                                             (*-congʳ {∣x₀∣⁻¹} {∣ x₀ ∣ * ∣x₀∣⁻¹} {1ℝ}
+                                                             (*-inverseʳ ∣ x₀ ∣ ∣x₀∣≄0)))⟩
+                    ∣ x₀ ∣ * (1ℝ * ∣x₀∣⁻¹)                ≈⟨ *-congˡ {∣ x₀ ∣} {1ℝ * ∣x₀∣⁻¹} {∣x₀∣⁻¹} (*-identityˡ ∣x₀∣⁻¹) ⟩
+                    ∣ x₀ ∣ * ∣x₀∣⁻¹                       ≈⟨ *-inverseʳ ∣ x₀ ∣ ∣x₀∣≄0 ⟩
+                    1ℝ                                     ∎
 
 ∣xₙ∣→∣x₀∣ : ∀ {xs : ℕ -> ℝ} -> (x→x₀ : xs isConvergent) -> (λ n -> ∣ xs n ∣) ConvergesTo ∣ proj₁ x→x₀ ∣
 ∣xₙ∣→∣x₀∣ {xs} (x₀ , con* x→x₀) = con* λ {(suc k-1) -> let k = suc k-1 in
