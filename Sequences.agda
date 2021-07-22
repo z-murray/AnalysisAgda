@@ -1020,27 +1020,6 @@ private
         ∣ y - w ∣             ≤⟨ x≤y⊔x ∣ y - w ∣ ∣ x - z ∣ ⟩
         ∣ x - z ∣ ⊔ ∣ y - w ∣   ∎
 
-test-proof : ∀ {xs : ℕ -> ℝ} -> (xₙ→ℓ : xs isConvergent) -> (xₙ≄0 : ∀ n -> xs n ≄0) -> (ℓ≄0 : (proj₁ xₙ→ℓ) ≄0) ->
-             (λ n -> (xs n ⁻¹) (xₙ≄0 n)) ConvergesTo ((proj₁ xₙ→ℓ) ⁻¹) ℓ≄0
-test-proof {xs} (ℓ , con* xₙ→ℓ) xₙ≄0 ℓ≄0 = con* main
-  where
-    open ≤-Reasoning
-    open ℤ-Solver.+-*-Solver
-    main : ∀ k -> {k≢0 : k ≢0} -> ∃ λ Nₖ-1 -> ∀ n -> n ℕ.≥ suc Nₖ-1 ->
-           ∣ (xs n ⁻¹) (xₙ≄0 n) - (ℓ ⁻¹) ℓ≄0 ∣ ≤ ((+ 1 / k) {k≢0}) ⋆
-    main (suc k-1) = ℕ.pred N , sub
-      where
-        k = suc k-1
-        m₀-getter = fast-ε-convergence {xs} (ℓ , con* xₙ→ℓ) ((+ 1 / (2 ℕ.* k)) ⋆ * (∣ ℓ ∣ * ∣ ℓ ∣)) {!!}
-        m₀ = suc {!!}
-        n₀ = suc {!!}
-        N = m₀ ℕ.⊔ n₀
-
-        sub : ∀ n -> n ℕ.≥ N -> ∣ (xs n ⁻¹) (xₙ≄0 n) - (ℓ ⁻¹) ℓ≄0 ∣ ≤ (+ 1 / k) ⋆
-        sub n n≥N = begin
-          ∣ (xs n ⁻¹) (xₙ≄0 n) - (ℓ ⁻¹) ℓ≄0 ∣ ≤⟨ {!!} ⟩
-          (+ 1 / k) ⋆                         ∎
-
 xₙ⊔yₙ→x₀⊔y₀ : ∀ {xs ys : ℕ -> ℝ} -> (xₙ→x₀ : xs isConvergent) -> (yₙ→y₀ : ys isConvergent) ->
               (λ n -> xs n ⊔ ys n) ConvergesTo (proj₁ xₙ→x₀ ⊔ proj₁ yₙ→y₀)
 xₙ⊔yₙ→x₀⊔y₀ {xs} {ys} (x₀ , con* xₙ→x₀) (y₀ , con* yₙ→y₀) = con* (λ {(suc k-1) ->
@@ -1053,11 +1032,6 @@ xₙ⊔yₙ→x₀⊔y₀ {xs} {ys} (x₀ , con* xₙ→x₀) (y₀ , con* yₙ�
   (+ 1 / k) ⋆                    ∎}})
   where open ≤-Reasoning
 
-{-
-(xₙ) k
-
-∑ᵢ₌ₖⁿ xᵢ
--}
 SeriesOf_From_ : (ℕ -> ℝ) -> ℕ -> (ℕ -> ℝ)
 (SeriesOf xs From i) n = ∑ xs i n
 
@@ -1327,18 +1301,111 @@ cauchy-getter {xs} (cauchy* hyp) = hyp
   where open ≤-Reasoning
 
 {-
-Have: ∃ ε ∀ N ∃m,n≥N (∣yₘ - yₙ∣ ≥ ε)
-      ∃ N ∀ n≥N (xₙ ≥ yₙ)
-WTS: ∃ ε ∀ N ∃ m,n≥N (∣xₘ - xₙ∣ ≥ ε)
-
-Let ε∈ℝ̂⁺ s.t., for some N₁∈ℕ, there is m,n ≥ N₁ s.t. ∣yₘ - yₙ∣ ≥ ε.
-Let N₂∈ℕ s.t. n ≥ N₂ implies xₙ ≥ yₙ.
-Let N = max{N₁, N₂}.
+(xₙ) is a subsequence of (yₙ) if there is h : ℕ -> ℕ such that
+                              xₙ = yₕ₍ₙ₎                 (n∈ℕ)
+and
+                            h(n) < h(n+1)                (n∈ℕ).
 -}
-comparison-test-divergence : ∀ {xs ys} -> SeriesOf ys isDivergent ->
-                             (∃ λ N-1 -> ∀ n -> n ℕ.≥ suc N-1 -> xs n ≥ ys n) ->
+data _SubsequenceOf_ : Rel (ℕ -> ℝ) 0ℓ where
+  subseq* : {xs ys : ℕ -> ℝ} -> (∃ λ (f : ℕ -> ℕ) ->
+            (∀ n -> xs n ≃ ys (f n)) × (∀ n -> f n ℕ.< f (suc n))) ->
+            xs SubsequenceOf ys
+
+{-
+Not sure what a more meaningful name for this is yet.
+-}
+subsequence-helper : ∀ {f : ℕ -> ℕ} -> ∀ (k : ℕ) -> (∀ n -> f n ℕ.< f (suc n)) ->
+                     ∃ λ (N : ℕ) -> ∀ n -> n ℕ.> N -> f n ℕ.> k  
+subsequence-helper {f} zero hyp = 0 , λ {(suc n-1) n>0 → ℕP.<-transʳ ℕ.z≤n (hyp n-1)}
+subsequence-helper {f} (suc k) hyp = let ih = subsequence-helper k hyp; N = suc (proj₁ ih) in
+                                     N , λ {(suc n-1) (ℕ.s≤s n>N) → ℕP.<-transʳ (proj₂ ih n-1 n>N) (hyp n-1)}
+
+f[n]<f[n+1]⇒n≤f[n] : ∀ {f : ℕ -> ℕ} -> (∀ n -> f n ℕ.< f (suc n)) -> (∀ n -> n ℕ.≤ f n)
+f[n]<f[n+1]⇒n≤f[n] {f} f[n]<f[n+1] 0 = ℕ.z≤n
+f[n]<f[n+1]⇒n≤f[n] {f} f[n]<f[n+1] (suc n) = ℕP.<-transʳ (f[n]<f[n+1]⇒n≤f[n] f[n]<f[n+1] n) (f[n]<f[n+1] n)
+
+{-
+As per Bishop, the series ∑xᵢ is divergent if there is positive r∈ℝ such that ∣xₙ∣ ≥ r for infinitely many n.
+Alternatively, ∑xᵢ is divergent if there is positive r∈ℝ and a subsequence (yₙ) of (xₙ) such that ∣yₙ∣ ≥ r for
+all n∈ℕ.
+
+Proposition:
+  If there is positive r∈ℝ such that r ≤ ∣xₙ∣ for infinitely many n, then ∑xᵢ diverges.
+Proof:
+  Let (xₕ₍ₙ₎) be a subsequence of (xₙ) such that r ≤ ∣xₕ₍ₙ₎∣ for all n∈ℕ. Note that h(n) < h(n+1) for all n∈ℕ, 
+so n ≤ h(n) for all n∈ℕ. Let k∈ℕ. Then k ≤ f(k), and we have:
+  ∣ ∑ xs 0 h(k)+1 - ∑ xs 0 h(k) ∣ = ∣ xₕ₍ₖ₎ ∣ ≥ r.
+Thus the sum diverges.                                                                                       □
+-}
+subsequence-divergence-test : ∀ {xs : ℕ -> ℝ} ->
+                              (∃ λ (r : ℝ) -> ∃ λ (ys : ℕ -> ℝ) -> Positive r × ys SubsequenceOf xs × (∀ n -> ∣ ys n ∣ ≥ r)) ->
+                              SeriesOf xs isDivergent
+subsequence-divergence-test {xs} (r , ys , posr , subseq* (f , yₙ⊂xₙ) , ∣yₙ∣≥r) =
+                            r , div* posr (λ k -> let k≤f[k] = f[n]<f[n+1]⇒n≤f[n] (proj₂ yₙ⊂xₙ) k in
+                            suc (f k) , f k , ℕP.≤-trans k≤f[k] (ℕP.n≤1+n (f k)) , k≤f[k] , (begin
+  r                                          ≤⟨ ∣yₙ∣≥r k ⟩
+  ∣ ys k ∣                                   ≈⟨ ∣-∣-cong (proj₁ yₙ⊂xₙ k) ⟩
+  ∣ xs (f k) ∣                               ≈⟨ ∣-∣-cong (≃-symm (+-identityʳ (xs (f k)))) ⟩
+  ∣ xs (f k) + 0ℝ ∣                          ≈⟨ ∣-∣-cong (+-congʳ (xs (f k)) (≃-symm (+-inverseʳ (∑₀ xs (f k))))) ⟩
+  ∣ xs (f k) + (∑₀ xs (f k) - ∑₀ xs (f k)) ∣ ≈⟨ ∣-∣-cong (solve 3 (λ a b c -> a :+ (b :+ c) := b :+ a :+ c)
+                                                ≃-refl (xs (f k)) (∑₀ xs (f k)) (- ∑₀ xs (f k))) ⟩
+  ∣ ∑₀ xs (suc (f k)) - ∑₀ xs (f k) ∣         ∎))
+  where
+    open ≤-Reasoning
+    open ℝ-+-*-Solver
+
+{-
+Proposition:
+  Let (yₙ) be a sequence with a nonnegative tail (i.e. ∃N₁∈ℕ ∀n≥N₁[yₙ ≥ 0]). Suppose that
+∃N₂∈ℕ ∀n≥N₂[xₙ ≥ yₙ], and that ∑yᵢ is divergent. Then ∑xᵢ is divergent.
+Proof:
+  Let ε>0 such that ∑yᵢ diverges by ε. Define N = max{N₁, N₂}. Then there is m,n ≥ N such that
+                                     ∑ᵢ₌ₙᵐ yᵢ = ∣∑ᵢ₌ₙᵐ yᵢ∣ ≥ ε.
+Suppose, WLOG, that m ≥ n. Then:
+                       ∣∑ᵢ₌ₙᵐ xᵢ∣ = ∑ᵢ₌ₙᵐ xᵢ
+                                  ≥ ∑ᵢ₌ₙᵐ yᵢ
+                                  ≥ ε.
+Thus ∑xᵢ diverges by ε.                                                                      □
+
+Bishop assumes that (xₙ) is a sequence of nonnegative terms, but we don't need that assumption.
+We can generalize the statement more so that, instead of having (yₙ) be nonnegative, 
+have it eventually be nonnegative.
+
+This might bloat the hypotheses unnecessarily though. It might be better to create a proof that
+if (yₙ) is the tail end of (xₙ) and (xₙ) diverges, then so does (yₙ).
+-}
+comparison-test-divergence : ∀ {xs ys : ℕ -> ℝ} -> (∀ n -> NonNegative (ys n)) ->
+                             SeriesOf ys isDivergent -> (∃ λ N -> ∀ n -> n ℕ.≥ N -> xs n ≥ ys n) ->
                              SeriesOf xs isDivergent
-comparison-test-divergence {xs} {ys} ysDiv xₙ≥yₙ = {!!}
+comparison-test-divergence {xs} {ys} yₙ≥0 (ε , div* posε div∑yₙ) (N₁ , n≥N₁⇒xₙ≥yₙ) =
+                           ε , div* posε main
+  where
+    main : ∀ k -> {k ≢0} -> ∃ λ m -> ∃ λ n -> m ℕ.≥ k × n ℕ.≥ k × ∣ ∑₀ xs m - ∑₀ xs n ∣ ≥ ε
+    main (suc N₂-1) = let m = proj₁ (div∑yₙ N); n = proj₁ (proj₂ (div∑yₙ N))
+                            ; N≤m = proj₁ (proj₂ (proj₂ (div∑yₙ N))); N≤n = proj₁ (proj₂ (proj₂ (proj₂ (div∑yₙ N))))
+                            ; ∑yₙhyp = proj₂ (proj₂ (proj₂ (proj₂ (div∑yₙ N)))) in
+                            m , n , ℕP.≤-trans N₂≤N N≤m , ℕP.≤-trans N₂≤N N≤n ,
+                            [ (λ m≥n -> sub m n N≤m N≤n m≥n ∑yₙhyp) ,
+                              (λ m≤n -> ≤-respʳ-≃ (∣x-y∣≃∣y-x∣ (∑₀ xs n) (∑₀ xs m)) (sub n m N≤n N≤m m≤n
+                                        (≤-respʳ-≃ (∣x-y∣≃∣y-x∣ (∑₀ ys m) (∑₀ ys n)) ∑yₙhyp))) ]′ (ℕP.≤-total n m)
+      where
+        {-
+          Should generalize ∑-mono-≤ before proceeding. It should be
+          ∑-mono-≤ : ∀ {xs ys} -> ∀ m n -> m ℕ.≤ n -> (∀ k -> m ≤ k ≤ n -> xs k ≤ ys k) ->
+                     ∑ xs m n ≤ ∑ xs m n.
+        -}
+        open ≤-Reasoning
+        N₂ = suc N₂-1
+        N = (suc N₁) ℕ.⊔ N₂
+        N₁≤N = ℕP.≤-trans (ℕP.n≤1+n N₁) (ℕP.m≤m⊔n (suc N₁) N₂)
+        N₂≤N = ℕP.m≤n⊔m (suc N₁) N₂
+        sub : ∀ m n -> m ℕ.≥ N -> n ℕ.≥ N -> m ℕ.≥ n -> ∣ ∑₀ ys m - ∑₀ ys n ∣ ≥ ε -> ∣ ∑₀ xs m - ∑₀ xs n ∣ ≥ ε
+        sub (suc m-1) (suc n-1) m≥N n≥N m≥n hyp = let m = suc m-1; n = suc n-1 in begin {!!}
+          ε            ≤⟨ hyp ⟩
+          ∣ ∑ ys n m ∣ ≈⟨ 0≤x⇒∣x∣≃x {!!} ⟩
+          ∑ ys n m     ≤⟨ {!!} ⟩ 
+          ∑ xs n m     ≤⟨ x≤∣x∣ ⟩        
+          ∣ ∑ xs n m ∣  ∎
 
 pow : ℝ -> ℕ -> ℝ
 pow x 0 = 1ℝ
@@ -1357,45 +1424,6 @@ xⁿxᵐ≃xⁿ⁺ᵐ x (suc n) m = begin
   pow x ((1 ℕ.+ n) ℕ.+ m)  ∎
   where open ≃-Reasoning
 
-{-
-rⁿ = r²ᵐ⁺¹ 
-   = rᵐrᵐr
-   < rᵐrᵐ
-   < (k-1)⁻¹ * (k-1)⁻¹
-   ≤ k⁻¹.
-
-rⁿ ≤ 2⁻¹?
-
-rⁿ = rᵐrᵐr
-   ≤ k⁻²r
-   ≤ 2k⁻²
-   = 2/k²
-   
-2/k² ≤ 1/(k+1)
-<->
-2k + 2 ≤ k²
-
-Proof does not work. Consider k = 2. Then, for the even case (for example), we have:
-rⁿ = r²ᵐ
-   = rᵐrᵐ
-   ≤ (k-1)⁻¹ * (k-1)⁻¹
-   = 1 * 1
-   = 1
-   ≰ 2⁻¹ = k⁻¹.
-So the proof fails.
-
-0 < r < 1
-∣rⁿ∣ < ε
-∣r∣ⁿ < ε
-rⁿ < ε
-r = t⁻¹
-(t⁻¹)ⁿ < ε
-ε⁻¹ < tⁿ
-log ε⁻¹ / log t < n
-
-Positive (1 - r)
-∃n∈ℕ (1 - rₙ > n⁻¹)
--}
 ∣r∣<1⇒rⁿ→0 : ∀ {r} -> ∣ r ∣ < 1ℝ -> (λ n -> pow r n) ConvergesTo 0ℝ
 ∣r∣<1⇒rⁿ→0 {r} ∣r∣<1 = {!!}
   where
