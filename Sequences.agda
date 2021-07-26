@@ -548,12 +548,13 @@ p⋆≄0⇒∣↥p∣≢0 (mkℚᵘ (-[1+_] n) denominator-2) (inj₂ 0<p⋆) = 
 ∣↥p∣≢0⇒p⋆≄0 (mkℚᵘ +[1+ n ] d-1) ∣↥p∣≢0 = inj₂ (p<q⇒p⋆<q⋆ 0ℚᵘ (+[1+ n ] / (suc d-1)) (ℚP.positive⁻¹ _))
 ∣↥p∣≢0⇒p⋆≄0 (mkℚᵘ (-[1+_] n) d-1) ∣↥p∣≢0 = inj₁ (p<q⇒p⋆<q⋆ (-[1+_] n / (suc d-1)) 0ℚᵘ (ℚP.negative⁻¹ _))
 
-⁻¹-involutive : ∀ {x} -> (x≄0 : x ≄0) ->
+⁻¹-involutive : ∀ {x} -> (x≄0 : x ≄0) -> (x⁻¹≄0 : (x ⁻¹) x≄0 ≄0) ->
+                (((x ⁻¹) x≄0) ⁻¹) x⁻¹≄0 ≃ x
+⁻¹-involutive {x} x≄0 x⁻¹≄0 = let x⁻¹ = (x ⁻¹) x≄0 in ≃-symm (⁻¹-unique x x⁻¹ x⁻¹≄0 (*-inverseʳ x x≄0))
+
+⁻¹-involutive-default : ∀ {x} -> (x≄0 : x ≄0) ->
                 (((x ⁻¹) x≄0) ⁻¹) ([ (λ x<0 -> inj₁ (x<0⇒x⁻¹<0 {x} x≄0 x<0)) , (λ 0<x -> inj₂ (0<x⇒0<x⁻¹ {x} x≄0 0<x))]′ x≄0) ≃ x
-⁻¹-involutive {x} x≄0 = let x⁻¹ = (x ⁻¹) x≄0
-                                ; x⁻¹≄0 = [ (λ x<0 -> inj₁ (x<0⇒x⁻¹<0 {x} x≄0 x<0)) , (λ 0<x -> inj₂ (0<x⇒0<x⁻¹ {x} x≄0 0<x))]′ x≄0 in
-                        ≃-symm (⁻¹-unique x x⁻¹ x⁻¹≄0 (*-inverseʳ x x≄0))
-  where open ≃-Reasoning
+⁻¹-involutive-default {x} x≄0 = ⁻¹-involutive {x} x≄0 ([ (λ x<0 -> inj₁ (x<0⇒x⁻¹<0 {x} x≄0 x<0)) , (λ 0<x -> inj₂ (0<x⇒0<x⁻¹ {x} x≄0 0<x))]′ x≄0)
 
 ⋆-distrib-⁻¹ : ∀ p -> (p⋆≄0 : (p ⋆) ≄0) -> ((p ⋆) ⁻¹) p⋆≄0 ≃ ((ℚ.1/ p) {p⋆≄0⇒∣↥p∣≢0 p p⋆≄0}) ⋆
 ⋆-distrib-⁻¹ p p⋆≄0 = let p⁻¹ = (ℚ.1/ p) {p⋆≄0⇒∣↥p∣≢0 p p⋆≄0}; p⋆⁻¹ = ((p ⋆) ⁻¹) p⋆≄0 in
@@ -635,7 +636,7 @@ archimedean-ℝ₂ {x} posx = let x≄0 = inj₂ (posx⇒0<x posx); x⁻¹ = (x 
                                   ; x⁻¹≄0 = [ (λ x<0 -> inj₁ (x<0⇒x⁻¹<0 {x} x≄0 x<0)) , (λ 0<x -> inj₂ (0<x⇒0<x⁻¹ {x} x≄0 0<x))]′ x≄0
                                   ; n = suc (proj₁ arch) in
                           ℕ.pred n , <-respˡ-≃ (⋆-distrib-⁻¹ (+ n / 1) (∣↥p∣≢0⇒p⋆≄0 (+ n / 1) _))
-                          (<-respʳ-≃ {_} {(x⁻¹ ⁻¹) x⁻¹≄0} {x} (⁻¹-involutive {x} x≄0)
+                          (<-respʳ-≃ {_} {(x⁻¹ ⁻¹) x⁻¹≄0} {x} (⁻¹-involutive-default {x} x≄0)
                           (x<y∧posx,y⇒y⁻¹<x⁻¹ {x⁻¹} {(+ n / 1) ⋆} (proj₂ arch) x⁻¹≄0 (∣↥p∣≢0⇒p⋆≄0 (+ n / 1) _) (posx⇒posx⁻¹ {x} x≄0 posx)
                           (0<x⇒posx (p<q⇒p⋆<q⋆ 0ℚᵘ (+ n / 1) (ℚP.positive⁻¹ _)))))
   where open ≤-Reasoning
@@ -1236,6 +1237,51 @@ neg-flips-∑ xs 0 (suc n) = ≃-symm (+-identityˡ _)
 neg-flips-∑ xs (suc m) zero = ≃-trans (-‿cong (+-identityˡ _)) (neg-involutive (∑₀ xs (suc m)))
 neg-flips-∑ xs (suc m) (suc n) = -[x-y]≃y-x (∑₀ xs (suc n)) (∑₀ xs (suc m))
 
+∑ᵀ-mono-≤-weak : ∀ {xs ys : ℕ -> ℝ} -> ∀ {m n} -> (m≤n : m ℕ.≤ n) -> (∀ k -> m ℕ.≤ k × k ℕ.≤ n -> xs k ≤ ys k) ->
+                 ∑ᵀ xs m n m≤n ≤ ∑ᵀ ys m n m≤n
+∑ᵀ-mono-≤-weak {xs} {ys} {m} {n} m≤n hyp with ≤⇒≡∨< m n m≤n
+... | inj₁ refl = ≤-refl
+∑ᵀ-mono-≤-weak {xs} {ys} {m} {suc n-1} m≤n hyp | inj₂ (ℕ.s≤s m<n) = +-mono-≤
+                             (∑ᵀ-mono-≤-weak m<n (λ k m≤k≤n-1 -> hyp k (proj₁ m≤k≤n-1 , ℕP.≤-trans (proj₂ m≤k≤n-1) (ℕP.n≤1+n n-1))))
+                             (hyp n-1 (m<n , ℕP.n≤1+n n-1))
+
+∑-mono-≤-weak : ∀ {xs ys : ℕ -> ℝ} -> ∀ {m n} -> m ℕ.≤ n -> (∀ k -> m ℕ.≤ k × k ℕ.≤ n -> xs k ≤ ys k) ->
+                ∑ xs m n ≤ ∑ ys m n
+∑-mono-≤-weak {xs} {ys} {m} {n} m≤n hyp = begin
+  ∑ xs m n      ≈⟨ ∑-to-∑ᵀ xs m n m≤n ⟩
+  ∑ᵀ xs m n m≤n ≤⟨ ∑ᵀ-mono-≤-weak m≤n hyp ⟩
+  ∑ᵀ ys m n m≤n ≈⟨ ≃-symm (∑-to-∑ᵀ ys m n m≤n) ⟩
+  ∑ ys m n       ∎
+  where open ≤-Reasoning
+
+∑0≃0 : ∀ m n -> ∑ (λ k -> 0ℝ) m n ≃ 0ℝ
+∑0≃0 zero n = lem n
+  where
+    lem : ∀ n -> ∑₀ (λ k -> 0ℝ) n ≃ 0ℝ
+    lem zero = ≃-refl
+    lem (suc n) = ≃-trans (+-identityʳ (∑₀ (λ k -> 0ℝ) n)) (lem n)
+∑0≃0 (suc m) n = begin
+  ∑₀ (λ k -> 0ℝ) n - (∑₀ (λ k -> 0ℝ) m + 0ℝ) ≈⟨ +-cong (∑0≃0 0 n) (-‿cong (∑0≃0 0 (suc m))) ⟩
+  0ℝ - 0ℝ                                    ≈⟨ +-inverseʳ 0ℝ ⟩
+  0ℝ                                          ∎
+  where open ≃-Reasoning
+
+0≤xₙ⇒0≤∑xₙ : ∀ {xs : ℕ -> ℝ} -> ∀ {m n} -> m ℕ.≤ n -> (∀ k -> m ℕ.≤ k × k ℕ.≤ n -> 0ℝ ≤ xs k) ->
+             0ℝ ≤ ∑ xs m n
+0≤xₙ⇒0≤∑xₙ {xs} {m} {n} m≤n hyp = begin
+  0ℝ                ≈⟨ ≃-symm (∑0≃0 m n) ⟩
+  ∑ (λ k -> 0ℝ) m n ≤⟨ ∑-mono-≤-weak m≤n hyp ⟩
+  ∑ xs m n           ∎
+  where open ≤-Reasoning
+
+nonNegxₙ⇒nonNeg∑xₙ : ∀ {xs : ℕ -> ℝ} -> ∀ {m n} -> m ℕ.≤ n -> (∀ k -> m ℕ.≤ k × k ℕ.≤ n -> NonNegative (xs k)) ->
+                     NonNegative (∑ xs m n)
+nonNegxₙ⇒nonNeg∑xₙ {xs} {m} {n} m≤n hyp = nonNeg-cong (lem (∑ xs m n))
+                                          (0≤xₙ⇒0≤∑xₙ m≤n (λ k m≤k≤n -> nonNeg-cong (≃-symm (lem (xs k))) (hyp k m≤k≤n)))
+  where
+    lem : ∀ x -> x - 0ℝ ≃ x
+    lem x = ≃-trans (+-congʳ x (≃-symm 0≃-0)) (+-identityʳ x)
+      
 cauchy-convergence : ∀ {xs : ℕ -> ℝ} ->
                           (∀ k -> {k≢0 : k ≢0} -> ∃ λ Nₖ-1 -> ∀ m n -> m ℕ.≥ n -> m ℕ.≥ suc Nₖ-1 -> n ℕ.≥ suc Nₖ-1 -> ∣ xs m - xs n ∣ ≤ ((+ 1 / k) {k≢0}) ⋆) ->
                           xs isConvergent
@@ -1367,49 +1413,51 @@ Suppose, WLOG, that m ≥ n. Then:
                                   ≥ ε.
 Thus ∑xᵢ diverges by ε.                                                                      □
 
-Bishop assumes that (xₙ) is a sequence of nonnegative terms, but we don't need that assumption.
-We can generalize the statement more so that, instead of having (yₙ) be nonnegative, 
-have it eventually be nonnegative.
+Bishop assumes that 
+  (i)  (xₙ) is a sequence of nonnegative terms, and
+  (ii) (yₙ) is a nonnegative sequence.
 
-This might bloat the hypotheses unnecessarily though. It might be better to create a proof that
-if (yₙ) is the tail end of (xₙ) and (xₙ) diverges, then so does (yₙ).
+The first could obviously be removed since xₙ ≥ yₙ eventually, and the second could be modified
+so that yₙ ≥ 0 eventually. The distinction doesn't matter informally of course, but we adopt it
+since we don't have the benefit of saying "it's a trivial extension of this result" without proof.
 -}
-comparison-test-divergence : ∀ {xs ys : ℕ -> ℝ} -> (∀ n -> NonNegative (ys n)) ->
-                             SeriesOf ys isDivergent -> (∃ λ N -> ∀ n -> n ℕ.≥ N -> xs n ≥ ys n) ->
+comparison-test-divergence : ∀ {xs ys : ℕ -> ℝ} -> (∃ λ N₁ -> ∀ n -> n ℕ.≥ N₁ -> NonNegative (ys n)) ->
+                             SeriesOf ys isDivergent -> (∃ λ N₂ -> ∀ n -> n ℕ.≥ N₂ -> xs n ≥ ys n) ->
                              SeriesOf xs isDivergent
-comparison-test-divergence {xs} {ys} yₙ≥0 (ε , div* posε div∑yₙ) (N₁ , n≥N₁⇒xₙ≥yₙ) =
-                           ε , div* posε main
+comparison-test-divergence {xs} {ys} (N₁ , n≥N₁⇒yₙ≥0) (ε , div* posε div∑yₙ) (N₂ , n≥N₂⇒xₙ≥yₙ) = ε , div* posε main
   where
     main : ∀ k -> {k ≢0} -> ∃ λ m -> ∃ λ n -> m ℕ.≥ k × n ℕ.≥ k × ∣ ∑₀ xs m - ∑₀ xs n ∣ ≥ ε
-    main (suc N₂-1) = let m = proj₁ (div∑yₙ N); n = proj₁ (proj₂ (div∑yₙ N))
+    main (suc N₃-1) = let m = proj₁ (div∑yₙ N); n = proj₁ (proj₂ (div∑yₙ N))
                             ; N≤m = proj₁ (proj₂ (proj₂ (div∑yₙ N))); N≤n = proj₁ (proj₂ (proj₂ (proj₂ (div∑yₙ N))))
                             ; ∑yₙhyp = proj₂ (proj₂ (proj₂ (proj₂ (div∑yₙ N)))) in
-                            m , n , ℕP.≤-trans N₂≤N N≤m , ℕP.≤-trans N₂≤N N≤n ,
+                            m , n , ℕP.≤-trans N₃≤N N≤m , ℕP.≤-trans N₃≤N N≤n ,
                             [ (λ m≥n -> sub m n N≤m N≤n m≥n ∑yₙhyp) ,
                               (λ m≤n -> ≤-respʳ-≃ (∣x-y∣≃∣y-x∣ (∑₀ xs n) (∑₀ xs m)) (sub n m N≤n N≤m m≤n
                                         (≤-respʳ-≃ (∣x-y∣≃∣y-x∣ (∑₀ ys m) (∑₀ ys n)) ∑yₙhyp))) ]′ (ℕP.≤-total n m)
       where
-        {-
-          Should generalize ∑-mono-≤ before proceeding. It should be
-          ∑-mono-≤ : ∀ {xs ys} -> ∀ m n -> m ℕ.≤ n -> (∀ k -> m ≤ k ≤ n -> xs k ≤ ys k) ->
-                     ∑ xs m n ≤ ∑ xs m n.
-        -}
         open ≤-Reasoning
-        N₂ = suc N₂-1
-        N = (suc N₁) ℕ.⊔ N₂
-        N₁≤N = ℕP.≤-trans (ℕP.n≤1+n N₁) (ℕP.m≤m⊔n (suc N₁) N₂)
-        N₂≤N = ℕP.m≤n⊔m (suc N₁) N₂
+        N₃ = suc N₃-1
+        N = suc (N₁ ℕ.⊔ N₂ ℕ.⊔ N₃)
+        N₁≤N = ℕP.≤-trans (ℕP.≤-trans (ℕP.m≤m⊔n N₁ N₂) (ℕP.m≤m⊔n (N₁ ℕ.⊔ N₂) N₃)) (ℕP.n≤1+n (ℕ.pred N))
+        N₂≤N = ℕP.≤-trans (ℕP.≤-trans (ℕP.m≤n⊔m N₁ N₂) (ℕP.m≤m⊔n (N₁ ℕ.⊔ N₂) N₃)) (ℕP.n≤1+n (ℕ.pred N))
+        N₃≤N = ℕP.≤-trans (ℕP.m≤n⊔m (N₁ ℕ.⊔ N₂) N₃) (ℕP.n≤1+n (ℕ.pred N))
         sub : ∀ m n -> m ℕ.≥ N -> n ℕ.≥ N -> m ℕ.≥ n -> ∣ ∑₀ ys m - ∑₀ ys n ∣ ≥ ε -> ∣ ∑₀ xs m - ∑₀ xs n ∣ ≥ ε
-        sub (suc m-1) (suc n-1) m≥N n≥N m≥n hyp = let m = suc m-1; n = suc n-1 in begin {!!}
+        sub (suc m-1) (suc n-1) m≥N n≥N m≥n hyp = let m = suc m-1; n = suc n-1 in begin
           ε            ≤⟨ hyp ⟩
-          ∣ ∑ ys n m ∣ ≈⟨ 0≤x⇒∣x∣≃x {!!} ⟩
-          ∑ ys n m     ≤⟨ {!!} ⟩ 
-          ∑ xs n m     ≤⟨ x≤∣x∣ ⟩        
-          ∣ ∑ xs n m ∣  ∎
+          ∣ ∑ ys n m ∣ ≈⟨ nonNegx⇒∣x∣≃x (nonNegxₙ⇒nonNeg∑xₙ m≥n (λ k n≤k≤m -> n≥N₁⇒yₙ≥0 k
+                          (ℕP.≤-trans (ℕP.≤-trans N₁≤N n≥N) (proj₁ n≤k≤m)))) ⟩
+          ∑ ys n m     ≤⟨ ∑-mono-≤-weak m≥n (λ k n≤k≤m -> n≥N₂⇒xₙ≥yₙ k
+                          (ℕP.≤-trans (ℕP.≤-trans N₂≤N n≥N) (proj₁ n≤k≤m))) ⟩
+          ∑ xs n m     ≤⟨ x≤∣x∣ ⟩
+          ∣ ∑ xs n m ∣   ∎
 
 pow : ℝ -> ℕ -> ℝ
 pow x 0 = 1ℝ
 pow x (suc n) = pow x n * x
+
+pow-cong : ∀ {x y} -> ∀ n -> x ≃ y -> pow x n ≃ pow y n
+pow-cong {x} {y} zero x≃y = ≃-refl
+pow-cong {x} {y} (suc n) x≃y = *-cong (pow-cong n x≃y) x≃y
 
 xⁿxᵐ≃xⁿ⁺ᵐ : ∀ x -> ∀ n m -> (pow x n) * (pow x m) ≃ pow x (n ℕ.+ m)
 xⁿxᵐ≃xⁿ⁺ᵐ x zero m = *-identityˡ (pow x m)
@@ -1424,24 +1472,145 @@ xⁿxᵐ≃xⁿ⁺ᵐ x (suc n) m = begin
   pow x ((1 ℕ.+ n) ℕ.+ m)  ∎
   where open ≃-Reasoning
 
-∣r∣<1⇒rⁿ→0 : ∀ {r} -> ∣ r ∣ < 1ℝ -> (λ n -> pow r n) ConvergesTo 0ℝ
-∣r∣<1⇒rⁿ→0 {r} ∣r∣<1 = {!!}
+archimedean-ℝ₃ : ∀ {x} y -> Positive x -> ∃ λ n-1 -> (+ (suc n-1) / 1) ⋆ * x > y
+archimedean-ℝ₃ {x} y posx = {!!}
+
+abstract
+  fast-archimedean-ℝ₃ : ∀ {x} y -> Positive x -> ∃ λ n-1 -> (+ (suc n-1) / 1) ⋆ * x > y
+  fast-archimedean-ℝ₃ = archimedean-ℝ₃
+
+x≤y∧posx⇒y⁻¹≤x⁻¹ : ∀ {x y} -> x ≤ y -> Positive x -> (x≄0 : x ≄0) -> (y≄0 : y ≄0) ->
+                   (y ⁻¹) y≄0 ≤ (x ⁻¹) x≄0
+x≤y∧posx⇒y⁻¹≤x⁻¹ {x} {y} x≤y posx x≄0 y≄0 = {!!}
+
+{-
+∣r∣ < 1
+∣r∣ < ∣r∣ + 2⁻¹(1 - ∣r∣) ≤ ∣r∣ + (1 - ∣r∣) = 1
+-}
+x<z∧y<z⇒∃ε>0[y<x+ε<z] : ∀ {x y z} -> x < z -> y < z -> ∃ λ ε -> Positive ε × y < (x + ε) < z
+x<z∧y<z⇒∃ε>0[y<x+ε<z] {x} {y} {z} x<z y<z = {!!}
+
+[x+y]*[z+w]≃xz+xw+yz+yw : ∀ x y z w -> (x + y) * (z + w) ≃ x * z + x * w + y * z + y * w
+[x+y]*[z+w]≃xz+xw+yz+yw x y z w = {!!}
+{-
+(1+x)ˢ⁺¹ = (1+x)ˢ * (1+x)
+         ≥ (1+sx) * (1+x)
+         = 1 + (s+1)x + sx²
+         ≥ 1 + (s+1)x
+
+1 + (s+1)x = 1 + sx + x
+           ≤ (1+x)ˢ + x
+-}
+bernoullis-inequality : ∀ {x} -> x ≥ - 1ℝ -> ∀ (r : ℕ) -> pow (1ℝ + x) r ≥ 1ℝ + (+ r / 1) ⋆ * x
+bernoullis-inequality {x} x≥-1 zero = begin
+  1ℝ + 0ℝ * x ≈⟨ +-congʳ 1ℝ (*-zeroˡ x) ⟩
+  1ℝ + 0ℝ     ≈⟨ +-identityʳ 1ℝ ⟩
+  1ℝ           ∎
+  where open ≤-Reasoning
+bernoullis-inequality {x} x≥-1 (suc r-1) = {!!}
+  where open ≤-Reasoning
+
+[xⁿ]⁻¹≃[x⁻¹]ⁿ : ∀ {x} -> (x≄0 : x ≄0) -> ∀ n -> (xⁿ≄0 : pow x n ≄0) -> ((pow x n) ⁻¹) xⁿ≄0 ≃ pow ((x ⁻¹) x≄0) n
+[xⁿ]⁻¹≃[x⁻¹]ⁿ {x} x≄0 xⁿ≄0 n = {!!}
+
+posx∧m≤n⇒xᵐ≤xⁿ : ∀ {x} -> ∀ {m n} -> Positive x -> m ℕ.≤ n -> pow x m ≤ pow x n
+posx∧m≤n⇒xᵐ≤xⁿ {x} {m} {n} posx m≤n = {!!}
+
+nonNegx⇒nonNegxⁿ : ∀ {x} -> ∀ n -> NonNegative x -> NonNegative (pow x n)
+nonNegx⇒nonNegxⁿ {x} zero nonx = nonNegp⇒nonNegp⋆ 1ℚᵘ _
+nonNegx⇒nonNegxⁿ {x} (suc n) nonx = nonNegx,y⇒nonNegx*y (nonNegx⇒nonNegxⁿ n nonx) nonx
+
+0<r<1⇒rⁿ→0 : ∀ {r} -> 0ℝ < r < 1ℝ -> (λ n -> pow r n) ConvergesTo 0ℝ
+0<r<1⇒rⁿ→0 {r} (0<r , r<1) = con* part2
   where
     open ≤-Reasoning
-    power-helper : ∀ n -> {n ≢0} -> ∃ λ m -> n ≡ m ℕ.+ m ⊎ n ≡ suc (2 ℕ.* m)
-    power-helper 1 = 0 , inj₂ refl
-    power-helper (suc (suc n-2)) = let n-1 = suc n-2; n = suc n-1 in
-                                   {!!}
+    r≄0 = inj₂ 0<r
+    t = (r ⁻¹) r≄0
+    1<t : 1ℝ < t
+    1<t = let 0<1 = p<q⇒p⋆<q⋆ 0ℚᵘ 1ℚᵘ (ℚP.positive⁻¹ _); 1≄0 = inj₂ 0<1 in begin-strict
+      1ℝ                     ≈⟨ ≃-symm (⋆-distrib-⁻¹ 1ℚᵘ 1≄0) ⟩
+      (((+ 1 / 1) ⋆) ⁻¹) 1≄0 <⟨ x<y∧posx,y⇒y⁻¹<x⁻¹ {r} {1ℝ} r<1 r≄0 1≄0 (0<x⇒posx 0<r) (0<x⇒posx 0<1) ⟩
+      t                       ∎
+    t≄0 = inj₂ (0<x⇒0<x⁻¹ {r} r≄0 0<r)
+    tⁿ≄0 : ∀ n -> pow t n ≄0
+    tⁿ≄0 0 = inj₂ (p<q⇒p⋆<q⋆ 0ℚᵘ 1ℚᵘ (ℚP.positive⁻¹ _))
+    tⁿ≄0 (suc n) = x≄0∧y≄0⇒x*y≄0 (tⁿ≄0 n) t≄0
+    arch = fast-archimedean-ℝ₃ {t - 1ℝ} 1ℝ 1<t
+    k = suc (proj₁ arch)
 
-    lem : ∀ k -> {k≢0 : k ≢0} -> ∃ λ Nₖ-1 -> ∀ n -> n ℕ.≥ suc Nₖ-1 -> pow ∣ r ∣ n ≤ ((+ 1 / k) {k≢0}) ⋆
-    lem 1 = 0 , λ { 1 n≥1 → ≤-respˡ-≃ (≃-symm (*-identityˡ ∣ r ∣)) (<⇒≤ ∣r∣<1) ;
-                (suc (suc n-2)) n≥1 → let n-1 = suc n-2; n = suc n-1 in {!!}}
-    lem (suc (suc k-2)) = {!!} , {!!}
-      where
-        k-1 = suc k-2
-        k = suc k-1
-        Nₖ = suc (proj₁ (lem k-1))
-        Mₖ = 2 ℕ.* Nₖ
+    -1≤t-1 : - 1ℝ ≤ t - 1ℝ
+    -1≤t-1 = begin
+      - 1ℝ        ≈⟨ ≃-symm (⋆-distrib-neg 1ℚᵘ) ⟩
+      (ℚ.- 1ℚᵘ) ⋆ ≤⟨ p≤q⇒p⋆≤q⋆ (ℚ.- 1ℚᵘ) 0ℚᵘ (ℚP.nonPositive⁻¹ _) ⟩
+      0ℝ          ≤⟨ x≤y⇒0≤y-x (<⇒≤ 1<t) ⟩
+      t - 1ℝ       ∎
+
+    t≃1+[t-1] : t ≃ 1ℝ + (t - 1ℝ)
+    t≃1+[t-1] = begin-equality
+      t               ≈⟨ ≃-symm (+-identityˡ t) ⟩
+      0ℝ + t          ≈⟨ +-congˡ t (≃-symm (+-inverseʳ 1ℝ)) ⟩
+      (1ℝ - 1ℝ) + t   ≈⟨ +-assoc 1ℝ (- 1ℝ) t ⟩
+      1ℝ + (- 1ℝ + t) ≈⟨ +-congʳ 1ℝ (+-comm (- 1ℝ) t) ⟩
+      1ℝ + (t - 1ℝ)    ∎
+
+    tᵏⁿ≥n : ∀ n -> {n ≢0} -> pow t (k ℕ.* n) ≥ (+ n / 1) ⋆
+    tᵏⁿ≥n (suc n-1) = let n = suc n-1 in begin
+      (+ n / 1) ⋆                          ≈⟨ ≃-symm (*-identityˡ ((+ n / 1) ⋆)) ⟩
+      1ℝ * (+ n / 1) ⋆                     ≤⟨ *-monoʳ-≤-nonNeg {1ℝ} {(+ n / 1) ⋆} {(+ k / 1) ⋆ * (t - 1ℝ)}
+                                              (<⇒≤ (proj₂ arch)) (nonNegp⇒nonNegp⋆ (+ n / 1) _) ⟩
+      (+ k / 1) ⋆ * (t - 1ℝ) * (+ n / 1) ⋆ ≈⟨ ≃-trans (≃-trans
+                                              (*-assoc ((+ k / 1) ⋆) (t - 1ℝ) ((+ n / 1) ⋆))
+                                              (*-congˡ {(+ k / 1) ⋆} (*-comm (t - 1ℝ) ((+ n / 1) ⋆))))
+                                              (≃-symm (*-assoc ((+ k / 1) ⋆) ((+ n / 1) ⋆) (t - 1ℝ))) ⟩
+      (+ k / 1) ⋆ * (+ n / 1) ⋆ * (t - 1ℝ) ≈⟨ *-congʳ {t - 1ℝ} (≃-symm (⋆-distrib-* (+ k / 1) (+ n / 1))) ⟩
+      (+ (k ℕ.* n) / 1) ⋆ * (t - 1ℝ)       ≤⟨ ≤-respˡ-≃ (+-identityˡ ((+ (k ℕ.* n) / 1) ⋆ * (t - 1ℝ)))
+                                              (+-monoˡ-≤ ((+ (k ℕ.* n) / 1) ⋆ * (t - 1ℝ)) (p≤q⇒p⋆≤q⋆ 0ℚᵘ 1ℚᵘ (ℚP.nonNegative⁻¹ _))) ⟩
+      1ℝ + (+ (k ℕ.* n) / 1) ⋆ * (t - 1ℝ)  ≤⟨ bernoullis-inequality {t - 1ℝ} -1≤t-1 (k ℕ.* n) ⟩
+      pow (1ℝ + (t - 1ℝ)) (k ℕ.* n)        ≈⟨ pow-cong (k ℕ.* n) (≃-symm t≃1+[t-1]) ⟩
+      pow t (k ℕ.* n)                       ∎
+
+    part1 : ∀ j -> {j ≢0} -> ∃ λ N-1 -> ∀ n -> n ℕ.≥ suc N-1 -> pow t n ≥ (+ j / 1) ⋆
+    part1 (suc j-1) = let j = suc j-1 in ℕ.pred (k ℕ.* j) , λ n n≥kj -> begin
+      (+ j / 1) ⋆         ≤⟨ tᵏⁿ≥n j ⟩
+      pow t (k ℕ.* j)     ≤⟨ posx∧m≤n⇒xᵐ≤xⁿ (0<x⇒posx (0<x⇒0<x⁻¹ {r} r≄0 0<r)) n≥kj ⟩
+      pow t n              ∎
+
+    part2 : ∀ j -> {j≢0 : j ≢0} -> ∃ λ N-1 -> ∀ n -> n ℕ.≥ suc N-1 -> ∣ pow r n - 0ℝ ∣ ≤ ((+ 1 / j) {j≢0}) ⋆
+    part2 (suc j-1) = let j = suc j-1; j⋆≄0 = ∣↥p∣≢0⇒p⋆≄0 (+ j / 1) _; N = suc (proj₁ (part1 j)) in
+                      ℕ.pred N , λ n n≥N -> begin
+      ∣ pow r n - 0ℝ ∣         ≈⟨ ∣-∣-cong (≃-trans (+-congʳ (pow r n) (≃-symm 0≃-0)) (+-identityʳ (pow r n))) ⟩
+      ∣ pow r n ∣              ≈⟨ nonNegx⇒∣x∣≃x (nonNegx⇒nonNegxⁿ n (pos⇒nonNeg (0<x⇒posx 0<r))) ⟩
+      pow r n                  ≈⟨ pow-cong n (≃-symm (⁻¹-involutive {r} r≄0 t≄0 )) ⟩
+      pow ((t ⁻¹) t≄0) n       ≈⟨ ≃-symm ([xⁿ]⁻¹≃[x⁻¹]ⁿ {t} t≄0 n (tⁿ≄0 n)) ⟩
+      ((pow t n) ⁻¹) (tⁿ≄0 n)  ≤⟨ x≤y∧posx⇒y⁻¹≤x⁻¹ {(+ j / 1) ⋆} {pow t n} (proj₂ (part1 j) n n≥N) (posp⇒posp⋆ (+ j / 1) _) j⋆≄0 (tⁿ≄0 n) ⟩
+      (((+ j / 1) ⋆) ⁻¹) j⋆≄0  ≈⟨ ⋆-distrib-⁻¹ (+ j / 1) j⋆≄0 ⟩
+      (+ 1 / j) ⋆               ∎
+
+{-
+This proof is an altered and further constructivized version of the proof at 
+https://math.stackexchange.com/questions/1253129/as-the-limit-of-n-goes-to-infinity-prove-that-xn-0-if-operatornameabs  
+
+Proposition:
+  If ∣r∣ < 1, then (rₙ)→0.
+Proof:
+  Let ε∈ℝ⁺ such that ∣r∣ < ∣r∣ + ε and 0 < ∣r∣ + ε < 1. If ([∣r∣ + ε]ⁿ)→0, then
+(∣r∣ⁿ)→0, and so (rⁿ)→0. Let t = (∣r∣ + ε)⁻¹. Then t = 1 + (t - 1), where t - 1 > 0.
+By the Archimedean Property, there is k∈ℕ such that k(t - 1) > 1. We have, for n∈ℕ:
+             tᵏⁿ = (1 + (t-1))ᵏⁿ
+                 ≥ 1 + k(t-1)n   by Bernoulli's inequality
+                 > 1 + n         since k(t-1) > 1
+                 > n,
+so tᵏⁿ > n for all n∈ℕ (⋆).
+  Let j∈ℕ and let N = k * j. Let n ≥ N. Then (∣r∣ + ε)ⁿ ≤ j⁻¹ ⇔ j ≤ tⁿ. We have:
+           j < tᵏʲ by ⋆
+             ≤ tⁿ  since n ≥ kj and (tⁿ) is an increasing sequence.
+Thus ([∣r∣ + ε]ⁿ)→0, and so (rⁿ)→0.                                               □
+-}
+∣r∣<1⇒rⁿ→0 : ∀ {r} -> ∣ r ∣ < 1ℝ -> (λ n -> pow r n) ConvergesTo 0ℝ
+∣r∣<1⇒rⁿ→0 {r} ∣r∣<1 = {!div*!}
+  where
+    open ≤-Reasoning
+    
 
 {-geometric-series : ∀ {r} -> (- 1ℝ) < r < 1ℝ -> SeriesOf (λ n -> pow r n) ConvergesTo ((1ℝ - r) ⁻¹) {!!}
 geometric-series {r} -1<r<1 = {!!}
