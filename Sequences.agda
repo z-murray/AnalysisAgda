@@ -100,6 +100,14 @@ xₙ≃yₙ∧xₙ→x₀⇒yₙ→x₀ {xs} {ys} xₙ≃yₙ (x₀ , con* x→x
   (+ 1 / k) ⋆    ∎}})
   where open ≤-Reasoning
 
+xₙ→x∧x≃y⇒xₙ→y : ∀ {xs : ℕ -> ℝ} -> ∀ {x y : ℝ} -> xs ConvergesTo x -> x ≃ y -> xs ConvergesTo y
+xₙ→x∧x≃y⇒xₙ→y {xs} {x} {y} (con* xₙ→x) x≃y = con* (λ {(suc k-1) -> let k = suc k-1; Nₖ = suc (proj₁ (xₙ→x k)) in
+                                             ℕ.pred Nₖ , λ n n≥Nₖ -> begin
+  ∣ xs n - y ∣ ≈⟨ ∣-∣-cong (+-congʳ (xs n) (-‿cong (≃-symm x≃y))) ⟩
+  ∣ xs n - x ∣ ≤⟨ proj₂ (xₙ→x k) n n≥Nₖ ⟩
+  (+ 1 / k) ⋆   ∎})
+  where open ≤-Reasoning
+
 uniqueness-of-limits : ∀ {f : ℕ -> ℝ} -> ∀ {x y : ℝ} -> f ConvergesTo x -> f ConvergesTo y -> x ≃ y
 uniqueness-of-limits {f} {x} {y} (con* f→x) (con* f→y) = ∣x-y∣≤k⁻¹⇒x≃y x y (λ {(suc k-1) ->
                                                          let k = suc k-1; N₁ = suc (proj₁ (f→x (2 ℕ.* k))); N₂ = suc (proj₁ ((f→y (2 ℕ.* k))))
@@ -407,6 +415,10 @@ archimedean-ℝ x = K x , (begin-strict
   (+ (suc (K x)) / 1) ⋆  ∎)
   where open ≤-Reasoning
 
+abstract
+  fast-archimedean-ℝ : ∀ x -> ∃ λ (n-1 : ℕ) -> (+ (suc n-1) / 1) ⋆ > x
+  fast-archimedean-ℝ = archimedean-ℝ
+
 bound⇒boundℕ : ∀ {f : ℕ -> ℝ} -> f isBounded ->
                ∃ λ (M-1 : ℕ) -> ∀ (n : ℕ) -> {n ≢0} -> ∣ f n ∣ < (+ suc (M-1) / 1) ⋆
 bound⇒boundℕ {f} (r , (bound* ∣f∣≤r)) = let M = suc (proj₁ (archimedean-ℝ r)) in
@@ -709,6 +721,11 @@ x≄0⇒∣x∣≄0 {x} x≄0 = inj₂ (pos-cong (≃-symm (≃-trans (+-congʳ 
   x⁻¹ * x               ≈⟨ *-inverseˡ x x≄0 ⟩
   1ℝ                     ∎))
   where open ≃-Reasoning
+
+abstract
+  fast-⁻¹-distrib-* : ∀ {x y} -> (x≄0 : x ≄0) -> (y≄0 : y ≄0) -> (xy≄0 : (x * y) ≄0) -> 
+                      ((x * y) ⁻¹) xy≄0 ≃ ((x ⁻¹) x≄0) * ((y ⁻¹) y≄0)
+  fast-⁻¹-distrib-* {x} {y} x≄0 y≄0 xy≄0 = ⁻¹-distrib-* {x} {y} x≄0 y≄0 xy≄0
 
 ε-convergence : ∀ {xs : ℕ -> ℝ} -> (xₙ→ℓ : xs isConvergent) ->
                 ∀ ε -> Positive ε -> ∃ λ (N-1 : ℕ) -> ∀ n -> n ℕ.≥ suc N-1 -> ∣ xs n - proj₁ xₙ→ℓ ∣ < ε
@@ -1473,7 +1490,14 @@ xⁿxᵐ≃xⁿ⁺ᵐ x (suc n) m = begin
   where open ≃-Reasoning
 
 archimedean-ℝ₃ : ∀ {x} y -> Positive x -> ∃ λ n-1 -> (+ (suc n-1) / 1) ⋆ * x > y
-archimedean-ℝ₃ {x} y posx = {!!}
+archimedean-ℝ₃ {x} y posx = let x≄0 = inj₂ (posx⇒0<x posx); x⁻¹ = (x ⁻¹) x≄0
+                                    ; arch = fast-archimedean-ℝ (y * x⁻¹); n = suc (proj₁ arch) in
+                            ℕ.pred n , (begin-strict
+  y               ≈⟨ ≃-symm (≃-trans (≃-trans (*-assoc y x⁻¹ x)
+                     (*-congˡ {y} {x⁻¹ * x} {1ℝ} (*-inverseˡ x x≄0))) (*-identityʳ y)) ⟩
+  y * x⁻¹ * x     <⟨ *-monoˡ-<-pos {x} posx {y * x⁻¹} {(+ n / 1) ⋆} (proj₂ arch) ⟩
+  (+ n / 1) ⋆ * x  ∎)
+  where open ≤-Reasoning
 
 abstract
   fast-archimedean-ℝ₃ : ∀ {x} y -> Positive x -> ∃ λ n-1 -> (+ (suc n-1) / 1) ⋆ * x > y
@@ -1481,26 +1505,22 @@ abstract
 
 x≤y∧posx⇒y⁻¹≤x⁻¹ : ∀ {x y} -> x ≤ y -> Positive x -> (x≄0 : x ≄0) -> (y≄0 : y ≄0) ->
                    (y ⁻¹) y≄0 ≤ (x ⁻¹) x≄0
-x≤y∧posx⇒y⁻¹≤x⁻¹ {x} {y} x≤y posx x≄0 y≄0 = {!!}
+x≤y∧posx⇒y⁻¹≤x⁻¹ {x} {y} x≤y posx x≄0 y≄0 = let x⁻¹ = (x ⁻¹) x≄0; y⁻¹ = (y ⁻¹) y≄0 in begin
+  y⁻¹             ≈⟨ ≃-symm (≃-trans (*-congˡ {y⁻¹} {x * x⁻¹} {1ℝ} (*-inverseʳ x x≄0)) (*-identityʳ y⁻¹)) ⟩
+  y⁻¹ * (x * x⁻¹) ≤⟨ *-monoˡ-≤-nonNeg {x * x⁻¹} {y⁻¹} {y * x⁻¹}
+                     (*-monoʳ-≤-nonNeg {x} {x⁻¹} {y} x≤y (nonNegx⇒nonNegx⁻¹ {x} (pos⇒nonNeg posx) x≄0))
+                     (nonNegx⇒nonNegx⁻¹ {y} (pos⇒nonNeg (0<x⇒posx (<-≤-trans (posx⇒0<x posx) x≤y))) y≄0) ⟩
+  y⁻¹ * (y * x⁻¹) ≈⟨ ≃-trans (≃-trans (≃-symm (*-assoc y⁻¹ y x⁻¹))
+                     (*-congʳ {x⁻¹} {y⁻¹ * y} {1ℝ} (*-inverseˡ y y≄0))) (*-identityˡ x⁻¹) ⟩
+  x⁻¹              ∎
+  where open ≤-Reasoning
 
-{-
-∣r∣ < 1
-∣r∣ < ∣r∣ + 2⁻¹(1 - ∣r∣) ≤ ∣r∣ + (1 - ∣r∣) = 1
--}
-x<z∧y<z⇒∃ε>0[y<x+ε<z] : ∀ {x y z} -> x < z -> y < z -> ∃ λ ε -> Positive ε × y < (x + ε) < z
-x<z∧y<z⇒∃ε>0[y<x+ε<z] {x} {y} {z} x<z y<z = {!!}
+x<y⇒∃ε>0[x<x+ε<y] : ∀ {x y} -> x < y -> ∃ λ ε -> Positive ε × x < (x + ε) < y
+x<y⇒∃ε>0[x<x+ε<y] {x} {y} x<y = {!!}
 
 [x+y]*[z+w]≃xz+xw+yz+yw : ∀ x y z w -> (x + y) * (z + w) ≃ x * z + x * w + y * z + y * w
 [x+y]*[z+w]≃xz+xw+yz+yw x y z w = {!!}
-{-
-(1+x)ˢ⁺¹ = (1+x)ˢ * (1+x)
-         ≥ (1+sx) * (1+x)
-         = 1 + (s+1)x + sx²
-         ≥ 1 + (s+1)x
 
-1 + (s+1)x = 1 + sx + x
-           ≤ (1+x)ˢ + x
--}
 bernoullis-inequality : ∀ {x} -> x ≥ - 1ℝ -> ∀ (r : ℕ) -> pow (1ℝ + x) r ≥ 1ℝ + (+ r / 1) ⋆ * x
 bernoullis-inequality {x} x≥-1 zero = begin
   1ℝ + 0ℝ * x ≈⟨ +-congʳ 1ℝ (*-zeroˡ x) ⟩
@@ -1510,18 +1530,48 @@ bernoullis-inequality {x} x≥-1 zero = begin
 bernoullis-inequality {x} x≥-1 (suc r-1) = {!!}
   where open ≤-Reasoning
 
-[xⁿ]⁻¹≃[x⁻¹]ⁿ : ∀ {x} -> (x≄0 : x ≄0) -> ∀ n -> (xⁿ≄0 : pow x n ≄0) -> ((pow x n) ⁻¹) xⁿ≄0 ≃ pow ((x ⁻¹) x≄0) n
-[xⁿ]⁻¹≃[x⁻¹]ⁿ {x} x≄0 xⁿ≄0 n = {!!}
+x≄0⇒xⁿ≄0 : ∀ {x} -> ∀ n -> x ≄0 -> pow x n ≄0
+x≄0⇒xⁿ≄0 {x} zero x≄0 = inj₂ (p<q⇒p⋆<q⋆ 0ℚᵘ 1ℚᵘ (ℚP.positive⁻¹ _))
+x≄0⇒xⁿ≄0 {x} (suc n) x≄0 = x≄0∧y≄0⇒x*y≄0 (x≄0⇒xⁿ≄0 n x≄0) x≄0
 
-posx∧m≤n⇒xᵐ≤xⁿ : ∀ {x} -> ∀ {m n} -> Positive x -> m ℕ.≤ n -> pow x m ≤ pow x n
-posx∧m≤n⇒xᵐ≤xⁿ {x} {m} {n} posx m≤n = {!!}
+[xⁿ]⁻¹≃[x⁻¹]ⁿ : ∀ {x} -> (x≄0 : x ≄0) -> ∀ n -> (xⁿ≄0 : pow x n ≄0) -> ((pow x n) ⁻¹) xⁿ≄0 ≃ pow ((x ⁻¹) x≄0) n
+[xⁿ]⁻¹≃[x⁻¹]ⁿ {x} x≄0 zero xⁿ≄0 = ⋆-distrib-⁻¹ 1ℚᵘ xⁿ≄0
+[xⁿ]⁻¹≃[x⁻¹]ⁿ {x} x≄0 (suc n) xⁿ⁺¹≄0 = let xⁿ≄0 = x≄0⇒xⁿ≄0 {x} n x≄0 in begin
+  ((pow x n * x) ⁻¹) xⁿ⁺¹≄0        ≈⟨ fast-⁻¹-distrib-* {pow x n} {x} xⁿ≄0 x≄0 xⁿ⁺¹≄0 ⟩
+  ((pow x n) ⁻¹) xⁿ≄0 * (x ⁻¹) x≄0 ≈⟨ *-congʳ {(x ⁻¹) x≄0} {(pow x n ⁻¹) xⁿ≄0} {pow ((x ⁻¹) x≄0) n}
+                                      ([xⁿ]⁻¹≃[x⁻¹]ⁿ {x} x≄0 n xⁿ≄0) ⟩
+  pow ((x ⁻¹) x≄0) n * (x ⁻¹) x≄0   ∎
+  where open ≃-Reasoning
+
+1≤x∧m≤n⇒xᵐ≤xⁿ : ∀ {x} -> ∀ {m n} -> 1ℝ ≤ x -> m ℕ.≤ n -> pow x m ≤ pow x n
+1≤x∧m≤n⇒xᵐ≤xⁿ {x} {zero} {zero} 1≤x m≤n = ≤-refl
+1≤x∧m≤n⇒xᵐ≤xⁿ {x} {zero} {suc n} 1≤x m≤n = lem (suc n)
+  where
+    open ≤-Reasoning
+    lem : ∀ n -> 1ℝ ≤ pow x n
+    lem zero = ≤-refl
+    lem (suc n) = begin
+      1ℝ          ≤⟨ 1≤x ⟩
+      x           ≈⟨ ≃-symm (*-identityˡ x) ⟩
+      1ℝ * x      ≤⟨ *-monoʳ-≤-nonNeg (lem n)
+                     (0≤x⇒nonNegx (≤-trans (p≤q⇒p⋆≤q⋆ 0ℚᵘ 1ℚᵘ (ℚP.nonNegative⁻¹ _)) 1≤x)) ⟩
+      pow x n * x  ∎
+1≤x∧m≤n⇒xᵐ≤xⁿ {x} {suc m} {suc n} 1≤x (ℕ.s≤s m≤n) = *-monoʳ-≤-nonNeg (1≤x∧m≤n⇒xᵐ≤xⁿ 1≤x m≤n)
+                                                    (0≤x⇒nonNegx (≤-trans (p≤q⇒p⋆≤q⋆ 0ℚᵘ 1ℚᵘ (ℚP.nonNegative⁻¹ _)) 1≤x))
 
 nonNegx⇒nonNegxⁿ : ∀ {x} -> ∀ n -> NonNegative x -> NonNegative (pow x n)
 nonNegx⇒nonNegxⁿ {x} zero nonx = nonNegp⇒nonNegp⋆ 1ℚᵘ _
 nonNegx⇒nonNegxⁿ {x} (suc n) nonx = nonNegx,y⇒nonNegx*y (nonNegx⇒nonNegxⁿ n nonx) nonx
 
-0<r<1⇒rⁿ→0 : ∀ {r} -> 0ℝ < r < 1ℝ -> (λ n -> pow r n) ConvergesTo 0ℝ
-0<r<1⇒rⁿ→0 {r} (0<r , r<1) = con* part2
+0<r<1⇒rⁿ→0 : ∀ {r} -> 0ℝ < r < 1ℝ ->
+             ∀ j -> {j≢0 : j ≢0} -> ∃ λ Nₖ-1 -> ∀ n -> n ℕ.≥ suc Nₖ-1 -> pow r n ≤ ((+ 1 / j) {j≢0}) ⋆
+0<r<1⇒rⁿ→0 {r} (0<r , r<1) (suc j-1) = let j = suc j-1; j⋆≄0 = ∣↥p∣≢0⇒p⋆≄0 (+ j / 1) _; N = suc (proj₁ (lem j)) in
+                                       ℕ.pred N , λ n n≥N -> begin
+      pow r n                  ≈⟨ pow-cong n (≃-symm (⁻¹-involutive {r} r≄0 t≄0)) ⟩
+      pow ((t ⁻¹) t≄0) n       ≈⟨ ≃-symm ([xⁿ]⁻¹≃[x⁻¹]ⁿ {t} t≄0 n (tⁿ≄0 n)) ⟩
+      ((pow t n) ⁻¹) (tⁿ≄0 n)  ≤⟨ x≤y∧posx⇒y⁻¹≤x⁻¹ {(+ j / 1) ⋆} {pow t n} (proj₂ (lem j) n n≥N) (posp⇒posp⋆ (+ j / 1) _) j⋆≄0 (tⁿ≄0 n) ⟩
+      (((+ j / 1) ⋆) ⁻¹) j⋆≄0  ≈⟨ ⋆-distrib-⁻¹ (+ j / 1) j⋆≄0 ⟩
+      (+ 1 / j) ⋆               ∎
   where
     open ≤-Reasoning
     r≄0 = inj₂ 0<r
@@ -1569,22 +1619,28 @@ nonNegx⇒nonNegxⁿ {x} (suc n) nonx = nonNegx,y⇒nonNegx*y (nonNegx⇒nonNegx
       pow (1ℝ + (t - 1ℝ)) (k ℕ.* n)        ≈⟨ pow-cong (k ℕ.* n) (≃-symm t≃1+[t-1]) ⟩
       pow t (k ℕ.* n)                       ∎
 
-    part1 : ∀ j -> {j ≢0} -> ∃ λ N-1 -> ∀ n -> n ℕ.≥ suc N-1 -> pow t n ≥ (+ j / 1) ⋆
-    part1 (suc j-1) = let j = suc j-1 in ℕ.pred (k ℕ.* j) , λ n n≥kj -> begin
+    lem : ∀ j -> {j ≢0} -> ∃ λ N-1 -> ∀ n -> n ℕ.≥ suc N-1 -> pow t n ≥ (+ j / 1) ⋆
+    lem (suc j-1) = let j = suc j-1 in ℕ.pred (k ℕ.* j) , λ n n≥kj -> begin
       (+ j / 1) ⋆         ≤⟨ tᵏⁿ≥n j ⟩
-      pow t (k ℕ.* j)     ≤⟨ posx∧m≤n⇒xᵐ≤xⁿ (0<x⇒posx (0<x⇒0<x⁻¹ {r} r≄0 0<r)) n≥kj ⟩
+      pow t (k ℕ.* j)     ≤⟨ 1≤x∧m≤n⇒xᵐ≤xⁿ {t} {k ℕ.* j} {n} (<⇒≤ 1<t) n≥kj ⟩
       pow t n              ∎
 
-    part2 : ∀ j -> {j≢0 : j ≢0} -> ∃ λ N-1 -> ∀ n -> n ℕ.≥ suc N-1 -> ∣ pow r n - 0ℝ ∣ ≤ ((+ 1 / j) {j≢0}) ⋆
-    part2 (suc j-1) = let j = suc j-1; j⋆≄0 = ∣↥p∣≢0⇒p⋆≄0 (+ j / 1) _; N = suc (proj₁ (part1 j)) in
-                      ℕ.pred N , λ n n≥N -> begin
-      ∣ pow r n - 0ℝ ∣         ≈⟨ ∣-∣-cong (≃-trans (+-congʳ (pow r n) (≃-symm 0≃-0)) (+-identityʳ (pow r n))) ⟩
-      ∣ pow r n ∣              ≈⟨ nonNegx⇒∣x∣≃x (nonNegx⇒nonNegxⁿ n (pos⇒nonNeg (0<x⇒posx 0<r))) ⟩
-      pow r n                  ≈⟨ pow-cong n (≃-symm (⁻¹-involutive {r} r≄0 t≄0 )) ⟩
-      pow ((t ⁻¹) t≄0) n       ≈⟨ ≃-symm ([xⁿ]⁻¹≃[x⁻¹]ⁿ {t} t≄0 n (tⁿ≄0 n)) ⟩
-      ((pow t n) ⁻¹) (tⁿ≄0 n)  ≤⟨ x≤y∧posx⇒y⁻¹≤x⁻¹ {(+ j / 1) ⋆} {pow t n} (proj₂ (part1 j) n n≥N) (posp⇒posp⋆ (+ j / 1) _) j⋆≄0 (tⁿ≄0 n) ⟩
-      (((+ j / 1) ⋆) ⁻¹) j⋆≄0  ≈⟨ ⋆-distrib-⁻¹ (+ j / 1) j⋆≄0 ⟩
-      (+ 1 / j) ⋆               ∎
+abstract
+  fast-0<r<1⇒rⁿ→0 : ∀ {r} -> 0ℝ < r < 1ℝ ->
+                    ∀ j -> {j≢0 : j ≢0} -> ∃ λ Nₖ-1 -> ∀ n -> n ℕ.≥ suc Nₖ-1 -> pow r n ≤ ((+ 1 / j) {j≢0}) ⋆
+  fast-0<r<1⇒rⁿ→0 = 0<r<1⇒rⁿ→0
+
+x≤y∧nonNegx⇒xⁿ≤yⁿ : ∀ {x y} -> ∀ n -> x ≤ y -> NonNegative x -> pow x n ≤ pow y n
+x≤y∧nonNegx⇒xⁿ≤yⁿ {x} {y} zero x≤y nonx = ≤-refl
+x≤y∧nonNegx⇒xⁿ≤yⁿ {x} {y} (suc n) x≤y nonx = *-mono-≤ (nonNegx⇒nonNegxⁿ n nonx) nonx (x≤y∧nonNegx⇒xⁿ≤yⁿ n x≤y nonx) x≤y
+
+∣xⁿ∣≃∣x∣ⁿ : ∀ x -> ∀ n -> ∣ pow x n ∣ ≃ pow ∣ x ∣ n
+∣xⁿ∣≃∣x∣ⁿ x zero = nonNegx⇒∣x∣≃x (0≤x⇒nonNegx (p≤q⇒p⋆≤q⋆ 0ℚᵘ 1ℚᵘ (ℚP.nonNegative⁻¹ _)))
+∣xⁿ∣≃∣x∣ⁿ x (suc n) = begin
+  ∣ pow x n * x ∣     ≈⟨ ∣x*y∣≃∣x∣*∣y∣ (pow x n) x ⟩
+  ∣ pow x n ∣ * ∣ x ∣ ≈⟨ *-congʳ (∣xⁿ∣≃∣x∣ⁿ x n) ⟩
+  pow ∣ x ∣ n * ∣ x ∣  ∎
+  where open ≃-Reasoning
 
 {-
 This proof is an altered and further constructivized version of the proof at 
@@ -1604,38 +1660,87 @@ so tᵏⁿ > n for all n∈ℕ (⋆).
   Let j∈ℕ and let N = k * j. Let n ≥ N. Then (∣r∣ + ε)ⁿ ≤ j⁻¹ ⇔ j ≤ tⁿ. We have:
            j < tᵏʲ by ⋆
              ≤ tⁿ  since n ≥ kj and (tⁿ) is an increasing sequence.
-Thus ([∣r∣ + ε]ⁿ)→0, and so (rⁿ)→0.                                               □
--}
+Thus ([∣r∣ + ε]ⁿ)→0, and so (rⁿ)→0.                                               □ -}
 ∣r∣<1⇒rⁿ→0 : ∀ {r} -> ∣ r ∣ < 1ℝ -> (λ n -> pow r n) ConvergesTo 0ℝ
-∣r∣<1⇒rⁿ→0 {r} ∣r∣<1 = {!div*!}
+∣r∣<1⇒rⁿ→0 {r} ∣r∣<1 = con* (λ {(suc k-1) -> let k = suc k-1; Nₖ-getter = fast-0<r<1⇒rⁿ→0 {∣ r ∣ + ε} (0<∣r∣+ε , (proj₂ (proj₂ (ε-prop))))
+                                                  ; Nₖ = suc (proj₁ (Nₖ-getter k)) in ℕ.pred Nₖ , λ n n≥Nₖ -> begin
+  ∣ pow r n - 0ℝ ∣  ≈⟨ ∣-∣-cong (≃-trans (+-congʳ (pow r n) (≃-symm 0≃-0)) (+-identityʳ (pow r n))) ⟩
+  ∣ pow r n ∣       ≈⟨ ∣xⁿ∣≃∣x∣ⁿ r n ⟩
+  pow ∣ r ∣ n       ≤⟨ x≤y∧nonNegx⇒xⁿ≤yⁿ {∣ r ∣} {∣ r ∣ + ε} n ∣r∣≤∣r∣+ε (nonNeg∣x∣ r) ⟩
+  pow (∣ r ∣ + ε) n ≤⟨ proj₂ (Nₖ-getter k) n n≥Nₖ ⟩
+  (+ 1 / k) ⋆        ∎})
   where
     open ≤-Reasoning
-    
+    ε-prop = proj₂ (x<y⇒∃ε>0[x<x+ε<y] {∣ r ∣} {1ℝ} ∣r∣<1)
+    ε = proj₁ (x<y⇒∃ε>0[x<x+ε<y] {∣ r ∣} {1ℝ} ∣r∣<1)
 
-{-geometric-series : ∀ {r} -> (- 1ℝ) < r < 1ℝ -> SeriesOf (λ n -> pow r n) ConvergesTo ((1ℝ - r) ⁻¹) {!!}
-geometric-series {r} -1<r<1 = {!!}
+    0<∣r∣+ε : 0ℝ < ∣ r ∣ + ε
+    0<∣r∣+ε = begin-strict
+      0ℝ        <⟨ posx⇒0<x (proj₁ ε-prop) ⟩
+      ε         ≤⟨ ≤-respˡ-≃ (+-identityˡ ε) (+-monoˡ-≤ ε (0≤∣x∣ r)) ⟩
+      ∣ r ∣ + ε   ∎
+
+    ∣r∣≤∣r∣+ε : ∣ r ∣ ≤ ∣ r ∣ + ε
+    ∣r∣≤∣r∣+ε = begin
+      ∣ r ∣      ≈⟨ ≃-symm (+-identityʳ ∣ r ∣) ⟩
+      ∣ r ∣ + 0ℝ ≤⟨ +-monoʳ-≤ ∣ r ∣ {0ℝ} {ε} (nonNegx⇒0≤x (pos⇒nonNeg (proj₁ ε-prop))) ⟩
+      ∣ r ∣ + ε   ∎
+
+private
+  1-r≄0 : ∀ r -> ∣ r ∣ < 1ℝ -> (1ℝ - r) ≄0
+  1-r≄0 r ∣r∣<1 = inj₂ (x<y⇒0<y-x r 1ℝ (proj₂ (∣x∣<y⇒-y<x<y r 1ℝ ∣r∣<1)))
+
+geometric-sum : ∀ {r} -> ∀ n -> (∣r∣<1 : ∣ r ∣ < 1ℝ) -> ∑ (λ i -> pow r i) 0 n ≃ (1ℝ - pow r n) * ((1ℝ - r) ⁻¹) (1-r≄0 r ∣r∣<1)
+geometric-sum {r} zero ∣r∣<1 = let [1-r]⁻¹ = ((1ℝ - r) ⁻¹) (1-r≄0 r ∣r∣<1) in ≃-symm (begin
+  (1ℝ - 1ℝ) * [1-r]⁻¹ ≈⟨ *-congʳ {[1-r]⁻¹} {1ℝ - 1ℝ} {0ℝ} (+-inverseʳ 1ℝ) ⟩
+  0ℝ * [1-r]⁻¹        ≈⟨ *-zeroˡ [1-r]⁻¹ ⟩
+  0ℝ                   ∎)
+  where open ≃-Reasoning
+geometric-sum {r} (suc n) ∣r∣<1 = let [1-r]⁻¹ = ((1ℝ - r) ⁻¹) (1-r≄0 r ∣r∣<1) in begin
+  ∑₀ (pow r) n + pow r n                                  ≈⟨ +-cong {∑₀ (pow r) n} {(1ℝ - pow r n) * [1-r]⁻¹}
+                                                             {pow r n} {pow r n * (1ℝ - r) * [1-r]⁻¹}
+                                                             (geometric-sum {r} n ∣r∣<1)
+                                                             (≃-symm (≃-trans (≃-trans
+                                                             (*-assoc (pow r n) (1ℝ - r) [1-r]⁻¹)
+                                                             (*-congˡ {pow r n} {(1ℝ - r) * [1-r]⁻¹} {1ℝ} (*-inverseʳ (1ℝ - r) (1-r≄0 r ∣r∣<1))))
+                                                             (*-identityʳ (pow r n)))) ⟩
+  (1ℝ - pow r n) * [1-r]⁻¹ + pow r n * (1ℝ - r) * [1-r]⁻¹ ≈⟨ ≃-symm (*-distribʳ-+ [1-r]⁻¹ (1ℝ - pow r n) (pow r n * (1ℝ - r))) ⟩
+  (1ℝ - pow r n + pow r n * (1ℝ - r)) * [1-r]⁻¹           ≈⟨ *-congʳ {[1-r]⁻¹} {1ℝ - pow r n + pow r n * (1ℝ - r)}
+                                                             {1ℝ - pow r n + (pow r n - pow r (suc n))}
+                                                             (+-congʳ (1ℝ - pow r n) (≃-trans
+                                                             (*-distribˡ-+ (pow r n) 1ℝ (- r))
+                                                             (+-cong (*-identityʳ (pow r n)) (≃-symm (neg-distribʳ-* (pow r n) r))))) ⟩
+  (1ℝ - pow r n + (pow r n - pow r (suc n))) * [1-r]⁻¹    ≈⟨ *-congʳ {[1-r]⁻¹} {1ℝ - pow r n + (pow r n - pow r (suc n))}
+                                                             {1ℝ - pow r (suc n) + (pow r n - pow r n)}
+                                                             (solve 4 (λ a b c d -> a :+ b :+ (c :+ d) := a :+ d :+ (c :+ b))
+                                                             ≃-refl 1ℝ (- pow r n) (pow r n) (- pow r (suc n))) ⟩
+  (1ℝ - pow r (suc n) + (pow r n - pow r n)) * [1-r]⁻¹    ≈⟨ *-congʳ {[1-r]⁻¹} {1ℝ - pow r (suc n) + (pow r n - pow r n)}
+                                                             {1ℝ - pow r (suc n)}
+                                                             (≃-trans (+-congʳ (1ℝ - pow r (suc n)) (+-inverseʳ (pow r n)))
+                                                             (+-identityʳ (1ℝ - pow r (suc n)))) ⟩
+  (1ℝ - pow r (suc n)) * [1-r]⁻¹                           ∎
   where
-    open ≤-Reasoning
-    1-r≄0 : (1ℝ - r) ≄0
-    1-r≄0 = {!!}
-    [1-r]⁻¹ = ((1ℝ - r) ⁻¹) 1-r≄0
+    open ≃-Reasoning
+    open ℝ-+-*-Solver
+
+geometric-series-converges : ∀ {r} -> (∣r∣<1 : ∣ r ∣ < 1ℝ) -> SeriesOf (λ i -> pow r i) ConvergesTo ((1ℝ - r) ⁻¹) (1-r≄0 r ∣r∣<1)
+geometric-series-converges {r} ∣r∣<1 = xₙ≃yₙ∧xₙ→x₀⇒yₙ→x₀ {λ n -> (1ℝ - pow r n) * [1-r]⁻¹} {SeriesOf rⁱ}
+                             (λ {(suc n-1) -> let n = suc n-1 in ≃-symm (geometric-sum {r} n ∣r∣<1)})
+                             ([1-r]⁻¹ , xₙ→x∧x≃y⇒xₙ→y {λ n → (1ℝ - pow r n) * [1-r]⁻¹} {1ℝ * [1-r]⁻¹} {[1-r]⁻¹}
+                             (xₙyₙ→x₀y₀ {1-rⁱ} {λ i → [1-r]⁻¹} 1-rⁱ→1 [1-r]⁻¹→[1-r]⁻¹) (*-identityˡ [1-r]⁻¹))
+  where
+    open ≃-Reasoning
+    -1<r<1 = ∣x∣<y⇒-y<x<y r 1ℝ ∣r∣<1
+    1-rⁱ = λ i -> 1ℝ - pow r i
+    [1-r]⁻¹ = ((1ℝ - r) ⁻¹) (1-r≄0 r ∣r∣<1)
     rⁱ = λ i -> pow r i
-    lem : ∀ n -> {n ≢0} -> ∑₀ rⁱ n ≃ (1ℝ - pow r n) * [1-r]⁻¹
-    lem (suc zero) = begin-equality
-      0ℝ + 1ℝ                 ≈⟨ +-identityˡ 1ℝ ⟩
-      1ℝ                      ≈⟨ ≃-symm (*-inverseʳ (1ℝ - r) 1-r≄0) ⟩
-      (1ℝ - r) * [1-r]⁻¹      ≈⟨ *-congʳ (+-congʳ 1ℝ (-‿cong (≃-symm (*-identityˡ r)))) ⟩
-      (1ℝ - 1ℝ * r) * [1-r]⁻¹  ∎
-    lem (suc (suc n-1)) = let n = suc n-1; 1+n = suc n in begin-equality
-      ∑₀ rⁱ n + pow r n                                                     ≈⟨ +-cong (lem n) (≃-symm (≃-trans
-                                                                               (*-congˡ (*-inverseʳ (1ℝ - r) 1-r≄0))
-                                                                               (*-identityʳ (pow r n)))) ⟩
-      (1ℝ - pow r n) * [1-r]⁻¹ + pow r n * ((1ℝ - r) * [1-r]⁻¹)             ≈⟨ +-congʳ ((1ℝ - pow r n) * [1-r]⁻¹) {!!} ⟩
-      (1ℝ - pow r n) * [1-r]⁻¹ + (pow r n * 1ℝ + pow r n * (- r)) * [1-r]⁻¹ ≈⟨ {!!} ⟩
-      (1ℝ - pow r n) * [1-r]⁻¹ + (pow r n - pow r 1+n) * [1-r]⁻¹            ≈⟨ {!!} ⟩
-      (1ℝ - pow r n + (pow r n - pow r 1+n)) * [1-r]⁻¹                      ≈⟨ {!!} ⟩
-      (1ℝ + 0ℝ - pow r 1+n) * [1-r]⁻¹                                       ≈⟨ {!!} ⟩
-      (1ℝ - pow r 1+n) * [1-r]⁻¹                                             ∎-}
+    rⁱ→0 = 0ℝ , ∣r∣<1⇒rⁿ→0 ∣r∣<1
+    1→1 = 1ℝ , xₙ≃c⇒xₙ→c {λ i -> 1ℝ} {1ℝ} λ {(suc n-1) -> ≃-refl}
+    [1-r]⁻¹→[1-r]⁻¹ = [1-r]⁻¹ , xₙ≃c⇒xₙ→c {λ i -> [1-r]⁻¹} {[1-r]⁻¹} λ {(suc n-1) -> ≃-refl}
+    1-rⁱ→1 = 1ℝ , xₙ→x∧x≃y⇒xₙ→y (xₙ+yₙ→x₀+y₀ 1→1 (- 0ℝ , -xₙ→-x₀ rⁱ→0)) (≃-trans (+-congʳ 1ℝ (≃-symm 0≃-0)) (+-identityʳ 1ℝ))
+
+geometric-series-isConvergent : ∀ {r} -> ∣ r ∣ < 1ℝ -> SeriesOf (λ i -> pow r i) isConvergent
+geometric-series-isConvergent {r} ∣r∣<1 = ((1ℝ - r) ⁻¹) (1-r≄0 r ∣r∣<1) , geometric-series-converges {r} ∣r∣<1
 
 {-
 Proposition:
