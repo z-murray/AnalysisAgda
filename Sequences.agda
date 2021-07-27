@@ -1300,29 +1300,51 @@ nonNegxₙ⇒nonNeg∑xₙ {xs} {m} {n} m≤n hyp = nonNeg-cong (lem (∑ xs m n
     lem x = ≃-trans (+-congʳ x (≃-symm 0≃-0)) (+-identityʳ x)
       
 cauchy-convergence : ∀ {xs : ℕ -> ℝ} ->
-                          (∀ k -> {k≢0 : k ≢0} -> ∃ λ Nₖ-1 -> ∀ m n -> m ℕ.≥ n -> m ℕ.≥ suc Nₖ-1 -> n ℕ.≥ suc Nₖ-1 -> ∣ xs m - xs n ∣ ≤ ((+ 1 / k) {k≢0}) ⋆) ->
+                          (∀ k -> {k≢0 : k ≢0} -> ∃ λ Nₖ-1 -> ∀ m n -> m ℕ.> n -> m ℕ.≥ suc Nₖ-1 -> n ℕ.≥ suc Nₖ-1 -> ∣ xs m - xs n ∣ ≤ ((+ 1 / k) {k≢0}) ⋆) ->
                           xs isConvergent
-cauchy-convergence {xs} hyp = cauchy⇒convergent (cauchy* λ {(suc k-1) -> let k = suc k-1; Mₖ = suc (proj₁ (hyp k)) in
+cauchy-convergence {xs} hyp = {!!} {-cauchy⇒convergent (cauchy* λ {(suc k-1) -> let k = suc k-1; Mₖ = suc (proj₁ (hyp k)) in
                               ℕ.pred Mₖ , λ {(suc m-1) (suc n-1) m≥Mₖ n≥Mₖ -> let m = suc m-1; n = suc n-1 in
                               [ (λ n≤m -> proj₂ (hyp k) m n n≤m m≥Mₖ n≥Mₖ) ,
                                 (λ m≤n -> ≤-respˡ-≃ (∣x-y∣≃∣y-x∣ (xs n) (xs m)) (proj₂ (hyp k) n m m≤n n≥Mₖ m≥Mₖ)) ]′
-                              (ℕP.≤-total n m)}})
+                              (ℕP.≤-total n m)}})-}
 
-proposition-3-5 : ∀ {xs ys : ℕ -> ℝ} -> SeriesOf ys isConvergent -> (∀ n -> NonNegative (ys n)) -> (∀ n -> ∣ xs n ∣ ≤ ys n) -> SeriesOf xs isConvergent
-proposition-3-5 {xs} {ys} ∑ysCon 0≤yₙ ∣xₙ∣≤yₙ = cauchy-convergence (λ {(suc k-1) ->
-                                                         let k = suc k-1; ∑ysCauchy = cauchyConvergenceTest-if ys ∑ysCon k
-                                                               ; Nₖ = suc (proj₁ ∑ysCauchy) in
-                                                         ℕ.pred Nₖ , λ {(suc m-1) (suc n-1) m≥n m≥Nₖ n≥Nₖ -> let m = suc m-1; n = suc n-1 in
-                                                         begin
-  ∣ ∑ xs n m ∣            ≤⟨ ∑-triangle-inequality xs n m m≥n ⟩
-  ∑ (λ r -> ∣ xs r ∣) n m ≤⟨ ∑-mono-≤ ∣xₙ∣≤yₙ n m m≥n ⟩
+{-
+This is a generalized version of Bishop's Proposition 3.5.
+
+Proposition:
+  If ∑yₙ converges and if there is N∈ℕ such that
+                ∣xₙ∣ ≤ yₙ                        (n ≥ N),
+then ∑xₙ converges.
+Proof:
+  Let k∈ℕ. Then there is N₂∈ℕ such that 
+                     ∣∑ᵢ₌ₙ₊₁ᵐ yᵢ∣ ≤ k⁻¹          (m > n ≥ N₂).
+Let N₂∈ℕ such that ∣xₙ∣ ≤ yₙ for n ≥ N₁. Define N = max{N₁, N₂} and let
+m > n ≥ N. Then
+               ∣∑ᵢ₌ₙ₊₁ᵐ xᵢ∣ ≤ ∑ᵢ₌ₙ₊₁ᵐ ∣xᵢ∣
+                            ≤ ∑ᵢ₌ₙ₊₁ᵐ yᵢ  since m > n ≥ N₁
+                            ≤ ∣∑ᵢ₌ₙ₊₁ᵐ yᵢ∣
+                            ≤ k⁻¹.
+Hence ∑xᵢ is convergent.                                               □
+-}
+proposition-3-5 : ∀ {xs ys} -> SeriesOf ys isConvergent -> (∃ λ N-1 -> ∀ n -> n ℕ.≥ suc N-1 -> ∣ xs n ∣ ≤ ys n) ->
+                    SeriesOf xs isConvergent
+proposition-3-5 {xs} {ys} ∑ysCon (N₁-1 , n≥N₁⇒∣xₙ∣≤yₙ) = cauchy-convergence (λ {(suc k-1) ->
+                            let k = suc k-1; ∑ysCauchy = cauchyConvergenceTest-if ys ∑ysCon k
+                                  ; N₁ = suc N₁-1; N₂ = suc (proj₁ ∑ysCauchy); N = N₁ ℕ.⊔ N₂ in ℕ.pred N ,
+                            λ {(suc m-1) (suc n-1) m>n m≥N n≥N ->
+                            let m = suc m-1; n = suc n-1; N₂≤N = ℕP.m≤n⊔m N₁ N₂ in begin
+  ∣ ∑ xs n m ∣            ≤⟨ ∑-triangle-inequality xs n m (ℕP.<⇒≤ m>n) ⟩
+  ∑ (λ i -> ∣ xs i ∣) n m ≤⟨ ∑-mono-≤-weak (ℕP.<⇒≤ m>n) (λ k n≤k≤m -> n≥N₁⇒∣xₙ∣≤yₙ k
+                             (ℕP.≤-trans (ℕP.≤-trans (ℕP.m≤m⊔n N₁ N₂) n≥N) (proj₁ n≤k≤m))) ⟩
   ∑ ys n m                ≤⟨ x≤∣x∣ ⟩
-  ∣ ∑ ys n m ∣            ≤⟨ proj₂ ∑ysCauchy n m n≥Nₖ m≥Nₖ ⟩
+  ∣ ∑ ys n m ∣            ≤⟨ proj₂ ∑ysCauchy n m
+                             (ℕP.≤-trans N₂≤N n≥N) (ℕP.≤-trans N₂≤N m≥N) ⟩
   (+ 1 / k) ⋆              ∎}})
-  where open ≤-Reasoning
+  where
+    open ≤-Reasoning
 
 absolute⇒isConvergent : ∀ {xs : ℕ -> ℝ} -> SeriesOf xs ConvergesAbsolutely -> SeriesOf xs isConvergent
-absolute⇒isConvergent {xs} hyp = proposition-3-5 hyp (λ n -> nonNeg∣x∣ (xs n)) (λ n -> ≤-refl)
+absolute⇒isConvergent {xs} hyp = proposition-3-5 hyp (0 , (λ n n≥1 -> ≤-refl))
 
 lim : {xs : ℕ -> ℝ} -> xs isConvergent -> ℝ
 lim {xs} (ℓ , hyp) = ℓ
@@ -1743,15 +1765,46 @@ geometric-series-isConvergent : ∀ {r} -> ∣ r ∣ < 1ℝ -> SeriesOf (λ i ->
 geometric-series-isConvergent {r} ∣r∣<1 = ((1ℝ - r) ⁻¹) (1-r≄0 r ∣r∣<1) , geometric-series-converges {r} ∣r∣<1
 
 {-
+n - N = 1:
+∣xₙ∣ ≤ c* ∣xN∣?
+
 Proposition:
   Let c∈ℝ⁺ and let t∈ℕ. if c < 1 and 
 (1)                        ∣xₙ₊₁∣ ≤ c∣xₙ∣                (n ≥ t),
 then ∑xᵢ converges.
 Proof:
   Suppose c < 1 and (1) hold. Then
-                        ∣xₙ∣ ≤ c∣xₜ∣ ≤ cⁿ⁻ᵗ∣xₜ∣           (n ≥ t).
+                        ∣xₙ∣ ≤ cⁿ⁻ᵗ∣xₜ∣                  (n ≥ t).
 WTS ∣xₜ∣∑ᵢ₌ₜ̂̂ cⁱ⁻ᵗ = ∣xₜ∣∑ᵢ₌₀ cⁱ converges. We have:
+
+∑ cⁿ⁻ᵗ∣xₜ∣ = ∑cⁿc⁻ᵗ∣xₜ∣
+           = c⁻ᵗ∣xₜ∣∑cⁿ
+cⁿ⁻ᴺ
+
+proposition-3-5 : ∀ {xₙ yₙ} -> (yₙ) converges -> NonNegative (yₙ) -> ∣xₙ∣ ≤ yₙ -> (xₙ) converges
+
+∣xₙ₊₁∣ ≤ c∣xₙ∣
+WTS: ∀ n -> ∣xₙ∣ ≤ cⁿ⁺¹∣xₜ∣
+Proof:
+n = 0: ∣x₀∣ ≤ 
 -}
 proposition-3-6-1 : ∀ {xs : ℕ -> ℝ} -> ∀ {c} -> Positive c -> ∀ N -> {N ≢0} ->
                   c < 1ℝ -> (∀ n -> n ℕ.≥ N -> ∣ xs (suc n) ∣ ≤ c * ∣ xs n ∣) -> SeriesOf xs isConvergent
-proposition-3-6-1 {xs} {c} posc (suc N-1) c<1 hyp = {!!}
+proposition-3-6-1 {xs} {c} posc (suc N-1) c<1 hyp = {!!} {-proposition-3-5 part1 part2 {!!}-}
+  where
+    open ≤-Reasoning
+    N = suc N-1
+    c≄0 = {!!}
+    c⁻ᴺ = pow ((c ⁻¹) c≄0) N
+
+    part1 : SeriesOf (λ n -> ∣ xs N ∣ * c⁻ᴺ * pow c n) isConvergent
+    part1 = {!!}
+
+    part2 : ∀ n -> NonNegative (∣ xs N ∣ * c⁻ᴺ * pow c n)
+    part2 n = nonNegx,y⇒nonNegx*y {∣ xs N ∣ * c⁻ᴺ} {pow c n}
+              (nonNegx,y⇒nonNegx*y {∣ xs N ∣} {c⁻ᴺ} (nonNeg∣x∣ (xs N))
+              (nonNegx⇒nonNegxⁿ {(c ⁻¹) c≄0} N (pos⇒nonNeg (posx⇒posx⁻¹ {c} c≄0 posc))))
+              (nonNegx⇒nonNegxⁿ n (pos⇒nonNeg posc))
+
+    part3 : {!∀ n -> ∣ xs n ∣ ≤ ∣ xs N ∣ * c⁻ᴺ * pow c n!}
+    part3 = {!!}
