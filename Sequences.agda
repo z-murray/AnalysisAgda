@@ -1888,21 +1888,15 @@ proposition-3-6-1 {xs} {c} posc (suc N-1) c<1 hyp = proposition-3-5 part1 (ℕ.p
     open ≃-Reasoning
     open ℝ-+-*-Solver
 
-{-
-c > 1
-∣xₙ₊₁∣ > c∣xₙ∣ (n ≥ t)
-∴ ∑xₙ diverges
-Proof:
-  Consider the nonnegative sequence (∣xₜ₊₁∣). Let n ≥ t. Then ∣xₙ∣ ≥ ∣xₜ₊₁∣ for n ≥ t + 1. Moreover,
-∣xₜ₊₁∣ > c∣xₜ∣ ≥ 0, so ∑∣xₜ₊₁∣ diverges. By the comparison test for divergence, ∑xₙ diverges.
--}
 proposition-3-6-2 : ∀ {xs : ℕ -> ℝ} -> ∀ {c} -> 1ℝ < c ->
                     (∃ λ N-1 -> ∀ n -> n ℕ.≥ suc N-1 -> ∣ xs (suc n) ∣ > c * ∣ xs n ∣) ->
                     SeriesOf xs isDivergent
-proposition-3-6-2 {xs} {c} 1<c (N-1 , hyp) = comparison-test-divergence {xs} {λ i → ∣ xs (suc N) ∣}
-                                             (0 , (λ n n≥0 -> nonNeg∣x∣ (xs (suc N))))
-                                             (∣c∣>0⇒∑c-isDivergent part1)
-                                             (suc N , λ n n≥N+1 -> {!≤-trans {∣ xs (suc N) ∣} {pow c n * c⁻ᴺ⁻¹ * ∣ xs (suc N) ∣} {∣ xs n ∣}!})
+proposition-3-6-2 {xs} {c} 1<c (N-1 , hyp) = subsequence-divergence-test {xs} (∣ xs (suc N) ∣ ,
+                                             (λ n -> xs (n ℕ.+ suc N)) , 0<x⇒posx {∣ xs (suc N) ∣} part1 ,
+                                             subseq* ((λ n -> n ℕ.+ suc N) , (λ n -> ≃-refl) , (λ n -> ℕP.n<1+n (n ℕ.+ suc N))) ,
+                                             λ n -> ≤-trans {∣ xs (suc N) ∣} {pow c (n ℕ.+ suc N) * c⁻ᴺ⁻¹ * ∣ xs (suc N) ∣} {∣ xs (n ℕ.+ suc N) ∣}
+                                                    (part2-1 (n ℕ.+ suc N) (ℕP.m≤n+m (suc N) n))
+                                                    (part2-2 (n ℕ.+ suc N) (≤⇒≡∨< (suc N) (n ℕ.+ suc N) (ℕP.m≤n+m (suc N) n))))
   where
     open ≤-Reasoning
     N = suc N-1
@@ -1912,12 +1906,11 @@ proposition-3-6-2 {xs} {c} 1<c (N-1 , hyp) = comparison-test-divergence {xs} {λ
     c⁻ᴺ⁻¹ = ((pow c (suc N)) ⁻¹) cᴺ⁺¹≄0
     posc = 0<x⇒posx (≤-<-trans (p≤q⇒p⋆≤q⋆ 0ℚᵘ 1ℚᵘ (ℚP.nonNegative⁻¹ _)) 1<c)
 
-    part1 : ∣ ∣ xs (suc N) ∣ ∣ > 0ℝ
+    part1 : ∣ xs (suc N) ∣ > 0ℝ
     part1 = begin-strict
       0ℝ                 ≤⟨ nonNegx⇒0≤x (nonNegx,y⇒nonNegx*y (pos⇒nonNeg posc) (nonNeg∣x∣ (xs N))) ⟩
       c * ∣ xs N ∣       <⟨ hyp N ℕP.≤-refl ⟩
-      ∣ xs (suc N) ∣     ≈⟨ ≃-symm (nonNegx⇒∣x∣≃x (nonNeg∣x∣ (xs (suc N)))) ⟩
-      ∣ ∣ xs (suc N) ∣ ∣   ∎
+      ∣ xs (suc N) ∣      ∎
 
     part2-1 : ∀ n -> suc N ℕ.≤ n -> pow c n * c⁻ᴺ⁻¹ * ∣ xs (suc N) ∣ ≥ ∣ xs (suc N) ∣
     part2-1 n N+1≤n = begin
