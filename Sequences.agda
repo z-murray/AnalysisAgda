@@ -1820,27 +1820,19 @@ abstract
   c * (∑₀ xs n - (∑₀ xs m + xs m))                              ∎
   where open ≃-Reasoning
 
-{-
-Should rework hypotheses a bit. The type would probably look better as
-∀ {xs : ℕ -> ℝ} -> ∀ {c} -> 0ℝ < c < 1ℝ -> 
-                   (∃ λ N-1 -> ∀ n -> n ℕ.≥ suc N-1 -> ∣ xs (suc n) ∣ ≤ c * ∣ xs n ∣) ->
-                   SeriesOf xs isConvergent
-instead of the weird ordering right now.
--}
-proposition-3-6-1 : ∀ {xs : ℕ -> ℝ} -> ∀ {c} -> Positive c -> ∀ N -> {N ≢0} ->
-                  c < 1ℝ -> (∀ n -> n ℕ.≥ N -> ∣ xs (suc n) ∣ ≤ c * ∣ xs n ∣) -> SeriesOf xs isConvergent
-proposition-3-6-1 {xs} {c} posc (suc N-1) c<1 hyp = proposition-3-5 part1 (ℕ.pred N , part2)
+proposition-3-6-1 : ∀ {xs : ℕ -> ℝ} -> ∀ {c} -> 0ℝ < c < 1ℝ ->
+                      (∃ λ N-1 -> ∀ n -> n ℕ.≥ suc N-1 -> ∣ xs (suc n) ∣ ≤ c * ∣ xs n ∣) ->
+                      SeriesOf xs isConvergent
+proposition-3-6-1 {xs} {c} (0<c , c<1) (N-1 , hyp) = proposition-3-5 {xs} {λ n -> ∣ xs N ∣ * c⁻ᴺ * pow c n} part1
+                                                     (ℕ.pred N , λ n n≥N -> part2 n (≤⇒≡∨< N n n≥N))
   where
     open ≤-Reasoning
     N = suc N-1
-    c≄0 = inj₂ (posx⇒0<x posc)
-    cᴺ≄0 = inj₂ (begin-strict
-      0ℝ              ≈⟨ ≃-symm (*-zeroʳ (pow 0ℝ N-1)) ⟩
-      pow 0ℝ N-1 * 0ℝ <⟨ x<y∧nonNegx⇒xⁿ<yⁿ {0ℝ} {c} N (posx⇒0<x posc) (0≤x⇒nonNegx ≤-refl) ⟩
-      pow c N          ∎)
-    c⁻ᴺ = pow ((c ⁻¹) c≄0) N
+    posc = 0<x⇒posx {c} 0<c
+    cᴺ≄0 = inj₂ (posx⇒0<x {pow c N} (posx⇒posxⁿ {c} N posc))
+    c⁻ᴺ = ((pow c N) ⁻¹) cᴺ≄0
     ∣c∣<1 = -y<x<y⇒∣x∣<y c 1ℝ (<-trans (<-respˡ-≃ (⋆-distrib-neg 1ℚᵘ)
-            (p<q⇒p⋆<q⋆ (ℚ.- 1ℚᵘ) 0ℚᵘ (ℚP.negative⁻¹ _))) (posx⇒0<x posc) , c<1)
+            (p<q⇒p⋆<q⋆ (ℚ.- 1ℚᵘ) 0ℚᵘ (ℚP.negative⁻¹ _))) 0<c , c<1)
     con∑cⁿ = fast-geometric-series-isConvergent {c} ∣c∣<1
 
     part0 : (λ i -> ∣ xs N ∣ * c⁻ᴺ * (SeriesOf (λ n -> pow c n) i)) isConvergent
@@ -1855,26 +1847,20 @@ proposition-3-6-1 {xs} {c} posc (suc N-1) c<1 hyp = proposition-3-5 part1 (ℕ.p
             {SeriesOf (λ n → ∣ xs N ∣ * c⁻ᴺ * pow c n)}
             (λ {n -> ≃-symm (∑cxₙ≃c∑xₙ (λ i -> pow c i) (∣ xs N ∣ * c⁻ᴺ) 0 n)}) part0
 
-    part2 : ∀ n -> n ℕ.≥ N -> ∣ xs n ∣ ≤ ∣ xs N ∣ * c⁻ᴺ * pow c n
-    part2 n n≥N = res n (≤⇒≡∨< N n n≥N)
-      where
-        res : ∀ n -> N ≡ n ⊎ N ℕ.< n -> ∣ xs n ∣ ≤ ∣ xs N ∣ * c⁻ᴺ * pow c n
-        res .(suc N-1) (inj₁ refl) = ≤-reflexive (≃-symm (begin-equality
-          ∣ xs N ∣ * c⁻ᴺ * pow c N                 ≈⟨ *-assoc ∣ xs N ∣ c⁻ᴺ (pow c N) ⟩
-          ∣ xs N ∣ * (c⁻ᴺ * pow c N)               ≈⟨ *-congˡ {∣ xs N ∣} {c⁻ᴺ * pow c N} {1ℝ}
-                                                      (≃-trans
-                                                      (*-congʳ {pow c N} {c⁻ᴺ} {(pow c N ⁻¹) cᴺ≄0}
-                                                               (≃-symm ([xⁿ]⁻¹≃[x⁻¹]ⁿ {c} c≄0 N cᴺ≄0)))
-                                                      (*-inverseˡ (pow c N) cᴺ≄0)) ⟩
-          ∣ xs N ∣ * 1ℝ                            ≈⟨ *-identityʳ ∣ xs N ∣ ⟩
-          ∣ xs N ∣                                  ∎))
-        res (suc n) (inj₂ (ℕ.s≤s N<n)) = begin
-          ∣ xs (suc n) ∣                 ≤⟨ hyp n N<n ⟩
-          c * ∣ xs n ∣                   ≤⟨ *-monoˡ-≤-nonNeg {∣ xs n ∣} {c} {∣ xs N ∣ * c⁻ᴺ * pow c n}
-                                            (res n (≤⇒≡∨< N n N<n)) (pos⇒nonNeg posc) ⟩
-          c * (∣ xs N ∣ * c⁻ᴺ * pow c n) ≈⟨ *-comm c (∣ xs N ∣ * c⁻ᴺ * pow c n) ⟩
-          ∣ xs N ∣ * c⁻ᴺ * pow c n * c   ≈⟨ *-assoc (∣ xs N ∣ * c⁻ᴺ) (pow c n) c ⟩
-          ∣ xs N ∣ * c⁻ᴺ * pow c (suc n)  ∎
+    part2 : ∀ n -> N ≡ n ⊎ N ℕ.< n -> ∣ xs n ∣ ≤ ∣ xs N ∣ * c⁻ᴺ * pow c n
+    part2 .(suc N-1) (inj₁ refl) = ≤-reflexive (≃-symm (begin-equality
+      ∣ xs N ∣ * c⁻ᴺ * pow c N                 ≈⟨ *-assoc ∣ xs N ∣ c⁻ᴺ (pow c N) ⟩
+      ∣ xs N ∣ * (c⁻ᴺ * pow c N)               ≈⟨ *-congˡ {∣ xs N ∣} {c⁻ᴺ * pow c N} {1ℝ}
+                                                  (*-inverseˡ (pow c N) cᴺ≄0) ⟩
+      ∣ xs N ∣ * 1ℝ                            ≈⟨ *-identityʳ ∣ xs N ∣ ⟩
+      ∣ xs N ∣                                  ∎))
+    part2 (suc n) (inj₂ (ℕ.s≤s N<n)) = begin
+      ∣ xs (suc n) ∣                 ≤⟨ hyp n N<n ⟩
+      c * ∣ xs n ∣                   ≤⟨ *-monoˡ-≤-nonNeg {∣ xs n ∣} {c} {∣ xs N ∣ * c⁻ᴺ * pow c n}
+                                        (part2 n (≤⇒≡∨< N n N<n)) (pos⇒nonNeg posc) ⟩
+      c * (∣ xs N ∣ * c⁻ᴺ * pow c n) ≈⟨ *-comm c (∣ xs N ∣ * c⁻ᴺ * pow c n) ⟩
+      ∣ xs N ∣ * c⁻ᴺ * pow c n * c   ≈⟨ *-assoc (∣ xs N ∣ * c⁻ᴺ) (pow c n) c ⟩
+      ∣ xs N ∣ * c⁻ᴺ * pow c (suc n)  ∎
 
 ∣c∣>0⇒∑c-isDivergent : ∀ {c} -> ∣ c ∣ > 0ℝ -> SeriesOf (λ i -> c) isDivergent
 ∣c∣>0⇒∑c-isDivergent {c} ∣c∣>0 = ∣ c ∣ , div* (0<x⇒posx ∣c∣>0)
@@ -1942,4 +1928,5 @@ proposition-3-6-2 {xs} {c} 1<c (N-1 , hyp) = subsequence-divergence-test {xs} (�
                                                 (pos⇒nonNeg {c} posc) ⟩
       c * ∣ xs n ∣                           <⟨ hyp n (ℕP.≤-trans (ℕP.n≤1+n N) N<n) ⟩
       ∣ xs (suc n) ∣                          ∎
+
 
