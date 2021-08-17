@@ -390,9 +390,9 @@ xₙ+yₙ→x₀+y₀ {xs} {ys} (x₀ , con* xₙ→x₀) (y₀ , con* yₙ→y�
         )
     open ℤ-Solver.+-*-Solver
 
-_·_ : (n : ℕ) -> {n ≢0} -> ℝ -> ℝ
+{-_·_ : (n : ℕ) -> {n ≢0} -> ℝ -> ℝ
 1 · x = x
-suc (suc n) · x = (suc n) · x + x 
+suc (suc n) · x = (suc n) · x + x -}
 
 x≤Kx : ∀ x -> x ≤ (+ K x / 1) ⋆
 x≤Kx x = nonNeg* (λ {(suc n-1) -> let n = suc n-1 in begin
@@ -435,12 +435,12 @@ bound⇒boundℕ {f} (r , (bound* ∣f∣≤r)) = let M = suc (proj₁ (archimed
   y * w  ∎
   where open ≤-Reasoning
 
-⋆-distrib-* : ∀ p q -> (p ℚ.* q) ⋆ ≃ p ⋆ * q ⋆
-⋆-distrib-* p q = *≃* (λ {(suc n-1) -> let n = suc n-1 in begin
+--⋆-distrib-* : ∀ p q -> (p ℚ.* q) ⋆ ≃ p ⋆ * q ⋆
+{-⋆-distrib-* p q = *≃* (λ {(suc n-1) -> let n = suc n-1 in begin
   ℚ.∣ p ℚ.* q ℚ.- p ℚ.* q ∣ ≈⟨ ℚP.∣-∣-cong (ℚP.+-inverseʳ (p ℚ.* q)) ⟩
   0ℚᵘ                       ≤⟨ ℚP.nonNegative⁻¹ _ ⟩
   + 2 / n                    ∎})
-  where open ℚP.≤-Reasoning
+  where open ℚP.≤-Reasoning-}
 
 -xₙ→-x₀ : ∀ {xs : ℕ -> ℝ} -> (x→x₀ : xs isConvergent) -> (λ n -> - xs n) ConvergesTo (- (proj₁ x→x₀))
 -xₙ→-x₀ {xs} (x₀ , con* x→x₀) = con* (λ {(suc k-1) -> let k = suc k-1 in
@@ -820,6 +820,7 @@ abstract
           N = m₀ ℕ.⊔ n₀
 
           {-
+            [1]
             Incredible optimization note!
             -------------------------------
             If you case split on n here to get n = suc m for some m∈ℕ, the typechecking (seemingly) never completes!
@@ -1340,6 +1341,7 @@ m > n ≥ N. Then
                             ≤ ∣∑ᵢ₌ₙ₊₁ᵐ yᵢ∣
                             ≤ k⁻¹.
 Hence ∑xᵢ is convergent.                                               □
+[2]
 -}
 proposition-3-5 : ∀ {xs ys} -> SeriesOf ys isConvergent -> (∃ λ N-1 -> ∀ n -> n ℕ.≥ suc N-1 -> ∣ xs n ∣ ≤ ys n) ->
                     SeriesOf xs isConvergent
@@ -1405,6 +1407,7 @@ cauchy-getter {xs} (cauchy* hyp) = hyp
                               xₙ = yₕ₍ₙ₎                 (n∈ℕ)
 and
                             h(n) < h(n+1)                (n∈ℕ).
+[3]
 -}
 data _SubsequenceOf_ : Rel (ℕ -> ℝ) 0ℓ where
   subseq* : {xs ys : ℕ -> ℝ} -> (∃ λ (f : ℕ -> ℕ) ->
@@ -1455,6 +1458,7 @@ subsequence-divergence-test {xs} (r , ys , posr , subseq* (f , yₙ⊂xₙ) , �
     open ℝ-+-*-Solver
 
 {-
+[4]
 Proposition:
   Let (yₙ) be a sequence with a nonnegative tail (i.e. ∃N₁∈ℕ ∀n≥N₁[yₙ ≥ 0]). Suppose that
 ∃N₂∈ℕ ∀n≥N₂[xₙ ≥ yₙ], and that ∑yᵢ is divergent. Then ∑xᵢ is divergent.
@@ -1526,6 +1530,16 @@ xⁿxᵐ≃xⁿ⁺ᵐ x (suc n) m = begin
   pow x ((1 ℕ.+ n) ℕ.+ m)  ∎
   where open ≃-Reasoning
 
+testingCase : ∀ x -> ∀ n m -> (pow x n) * (pow x m) ≃ pow x (n ℕ.+ m)
+testingCase x zero m = *-identityˡ (pow x m)
+testingCase x (suc n) m = begin
+  pow x n * x * pow x m ≈⟨ solve 3 (λ a b c -> a ⊗ b ⊗ c ⊜ a ⊗ c ⊗ b) ≃-refl (pow x n) x (pow x m) ⟩
+  pow x n * pow x m * x   ≈⟨ {!!} ⟩
+  pow x ((suc n) ℕ.+ m)  ∎
+  where
+    open ≃-Reasoning
+    open import RingSolverB
+
 archimedean-ℝ₃ : ∀ {x} y -> Positive x -> ∃ λ n-1 -> (+ (suc n-1) / 1) ⋆ * x > y
 archimedean-ℝ₃ {x} y posx = let x≄0 = inj₂ (posx⇒0<x posx); x⁻¹ = (x ⁻¹) x≄0
                                     ; arch = fast-archimedean-ℝ (y * x⁻¹); n = suc (proj₁ arch) in
@@ -1558,15 +1572,55 @@ x<y⇒∃ε>0[x<x+ε<y] {x} {y} x<y = {!!}
 [x+y]*[z+w]≃xz+xw+yz+yw : ∀ x y z w -> (x + y) * (z + w) ≃ x * z + x * w + y * z + y * w
 [x+y]*[z+w]≃xz+xw+yz+yw x y z w = {!!}
 
+x²ⁿ≥0 : ∀ x -> ∀ n -> pow x (2 ℕ.* n) ≥ 0ℝ
+x²ⁿ≥0 x n = {!!}
+
+{-
+(1 + x)ⁿ ≥ 1 + nx
+n = 0: Easy
+n∈ℕ:
+(1 + x)ⁿ⁺¹ = (1 + x) * (1 + x)ⁿ
+           ≥ (1 + x) * (1 + nx)
+           = 1 + (n + 1)x + nx²
+           ≥ 1 + (n + 1)x
+
+(1 + x) * (1 + r-1 * x)
+= 1 * 1 + 1 * (r-1 * x) + x * 1 + x * r-1 * x
+= 1 + (1 + r-1) * x + r-1 * x²
+
+(a + bx) * (c + dx) = ac + adx + bcx + bdx²
+                    = ac + (ad + bc)x + bdx²
+(1 + x) * (1 + rx)
+= 1 * 1 + 1 * rx + x * 1 + x * rx
+= 1 + (r + 1)x + rx²
+-}
 bernoullis-inequality : ∀ {x} -> x ≥ - 1ℝ -> ∀ (r : ℕ) -> pow (1ℝ + x) r ≥ 1ℝ + (+ r / 1) ⋆ * x
 bernoullis-inequality {x} x≥-1 zero = begin
   1ℝ + 0ℝ * x ≈⟨ +-congʳ 1ℝ (*-zeroˡ x) ⟩
   1ℝ + 0ℝ     ≈⟨ +-identityʳ 1ℝ ⟩
   1ℝ           ∎
   where open ≤-Reasoning
-bernoullis-inequality {x} x≥-1 (suc r-1) = {!!}
-  where open ≤-Reasoning
+bernoullis-inequality {x} x≥-1 (suc r-1) = begin
+  1ℝ + ((+ suc r-1) / 1) ⋆ * x                                      ≤⟨ ≤-respˡ-≃ (+-identityʳ _)
+                                                                       (+-monoʳ-≤ (1ℝ + (+ suc r-1 / 1) ⋆ * x)
+                                                                       (nonNegx⇒0≤x (nonNegx,y⇒nonNegx*y
+                                                                       (nonNegp⇒nonNegp⋆ (+ r-1 / 1) _) (0≤x⇒nonNegx (x²ⁿ≥0 x 1))))) ⟩
+  1ℝ + ((+ suc r-1) / 1) ⋆ * x + (+ r-1 / 1) ⋆ * pow x 2            ≈⟨ {!!} ⟩
+  1ℝ * 1ℝ + (1ℝ + 1ℝ * (+ r-1 / 1) ⋆) * x + (+ r-1 / 1) ⋆ * (x * x) ≈⟨ solve 3 (λ 1ₓ r x ->
+                                                                       (((1ₓ ⊗ 1ₓ) ⊕ ((1ₓ ⊕ (1ₓ ⊗ r)) ⊗ x)) ⊕ (r ⊗ (x ⊗ x))) ⊜
+                                                                       ((1ₓ ⊕ x) ⊗ (1ₓ ⊕ (r ⊗ x)))) ≃-refl 1ℝ ((+ r-1 / 1) ⋆) x ⟩
+  (1ℝ + x) * (1ℝ + (+ r-1 / 1) ⋆ * x)                               ≤⟨ *-monoˡ-≤-nonNeg (bernoullis-inequality x≥-1 r-1)
+                                                                       (0≤x⇒nonNegx (≤-respˡ-≃ (+-inverseʳ 1ℝ) (+-monoʳ-≤ 1ℝ x≥-1))) ⟩
+  (1ℝ + x) * pow (1ℝ + x) r-1                                       ≈⟨ *-comm (1ℝ + x) (pow (1ℝ + x) r-1) ⟩
+  pow (1ℝ + x) (suc r-1)                                             ∎
+  where
+    open ≤-Reasoning
+    open import RingSolverB
+{-
+(1 + x) * (1 + (r * x)) = 
+-}
 
+{-
 x≄0⇒xⁿ≄0 : ∀ {x} -> ∀ n -> x ≄0 -> pow x n ≄0
 x≄0⇒xⁿ≄0 {x} zero x≄0 = inj₂ (p<q⇒p⋆<q⋆ 0ℚᵘ 1ℚᵘ (ℚP.positive⁻¹ _))
 x≄0⇒xⁿ≄0 {x} (suc n) x≄0 = x≄0∧y≄0⇒x*y≄0 (x≄0⇒xⁿ≄0 n x≄0) x≄0
@@ -1692,11 +1746,24 @@ x<y∧nonNegx⇒xⁿ<yⁿ {x} {y} (suc (suc n)) x<y nonx = begin-strict
   where open ≃-Reasoning
 
 {-
+(1 + x)ⁿ ≥ 1 + nx
+x ≥ -1
+
+(1+x)⁰ = 1
+1 + 0x = 1
+
+
+(1 + x)ⁿ⁺¹ = (1 + x)ⁿ * (1 + x)
+           ≥ (1 + nx) * (1 + x)
+           = 1 + (n+1)x + nx²
+           ≥ 1 + (n+1)x
+
+[5]
 This proof is an altered and further constructivized version of the proof at 
 https://math.stackexchange.com/questions/1253129/as-the-limit-of-n-goes-to-infinity-prove-that-xn-0-if-operatornameabs  
 
 Proposition:
-  If ∣r∣ < 1, then (rₙ)→0.
+  If ∣r∣ < 1, then (rⁿ)→0.
 Proof:
   Let ε∈ℝ⁺ such that ∣r∣ < ∣r∣ + ε and 0 < ∣r∣ + ε < 1. If ([∣r∣ + ε]ⁿ)→0, then
 (∣r∣ⁿ)→0, and so (rⁿ)→0. Let t = (∣r∣ + ε)⁻¹. Then t = 1 + (t - 1), where t - 1 > 0.
@@ -1739,6 +1806,7 @@ private
   1-r≄0 : ∀ r -> ∣ r ∣ < 1ℝ -> (1ℝ - r) ≄0
   1-r≄0 r ∣r∣<1 = inj₂ (x<y⇒0<y-x r 1ℝ (proj₂ (∣x∣<y⇒-y<x<y r 1ℝ ∣r∣<1)))
 
+{- [6] -}
 geometric-sum : ∀ {r} -> ∀ n -> (∣r∣<1 : ∣ r ∣ < 1ℝ) -> ∑ (λ i -> pow r i) 0 n ≃ (1ℝ - pow r n) * ((1ℝ - r) ⁻¹) (1-r≄0 r ∣r∣<1)
 geometric-sum {r} zero ∣r∣<1 = let [1-r]⁻¹ = ((1ℝ - r) ⁻¹) (1-r≄0 r ∣r∣<1) in ≃-symm (begin
   (1ℝ - 1ℝ) * [1-r]⁻¹ ≈⟨ *-congʳ {[1-r]⁻¹} {1ℝ - 1ℝ} {0ℝ} (+-inverseʳ 1ℝ) ⟩
@@ -1820,6 +1888,7 @@ abstract
   c * (∑₀ xs n - (∑₀ xs m + xs m))                              ∎
   where open ≃-Reasoning
 
+{- [7] -}
 proposition-3-6-1 : ∀ {xs : ℕ -> ℝ} -> ∀ {c} -> 0ℝ < c < 1ℝ ->
                       (∃ λ N-1 -> ∀ n -> n ℕ.≥ suc N-1 -> ∣ xs (suc n) ∣ ≤ c * ∣ xs n ∣) ->
                       SeriesOf xs isConvergent
@@ -1874,6 +1943,7 @@ proposition-3-6-1 {xs} {c} (0<c , c<1) (N-1 , hyp) = proposition-3-5 {xs} {λ n 
     open ≃-Reasoning
     open ℝ-+-*-Solver
 
+{- [8] -}
 proposition-3-6-2 : ∀ {xs : ℕ -> ℝ} -> ∀ {c} -> 1ℝ < c ->
                     (∃ λ N-1 -> ∀ n -> n ℕ.≥ suc N-1 -> ∣ xs (suc n) ∣ > c * ∣ xs n ∣) ->
                     SeriesOf xs isDivergent
@@ -1948,7 +2018,7 @@ abstract
 
 {-
 Lemma:
-  Let (aₙ) and (xₙ) be positive sequences of real numbers and let c∈ℝ. If (aₙxₙ)→0 and there is N₁∈ℕ such that
+  Let (aₙ) and (xₙ) be positive sequences of real numbers and let c>0. If (aₙxₙ)→0 and there is N₁∈ℕ such that
 (1)                                 aₙxₙxₙ₊₁⁻¹ - aₙ₊₁ ≥ c         (n ≥ N₁)
 then ∑xₙ converges.
 Proof:
@@ -2034,3 +2104,62 @@ Ideas:
     part2 (suc (suc m-1)) (suc zero) m>n = {!limitShifting!}
     part2 (suc zero) (suc (suc n-1)) (ℕ.s≤s ())
     part2 (suc (suc m-1)) (suc (suc n-1)) m>n = {!!}
+
+_·_ : ℕ -> ℝ -> ℝ
+n · x = {!!}
+
+{-
+It's interesting that this typechecks with the (≃-reflexive (λ n -> ℚP.≃-refl)) proof, but
+not with the ≃-refl proof.
+
+The reason seems to be this: Each real number is represented as a sequence (xₙ) of rationals
+with a proof of its regularity. By calling ≃-refl to prove x ≃ y, we are also declaring that
+the regularity proofs of (xₙ) and (yₙ) are equivalent.
+
+We can't prove 0ℝ ≃ - 0ℝ by ≃-refl because of the regularity proof. We can, however, prove it
+simply by proving that their corresponding rational sequences are equal. This is exactly what
+is occurring here with ≃-reflexive. It checks only the rational sequences of the normal forms.
+
+This enables us to prove things about negatives and about the basic algebraic properties of 
+multiplication using the solver, as shown in test and test3. We cannot, however, use it to
+prove that x - x ≃ 0ℝ.
+-}
+test : ∀ x y -> x + y ≃ - (- x - y)
+test x y = solve 2 (λ x y -> x :+ y := :- (:- x :- y)) (≃-reflexive (λ n -> ℚP.≃-refl)) x y
+  where open ℝ-+-*-Solver
+
+test2 : ∀ x -> x - x ≃ 0ℝ
+test2 x = solve 1 (λ x -> x :- x := (0 :× x)) {!!} {!!}
+  where open ℝ-+-*-Solver
+
+{-
+This test is very slow! It takes a long time to check that the sequences of each normal form
+are actually equivalent. Hence the test is commented out until it's needed.
+-}
+{-
+test3 : ∀ x y -> x * y ≃ y * x
+test3 x y = solve 2 (λ x y -> x :* y := y :* x) (≃-reflexive (λ {n -> ℚP.≃-refl})) x y
+  where open ℝ-+-*-Solver
+-}
+
+≃-reflexive-≡ : ∀ {x y} -> (∀ n -> {n ≢0} -> seq x n ≡ seq y n) -> x ≃ y
+≃-reflexive-≡ {x} {y} hyp = {!!}
+
+{-
+After 15 minutes, test4 would still not typecheck, despite its apparent simplicity. 
+
+This, along with the long time it takes to typecheck test3, indicates that a real number solver that
+is functional with multiplication might not be feasible due to the reals being so computationally intensive.
+-}
+{-
+test4 : ∀ x y z -> x * y * z ≃ x * (y * z)
+test4 x y z = solve 3 (λ x y z -> x :* y :* z := x :* (y :* z)) (≃-reflexive (λ n -> ℚP.≃-refl)) {!!} {!!} {!!}
+  where open ℝ-+-*-Solver
+-}
+
+{-
+test4-modified : ∀ x y z -> x * y * z ≃ x * (y * z)
+test4-modified x y z = solve 3 (λ x y z -> x :* y :* z := x :* (y :* z)) (≃-reflexive-≡ (λ n -> {!refl!})) x y z
+  where open ℝ-+-*-Solver
+-}
+-}
