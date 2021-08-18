@@ -1278,6 +1278,16 @@ abstract
   ; _⁻¹ = -_
   }
 
++-*-rawSemiring : RawSemiring 0ℓ 0ℓ
++-*-rawSemiring = record
+  { Carrier = ℝ
+  ; _≈_     = _≃_
+  ; _+_     = _+_
+  ; _*_     = _*_
+  ; 0#      = 0ℝ
+  ; 1#      = 1ℝ
+  }
+
 +-*-rawRing : RawRing 0ℓ 0ℓ
 +-*-rawRing = record
   { Carrier = ℝ
@@ -1452,6 +1462,25 @@ abstract
   ; *-comm = *-comm₂
   }
 
++-*-isSemiringWithoutAnnihilatingZero : IsSemiringWithoutAnnihilatingZero _≃_ _+_ _*_ 0ℝ 1ℝ
++-*-isSemiringWithoutAnnihilatingZero = record
+  { +-isCommutativeMonoid = +-0-isCommutativeMonoid
+  ; *-isMonoid            = *-1-isMonoid
+  ; distrib               = *-distrib-+
+  }
+
++-*-isSemiring : IsSemiring _≃_ _+_ _*_ 0ℝ 1ℝ
++-*-isSemiring = record
+  { isSemiringWithoutAnnihilatingZero = +-*-isSemiringWithoutAnnihilatingZero
+  ; zero                              = *-zero
+  }
+
++-*-isCommutativeSemiring : IsCommutativeSemiring _≃_ _+_ _*_ 0ℝ 1ℝ
++-*-isCommutativeSemiring = record
+  { isSemiring = +-*-isSemiring
+  ; *-comm     = *-comm
+  }
+
 *-magma : Magma 0ℓ 0ℓ
 *-magma = record
   { isMagma = *-isMagma
@@ -1470,6 +1499,16 @@ abstract
 *-1-commutativeMonoid : CommutativeMonoid 0ℓ 0ℓ
 *-1-commutativeMonoid = record
   { isCommutativeMonoid = *-1-isCommutativeMonoid
+  }
+
++-*-semiring : Semiring 0ℓ 0ℓ
++-*-semiring = record
+  { isSemiring = +-*-isSemiring
+  }
+
++-*-commutativeSemiring : CommutativeSemiring 0ℓ 0ℓ
++-*-commutativeSemiring = record
+  { isCommutativeSemiring = +-*-isCommutativeSemiring
   }
 
 +-*-ring : Ring 0ℓ 0ℓ
@@ -2955,8 +2994,7 @@ abstract
 ≤⇒≡∨< zero (suc n) m≤n = inj₂ ℕP.0<1+n
 ≤⇒≡∨< (suc m) (suc n) (ℕ.s≤s m≤n) = [ (λ m≡n -> inj₁ (cong suc m≡n)) , (λ m<n -> inj₂ (ℕ.s≤s m<n)) ]′ (≤⇒≡∨< m n m≤n)
 
--- Put ℝ-Solver here!!
-
+-- Finite sums over a sequence
 ∑₀ : (ℕ -> ℝ) -> ℕ -> ℝ
 ∑₀ a 0 = 0ℝ
 ∑₀ a (suc n) = ∑₀ a n + a n
@@ -2964,8 +3002,6 @@ abstract
 ∑ : (ℕ -> ℝ) -> ℕ -> ℕ -> ℝ
 ∑ a 0 n = ∑₀ a n
 ∑ a (suc i) n = ∑₀ a n - ∑₀ a (suc i)
-
-{- lem : ∑ᵢⁿxᵢ = ∑₀ x n - ∑₀ x i -}
 
 ∑-distrib-+ : ∀ (xs ys : ℕ -> ℝ) -> ∀ i n ->
               ∑ (λ k -> xs k + ys k) i n ≃ ∑ xs i n + ∑ ys i n
