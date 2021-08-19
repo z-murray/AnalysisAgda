@@ -1852,13 +1852,13 @@ proposition-3-6-2 {xs} {c} 1<c (N-1 , hyp) = subsequence-divergence-test {xs} (�
       c * ∣ xs n ∣                           <⟨ hyp n (ℕP.≤-trans (ℕP.n≤1+n N) N<n) ⟩
       ∣ xs (suc n) ∣                          ∎
 
-ε-cauchy-convergence : ∀ {xs : ℕ -> ℝ} -> (∀ {ε} -> ε > 0ℝ -> ∃ λ N-1 -> ∀ m n -> m ℕ.> n -> n ℕ.≥ suc N-1 -> ∣ xs m - xs n ∣ < ε) -> xs isConvergent
-ε-cauchy-convergence {xs} hyp = cauchy-convergence ((λ {(suc k-1) ->
+ε-cauchy-convergence : ∀ {xs : ℕ -> ℝ} -> (∀ {ε} -> ε > 0ℝ -> ∃ λ N-1 -> ∀ m n -> m ℕ.> n -> n ℕ.≥ suc N-1 -> ∣ xs m - xs n ∣ ≤ ε) -> xs isConvergent
+ε-cauchy-convergence {xs} hyp = {!!} {-cauchy-convergence ((λ {(suc k-1) ->
                                 let k = suc k-1; res = hyp (p<q⇒p⋆<q⋆ 0ℚᵘ (+ 1 / k) (ℚP.positive⁻¹ _)) in
-                                proj₁ res , λ m n m>n m≥N n≥N -> <⇒≤ (proj₂ res m n m>n n≥N)}))
+                                proj₁ res , λ m n m>n m≥N n≥N -> <⇒≤ (proj₂ res m n m>n n≥N)}))-}
 
 ε-cauchy : ∀ {xs : ℕ -> ℝ} -> (∀ {ε} -> ε > 0ℝ -> ∃ λ N-1 -> ∀ m n -> m ℕ.> n -> n ℕ.≥ suc N-1 -> ∣ xs m - xs n ∣ < ε) -> xs isCauchy
-ε-cauchy {xs} hyp = convergent⇒cauchy (ε-cauchy-convergence hyp)
+ε-cauchy {xs} hyp = {!!} --convergent⇒cauchy (ε-cauchy-convergence hyp)
 
 ε-from-convergence-cauchy : ∀ {xs : ℕ -> ℝ} -> (xₙ→ℓ : xs isConvergent) ->
                             ∀ {ε : ℝ} -> ε > 0ℝ -> ∃ λ N-1 -> ∀ m n -> m ℕ.> n -> n ℕ.≥ suc N-1 -> ∣ xs m - xs n ∣ < ε
@@ -1868,6 +1868,11 @@ abstract
   fast-ε-from-convergence-cauchy : ∀ {xs : ℕ -> ℝ} -> (xₙ→ℓ : xs isConvergent) ->
                                    ∀ {ε : ℝ} -> ε > 0ℝ -> ∃ λ N-1 -> ∀ m n -> m ℕ.> n -> n ℕ.≥ suc N-1 -> ∣ xs m - xs n ∣ < ε
   fast-ε-from-convergence-cauchy = ε-from-convergence-cauchy
+
+∑-mono-< : ∀ {xs ys : ℕ -> ℝ} -> ∀ (m n : ℕ) ->
+           (∀ k -> k ℕ.≥ m -> xs k < ys k) ->
+           ∑ xs m n < ∑ ys m n
+∑-mono-< {xs} {ys} m n hyp = {!∑-mono-≤-weak!}
 
 {-
 Lemma:
@@ -1888,36 +1893,67 @@ Let N = max{N₁, N₂} and let m ≥ n ≥ N. Then
                             = ε.
 Thus ∑xₙ is a Cauchy sequence.                                                                             □
 -}
+lemma-3-7-1-2 : ∀ {as xs : ℕ -> ℝ} -> ∀ {c : ℝ} -> 0ℝ < c ->
+                (0<aₙ,xₙ : ∀ n -> (0ℝ < as n) × (0ℝ < xs n)) ->
+                (λ n -> as n * xs n) ConvergesTo 0ℝ ->
+                (∃ λ N-1 -> ∀ n -> n ℕ.≥ suc N-1 -> as n * xs n * (xs (suc n) ⁻¹) (inj₂ (proj₂ (0<aₙ,xₙ (suc n)))) - as (suc n) ≥ c) ->
+                SeriesOf xs isConvergent
+lemma-3-7-1-2 {as} {xs} {c} 0<c 0<aₙ,xₙ aₙxₙ→0 (N₁-1 , hyp) = ε-cauchy-convergence main
+  where
+    main : ∀ {ε : ℝ} -> ε > 0ℝ -> ∃ λ N-1 -> ∀ m n -> m ℕ.> n -> n ℕ.≥ suc N-1 -> ∣ SeriesOf xs m - SeriesOf xs n ∣ ≤ ε
+    main {ε} ε>0 = {!!}
+      where
+        abstract
+          res : ∃ λ N₂-1 -> ∀ m n -> m ℕ.> n -> n ℕ.≥ suc N₂-1 -> ∣ as m * xs m - as n * xs n ∣ < c * ε
+          res = fast-ε-from-convergence-cauchy {λ n -> as n * xs n} (0ℝ , aₙxₙ→0) (posx⇒0<x (posx,y⇒posx*y (0<x⇒posx 0<c) (0<x⇒posx ε>0)))
+-- k > N₁
+-- N₁ ≤ N-1 < N ≤ n ≤ k
 lemma-3-7-1 : ∀ {as xs : ℕ -> ℝ} -> ∀ {c : ℝ} -> 0ℝ < c ->
               (0<aₙ,xₙ : ∀ n -> (0ℝ < as n) × (0ℝ < xs n)) ->
               (λ n -> as n * xs n) ConvergesTo 0ℝ ->
               (∃ λ N-1 -> ∀ n -> n ℕ.≥ suc N-1 -> as n * xs n * (xs (suc n) ⁻¹) (inj₂ (proj₂ (0<aₙ,xₙ (suc n)))) - as (suc n) ≥ c) ->
               SeriesOf xs isConvergent
 lemma-3-7-1 {as} {xs} {c} 0<c 0<aₙ,xₙ aₙxₙ→0 (N₁-1 , hyp) = ε-cauchy-convergence (λ {ε} ε>0 ->
-                                                        let res = fast-ε-from-convergence-cauchy (0ℝ , aₙxₙ→0)
-                                                                  (posx⇒0<x (posx,y⇒posx*y (0<x⇒posx 0<c) (0<x⇒posx ε>0)))
-                                                                ; N₁ = suc N₁-1; N₂ = suc (proj₁ res); N = N₁ ℕ.⊔ N₂ in
-                                                        ℕ.pred N , λ {(suc m-1) (suc n-1) m>n n≥N →
-                                                        let m = suc m-1; n = suc n-1
+                                                        let N₁ = suc N₁-1; N₂ = suc (proj₁ (res ε ε>0)); N = suc (N₁ ℕ.⊔ N₂) in
+                                                        ℕ.pred N , λ {(suc m-1) (suc n-1) (ℕ.s≤s m-1>n-1) (ℕ.s≤s n-1≥N-1) →
+                                                        let m = suc m-1; n = suc n-1; m>n = ℕ.s≤s m-1>n-1; n≥N = ℕ.s≤s n-1≥N-1
                                                               ; c≄0 = inj₂ 0<c; c⁻¹ = (c ⁻¹) c≄0
-                                                              ; posc⁻¹ = posx⇒posx⁻¹ {c} c≄0 (0<x⇒posx 0<c) in begin-strict
-  ∣ ∑ xs n m ∣                  ≈⟨ 0≤x⇒∣x∣≃x (0≤xₙ⇒0≤∑xₙ (ℕP.<⇒≤ m>n) (λ k n≤k≤m -> <⇒≤ (proj₂ (0<aₙ,xₙ k)))) ⟩
-  ∑ xs n m                      ≈⟨ ≃-symm (≃-trans (*-congʳ {∑ xs n m} (*-inverseˡ c c≄0)) (*-identityˡ (∑ xs n m))) ⟩
-  c⁻¹ * c * ∑ xs n m            ≈⟨ ≃-trans
-                                   (*-assoc c⁻¹ c (∑ xs n m))
-                                   (*-congˡ {c⁻¹} {c * ∑ xs n m} {∑ (λ i → c * xs i) n m}
-                                   (≃-symm (∑cxₙ≃c∑xₙ xs c n m))) ⟩
-  c⁻¹ * ∑ (λ i -> c * xs i) n m <⟨ *-monoʳ-<-pos {c⁻¹} posc⁻¹ {∑ (λ i → c * xs i) n m}
-                                   {∑ (λ i → as (ℕ.pred i) * xs (ℕ.pred i) - as i * xs i) n m}
-                                   {!!} ⟩
-  c⁻¹ * ∑ (λ i -> as (ℕ.pred i) * xs (ℕ.pred i) - as i * xs i) n m              ≈⟨ {!!} ⟩
-  c⁻¹ * (as m-1 * xs m-1 - as n * xs n)                    ≤⟨ *-monoˡ-≤-nonNeg {as m-1 * xs m-1 - as n * xs n} {c⁻¹} {c * ε}
-                                                              {!!}
-                                                              (pos⇒nonNeg {c⁻¹} posc⁻¹) ⟩
-  c⁻¹ * (c * ε)                 ≈⟨ ≃-trans (≃-trans (≃-symm (*-assoc c⁻¹ c ε)) (*-congʳ {ε} {c⁻¹ * c} {1ℝ} (*-inverseˡ c c≄0))) (*-identityˡ ε) ⟩
-  ε                              ∎})
+                                                              ; nonNegc⁻¹ = nonNegx⇒nonNegx⁻¹ {c} (0≤x⇒nonNegx (<⇒≤ 0<c)) c≄0
+                                                        in begin
+  ∣ ∑ xs n m ∣                                                     ≈⟨ 0≤x⇒∣x∣≃x (0≤xₙ⇒0≤∑xₙ (ℕP.<⇒≤ m>n) (λ k n≤k≤m -> <⇒≤ (proj₂ (0<aₙ,xₙ k)))) ⟩
+  ∑ xs n m                                                         ≈⟨ ≃-symm (≃-trans (*-congʳ {∑ xs n m} (*-inverseˡ c c≄0)) (*-identityˡ (∑ xs n m))) ⟩
+  c⁻¹ * c * ∑ xs n m                                               ≈⟨ ≃-trans
+                                                                      (*-assoc c⁻¹ c (∑ xs n m))
+                                                                      (*-congˡ {c⁻¹} {c * ∑ xs n m} {∑ (λ i → c * xs i) n m}
+                                                                      (≃-symm (∑cxₙ≃c∑xₙ xs c n m))) ⟩
+  c⁻¹ * ∑ (λ i -> c * xs i) n m                                    ≤⟨ *-monoˡ-≤-nonNeg {∑ (λ i → c * xs i) n m} {c⁻¹}
+                                                                      {∑ (λ i → as (ℕ.pred i) * xs (ℕ.pred i) - as i * xs i) n m}
+                                                                      (∑-mono-≤-weak {λ i → c * xs i}
+                                                                      {λ i → as (ℕ.pred i) * xs (ℕ.pred i) - as i * xs i} {n} {m} (ℕP.<⇒≤ m>n)
+                                                                      λ { (suc k-1) (n≤k , k≤m) → part3 (suc k-1)
+                                                                      (ℕP.<-transʳ (ℕP.m≤m⊔n N₁ N₂) (ℕP.<-transˡ (ℕP.n<1+n (ℕ.pred N))
+                                                                      (ℕP.≤-trans n≥N n≤k)))}) nonNegc⁻¹ ⟩
+  c⁻¹ * ∑ (λ i -> as (ℕ.pred i) * xs (ℕ.pred i) - as i * xs i) n m ≈⟨ *-congˡ {c⁻¹}
+                                                                      {∑ (λ i → as (ℕ.pred i) * xs (ℕ.pred i) - as i * xs i) n m}
+                                                                      {as n-1 * xs n-1 - as m-1 * xs m-1} (≃-trans
+                                                                      (∑-to-∑ᵀ (λ i -> as (ℕ.pred i) * xs (ℕ.pred i) - as i * xs i) n m (ℕP.<⇒≤ m>n))
+                                                                      (part2 m n (ℕP.<⇒≤ m>n))) ⟩
+  c⁻¹ * (as n-1 * xs n-1 - as m-1 * xs m-1)                        ≤⟨ *-monoˡ-≤-nonNeg {as n-1 * xs n-1 - as m-1 * xs m-1} {c⁻¹} {c * ε}
+                                                                      (<⇒≤ (≤-<-trans x≤∣x∣ (<-respˡ-≃ (∣x-y∣≃∣y-x∣ (as m-1 * xs m-1) (as n-1 * xs n-1))
+                                                                      (proj₂ (res ε ε>0) m-1 n-1 m-1>n-1
+                                                                      (ℕP.≤-trans (ℕP.m≤n⊔m N₁ N₂) n-1≥N-1))))) nonNegc⁻¹ ⟩
+  c⁻¹ * (c * ε)                                                    ≈⟨ ≃-trans (≃-trans
+                                                                      (≃-symm (*-assoc c⁻¹ c ε))
+                                                                      (*-congʳ {ε} {c⁻¹ * c} {1ℝ} (*-inverseˡ c c≄0)))
+                                                                      (*-identityˡ ε) ⟩
+  ε                                                                 ∎})
   where
     open ≤-Reasoning
+    -- If we don't use abstract for res, it will take forever to compute ℕP.m≤m⊔n N₁ N₂.
+    abstract
+      res : ∀ ε -> ε > 0ℝ -> ∃ λ N₂-1 -> ∀ m n -> m ℕ.> n -> n ℕ.≥ suc N₂-1 -> ∣ as m * xs m - as n * xs n ∣ < c * ε
+      res ε ε>0 = fast-ε-from-convergence-cauchy {λ n -> as n * xs n} (0ℝ , aₙxₙ→0) (posx⇒0<x (posx,y⇒posx*y (0<x⇒posx 0<c) (0<x⇒posx ε>0)))
+
     part1 : ∀ n -> n ℕ.≥ suc N₁-1 -> as n * xs n - as (suc n) * xs (suc n) ≥ c * xs (suc n)
     part1 n n≥N₁ = let n+1 = suc n; xₙ₊₁≄0 = inj₂ (proj₂ (0<aₙ,xₙ n+1)) in begin
       c * xs n+1                                                          ≤⟨ *-monoʳ-≤-nonNeg {c} {xs n+1}
@@ -1933,12 +1969,32 @@ lemma-3-7-1 {as} {xs} {c} 0<c 0<aₙ,xₙ aₙxₙ→0 (N₁-1 , hyp) = ε-cauch
                                                                              (≃-symm (neg-distribˡ-* (as n+1) (xs n+1))) ⟩
       as n * xs n - as n+1 * xs n+1                                        ∎
 
-    lem : ∀ m n -> {n ≢0} -> (m≥n : m ℕ.≥ n) ->
-          ∑ᵀ (λ i -> as (ℕ.pred i) * xs (ℕ.pred i) - as i * xs i) n m m≥n ≃ as (ℕ.pred n) * xs (ℕ.pred n) - as (ℕ.pred m) * xs (ℕ.pred m)  
-    lem (suc zero) (suc zero) (ℕ.s≤s ℕ.z≤n) = ≃-symm (+-inverseʳ (as 0 * xs 0))
-    lem (suc zero) (suc (suc n)) (ℕ.s≤s ())
-    lem (suc (suc m)) (suc zero) m≥n = {!!}
-    lem (suc (suc m)) (suc (suc n)) m≥n = {!!}
+    part2 : ∀ m n -> {n ≢0} -> (m≥n : m ℕ.≥ n) ->
+           ∑ᵀ (λ i -> as (ℕ.pred i) * xs (ℕ.pred i) - as i * xs i) n m m≥n ≃ as (ℕ.pred n) * xs (ℕ.pred n) - as (ℕ.pred m) * xs (ℕ.pred m)
+    part2 m n {n≢0} m≥n with ≤⇒≡∨< n m m≥n
+    ... | inj₁ refl = ≃-symm (+-inverseʳ (as (ℕ.pred m) * xs (ℕ.pred m)))
+    part2 (suc m-1) n {n≢0} m≥n | inj₂ (ℕ.s≤s y) = begin-equality
+      ∑ᵀ (λ i -> as (ℕ.pred i) * xs (ℕ.pred i) - as i * xs i) n m-1 y +
+      (as (ℕ.pred m-1) * xs (ℕ.pred m-1) - as m-1 * xs m-1)               ≈⟨ +-congˡ (as (ℕ.pred m-1) * xs (ℕ.pred m-1) - as m-1 * xs m-1)
+                                                                             (part2 m-1 n {n≢0} y) ⟩
+      as (ℕ.pred n) * xs (ℕ.pred n) - as (ℕ.pred m-1) * xs (ℕ.pred m-1) +
+      (as (ℕ.pred m-1) * xs (ℕ.pred m-1) - as m-1 * xs m-1)               ≈⟨ solve 3 (λ x y z -> x ⊖ y ⊕ (y ⊖ z) ⊜ x ⊖ z)
+                                                                             ≃-refl (as (ℕ.pred n) * xs (ℕ.pred n)) (as (ℕ.pred m-1) * xs (ℕ.pred m-1))
+                                                                             (as m-1 * xs m-1) ⟩
+      as (ℕ.pred n) * xs (ℕ.pred n) - as m-1 * xs m-1                      ∎
+
+    part3 : ∀ n -> {n ≢0} -> n ℕ.> suc N₁-1 -> c * xs n ≤ as (ℕ.pred n) * xs (ℕ.pred n) - as n * xs n
+    part3 (suc n-1) (ℕ.s≤s n-1>N₁-1) = let n = suc n-1; xₙ≄0 = inj₂ (proj₂ (0<aₙ,xₙ n)) in begin
+      c * xs n                                                ≤⟨ *-monoʳ-≤-nonNeg {c} {xs n}
+                                                                 {as n-1 * xs n-1 * (xs n ⁻¹) xₙ≄0 - as n}
+                                                                 (hyp n-1 n-1>N₁-1)
+                                                                 (pos⇒nonNeg (0<x⇒posx (proj₂ (0<aₙ,xₙ n)))) ⟩
+      (as n-1 * xs n-1 * (xs n ⁻¹) xₙ≄0 - as n) * xs n        ≈⟨ solve 4 (λ aₙ₋₁xₙ₋₁ xₙ⁻¹ aₙ xₙ ->
+                                                                 (aₙ₋₁xₙ₋₁ ⊗ xₙ⁻¹ ⊖ aₙ) ⊗ xₙ ⊜ aₙ₋₁xₙ₋₁ ⊗ (xₙ⁻¹ ⊗ xₙ) ⊖ aₙ ⊗ xₙ)
+                                                                 ≃-refl (as n-1 * xs n-1) ((xs n ⁻¹) xₙ≄0) (as n) (xs n) ⟩
+      as n-1 * xs n-1 * ((xs n ⁻¹) xₙ≄0 * xs n) - as n * xs n ≈⟨ +-congˡ (- (as n * xs n)) {as n-1 * xs n-1 * ((xs n ⁻¹) xₙ≄0 * xs n)} {as n-1 * xs n-1}
+                                                                 (≃-trans (*-congˡ {as n-1 * xs n-1} (*-inverseˡ (xs n) xₙ≄0)) (*-identityʳ (as n-1 * xs n-1))) ⟩
+      as n-1 * xs n-1 - as n * xs n                            ∎
 {-
 {-
 Need to figure out most efficient way to perform this limit shift.
