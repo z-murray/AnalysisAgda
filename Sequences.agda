@@ -43,6 +43,8 @@ open import NonReflectiveZ as ℤ-Solver using ()
     ; _⊜_   to _:=_
     ; Κ     to ℤΚ
     )
+    -- 0ℝ + x = x
+    -- Κ 0ℚᵘ ⊕ x ⊜ x
 open import NonReflectiveQ as ℚ-Solver using ()
   renaming
     ( solve to ℚsolve
@@ -53,6 +55,17 @@ open import NonReflectiveQ as ℚ-Solver using ()
     ; _⊜_   to _=:_
     ; Κ     to ℚΚ
     )
+
+{-
+test : ∀ m n -> m ℤ.+ n ≡ n ℤ.+ m
+test = solve-∀
+
+ℤring
+open ℤring
+_+_ -> _ℤ+_
+_-_ -> _ℤ-_
+
+-}
 
 open ℚᵘ
 open ℝ
@@ -73,8 +86,7 @@ p≤q+j⁻¹⇒p≤q {p} {q} hyp = p-q≤j⁻¹⇒p≤q (λ {(suc j-1) -> let j 
   p ℚ.- q             ≤⟨ ℚP.+-monoˡ-≤ (ℚ.- q) (hyp j) ⟩
   q ℚ.+ + 1 / j ℚ.- q ≈⟨ ℚsolve 2 (λ q j⁻¹ -> (q +: j⁻¹ -: q) =: j⁻¹) ℚP.≃-refl q (+ 1 / j) ⟩
   + 1 / j              ∎})
-  where
-    open ℚP.≤-Reasoning
+  where open ℚP.≤-Reasoning
 
 
 {-
@@ -1667,6 +1679,8 @@ If the solver gets updated to a field solver, we can delete almost the entire th
 = ((1 - rⁿ) + rⁿ * (1 - r)) * (1 - r)⁻¹
 = (1 - rⁿ + rⁿ - rⁿ * r) * (1 - r)⁻¹
 = (1 - rⁿ⁺¹) * (1 - r)⁻¹
+
+∑ᵢ₌₀ⁿ rⁱ = (1 - rⁿ) / (1 - r)
 -}
 geometric-sum : ∀ {r} -> ∀ n -> (∣r∣<1 : ∣ r ∣ < 1ℝ) -> ∑ (λ i -> pow r i) 0 n ≃ (1ℝ - pow r n) * ((1ℝ - r) ⁻¹) (1-r≄0 r ∣r∣<1)
 geometric-sum {r} zero ∣r∣<1 = let [1-r]⁻¹ = ((1ℝ - r) ⁻¹) (1-r≄0 r ∣r∣<1) in
@@ -1685,7 +1699,7 @@ geometric-sum {r} (suc n) ∣r∣<1 = let [1-r]⁻¹ = ((1ℝ - r) ⁻¹) (1-r�
                                                              ≃-refl r (pow r n) [1-r]⁻¹ ⟩
   (1ℝ - pow r (suc n)) * [1-r]⁻¹                           ∎
   where open ≃-Reasoning
-{-
+
 geometric-series-converges : ∀ {r} -> (∣r∣<1 : ∣ r ∣ < 1ℝ) -> SeriesOf (λ i -> pow r i) ConvergesTo ((1ℝ - r) ⁻¹) (1-r≄0 r ∣r∣<1)
 geometric-series-converges {r} ∣r∣<1 = xₙ≃yₙ∧xₙ→x₀⇒yₙ→x₀ {λ n -> (1ℝ - pow r n) * [1-r]⁻¹} {SeriesOf rⁱ}
                              (λ {(suc n-1) -> let n = suc n-1 in ≃-symm (geometric-sum {r} n ∣r∣<1)})
@@ -1728,9 +1742,9 @@ abstract
                                                                   (-‿cong (≃-trans
                                                                   (+-congˡ (c * xs m) (∑cxₙ≃c∑xₙ xs c 0 m))
                                                                   (≃-symm (*-distribˡ-+ c (∑₀ xs m) (xs m))))) ⟩
-  c * ∑₀ xs n - (c * (∑₀ xs m + xs m))                         ≈⟨ ≃-symm (≃-trans
-                                                                  (*-distribˡ-+ c (∑₀ xs n) (- (∑₀ xs m + xs m)))
-                                                                  (+-congʳ (c * ∑₀ xs n) (≃-symm (neg-distribʳ-* c (∑₀ xs (suc m)))))) ⟩
+  c * ∑₀ xs n - (c * (∑₀ xs m + xs m))                         ≈⟨ solve 3 (λ c ∑₀ⁿxᵢ ∑₀ᵐ⁺¹xᵢ ->
+                                                                  c ⊗ ∑₀ⁿxᵢ ⊖ c ⊗ ∑₀ᵐ⁺¹xᵢ ⊜ c ⊗ (∑₀ⁿxᵢ ⊖ ∑₀ᵐ⁺¹xᵢ) )
+                                                                  ≃-refl c (∑₀ xs n) (∑₀ xs (suc m)) ⟩
   c * (∑₀ xs n - (∑₀ xs m + xs m))                              ∎
   where open ≃-Reasoning
 
@@ -1773,21 +1787,17 @@ proposition-3-6-1 {xs} {c} (0<c , c<1) (N-1 , hyp) = proposition-3-5 {xs} {λ n 
       ∣ xs (suc n) ∣                 ≤⟨ hyp n N<n ⟩
       c * ∣ xs n ∣                   ≤⟨ *-monoˡ-≤-nonNeg {∣ xs n ∣} {c} {∣ xs N ∣ * c⁻ᴺ * pow c n}
                                         (part2 n (≤⇒≡∨< N n N<n)) (pos⇒nonNeg posc) ⟩
-      c * (∣ xs N ∣ * c⁻ᴺ * pow c n) ≈⟨ *-comm c (∣ xs N ∣ * c⁻ᴺ * pow c n) ⟩
-      ∣ xs N ∣ * c⁻ᴺ * pow c n * c   ≈⟨ *-assoc (∣ xs N ∣ * c⁻ᴺ) (pow c n) c ⟩
+      c * (∣ xs N ∣ * c⁻ᴺ * pow c n) ≈⟨ solve 4 (λ a b c d -> a ⊗ (b ⊗ c ⊗ d) ⊜ b ⊗ c ⊗ (d ⊗ a))
+                                        ≃-refl c ∣ xs N ∣ c⁻ᴺ (pow c n) ⟩
       ∣ xs N ∣ * c⁻ᴺ * pow c (suc n)  ∎
 
 ∣c∣>0⇒∑c-isDivergent : ∀ {c} -> ∣ c ∣ > 0ℝ -> SeriesOf (λ i -> c) isDivergent
 ∣c∣>0⇒∑c-isDivergent {c} ∣c∣>0 = ∣ c ∣ , div* (0<x⇒posx ∣c∣>0)
                            (λ {k -> suc k , k , ℕP.n≤1+n k , ℕP.≤-refl , ≤-reflexive (∣-∣-cong (≃-symm (begin
-  ∑₀ (λ i -> c) k + c - ∑₀ (λ i -> c) k   ≈⟨ solve 3 (λ x y z -> x :+ y :+ z := y :+ (x :+ z))
-                                             ≃-refl (∑₀ (λ i -> c) k) c (- ∑₀ (λ i -> c) k) ⟩
-  c + (∑₀ (λ i -> c) k - ∑₀ (λ i -> c) k) ≈⟨ +-congʳ c (+-inverseʳ (∑₀ (λ i -> c) k)) ⟩
-  c + 0ℝ                                  ≈⟨ +-identityʳ c ⟩
+  ∑₀ (λ i -> c) k + c - ∑₀ (λ i -> c) k   ≈⟨ solve 2 (λ a b -> a ⊕ b ⊖ a ⊜ b)
+                                             ≃-refl (∑₀ (λ i -> c) k) c ⟩
   c                                        ∎)))})
-  where
-    open ≃-Reasoning
-    open ℝ-+-*-Solver
+  where open ≃-Reasoning
 
 {- [8] -}
 proposition-3-6-2 : ∀ {xs : ℕ -> ℝ} -> ∀ {c} -> 1ℝ < c ->
@@ -1834,11 +1844,8 @@ proposition-3-6-2 {xs} {c} 1<c (N-1 , hyp) = subsequence-divergence-test {xs} (�
       1ℝ * ∣ xs (suc N) ∣                    ≈⟨ *-identityˡ ∣ xs (suc N) ∣ ⟩
       ∣ xs (suc N) ∣                          ∎
     part2-2 (suc n) (inj₂ (ℕ.s≤s N<n)) = begin
-      pow c n * c * c⁻ᴺ⁻¹ * ∣ xs (suc N) ∣   ≈⟨ *-congʳ {∣ xs (suc N) ∣} {pow c n * c * c⁻ᴺ⁻¹} {c * pow c n * c⁻ᴺ⁻¹}
-                                                (*-congʳ {c⁻ᴺ⁻¹} {pow c n * c} {c * pow c n} (*-comm (pow c n) c)) ⟩
-      c * pow c n * c⁻ᴺ⁻¹ * ∣ xs (suc N) ∣   ≈⟨ *-congʳ {∣ xs (suc N) ∣} {c * pow c n * c⁻ᴺ⁻¹} {c * (pow c n * c⁻ᴺ⁻¹)}
-                                                (*-assoc c (pow c n) c⁻ᴺ⁻¹) ⟩
-      c * (pow c n * c⁻ᴺ⁻¹) * ∣ xs (suc N) ∣ ≈⟨ *-assoc c (pow c n * c⁻ᴺ⁻¹) ∣ xs (suc N) ∣ ⟩
+      pow c n * c * c⁻ᴺ⁻¹ * ∣ xs (suc N) ∣   ≈⟨ solve 4 (λ x y z w -> x ⊗ y ⊗ z ⊗ w ⊜ y ⊗ (x ⊗ z ⊗ w))
+                                                ≃-refl (pow c n) c c⁻ᴺ⁻¹ ∣ xs (suc N) ∣ ⟩
       c * (pow c n * c⁻ᴺ⁻¹ * ∣ xs (suc N) ∣) ≤⟨ *-monoˡ-≤-nonNeg {pow c n * c⁻ᴺ⁻¹ * ∣ xs (suc N) ∣} {c} {∣ xs n ∣}
                                                 (part2-2 n (≤⇒≡∨< (suc N) n N<n))
                                                 (pos⇒nonNeg {c} posc) ⟩
@@ -1932,7 +1939,7 @@ lemma-3-7-1 {as} {xs} {c} 0<c 0<aₙ,xₙ aₙxₙ→0 (N₁-1 , hyp) = ε-cauch
     lem (suc zero) (suc (suc n)) (ℕ.s≤s ())
     lem (suc (suc m)) (suc zero) m≥n = {!!}
     lem (suc (suc m)) (suc (suc n)) m≥n = {!!}
-
+{-
 {-
 Need to figure out most efficient way to perform this limit shift.
 Hard to do it with natural numbers. 
