@@ -43,8 +43,6 @@ open import NonReflectiveZ as ℤ-Solver using ()
     ; _⊜_   to _:=_
     ; Κ     to ℤΚ
     )
-    -- 0ℝ + x = x
-    -- Κ 0ℚᵘ ⊕ x ⊜ x
 open import NonReflectiveQ as ℚ-Solver using ()
   renaming
     ( solve to ℚsolve
@@ -346,6 +344,13 @@ cauchy⇒convergent {f} (cauchy* fCauchy) = y , f→y
                                                                              ℤΚ (+ 1) :* ((ℤΚ (+ 3) :* k :* (ℤΚ (+ 2) :* (ℤΚ (+ 3) :* k))) :* (ℤΚ (+ 2) :* k)))
                                                                              refl (+ k))) ⟩
       (+ 1 / k) ⋆                                                          ∎}})
+
+abstract
+  fast-convergent⇒cauchy : ∀ {f : ℕ -> ℝ} -> f isConvergent -> f isCauchy
+  fast-convergent⇒cauchy = convergent⇒cauchy
+
+  fast-cauchy⇒convergent : ∀ {f : ℕ -> ℝ} -> f isCauchy -> f isConvergent
+  fast-cauchy⇒convergent = cauchy⇒convergent
 
 xₙ+yₙ→x₀+y₀ : ∀ {xs ys : ℕ -> ℝ} -> (xₙ→x₀ : xs isConvergent) -> (yₙ→y₀ : ys isConvergent) ->
               (λ n -> xs n + ys n) ConvergesTo (proj₁ xₙ→x₀ + proj₁ yₙ→y₀)
@@ -1033,7 +1038,7 @@ cauchyConvergenceTest-onlyif : ∀ xs ->
                                (∀ k -> {k≢0 : k ≢0} -> ∃ λ Nₖ-1 -> ∀ m n -> m ℕ.≥ suc Nₖ-1 -> n ℕ.≥ suc Nₖ-1 ->
                                        ∣ ∑ xs m n ∣ ≤ ((+ 1 / k) {k≢0}) ⋆) ->
                                SeriesOf xs isConvergent
-cauchyConvergenceTest-onlyif xs hyp = cauchy⇒convergent (cauchy* (λ {(suc k-1) -> let k = suc k-1; Mₖ = suc (proj₁ (hyp k)) in
+cauchyConvergenceTest-onlyif xs hyp = fast-cauchy⇒convergent (cauchy* (λ {(suc k-1) -> let k = suc k-1; Mₖ = suc (proj₁ (hyp k)) in
                                       ℕ.pred Mₖ , λ {(suc m-1) (suc n-1) m≥Mₖ n≥Mₖ -> let m = suc m-1; n = suc n-1 in begin
   ∣ ∑ xs 0 m - ∑ xs 0 n ∣                   ≈⟨ ≃-refl ⟩
   ∣ ∑ xs n m ∣                              ≤⟨ proj₂ (hyp k) n m n≥Mₖ m≥Mₖ ⟩
@@ -1203,9 +1208,9 @@ nonNegxₙ⇒nonNeg∑xₙ {xs} {m} {n} m≤n hyp = nonNeg-cong (lem (∑ xs m n
     lem = solve 1 (λ x -> x ⊖ Κ 0ℚᵘ ⊜ x) ≃-refl
       
 cauchy-convergence : ∀ {xs : ℕ -> ℝ} ->
-                     (∀ k -> {k≢0 : k ≢0} -> ∃ λ Nₖ-1 -> ∀ m n -> m ℕ.> n -> m ℕ.≥ suc Nₖ-1 -> n ℕ.≥ suc Nₖ-1 -> ∣ xs m - xs n ∣ ≤ ((+ 1 / k) {k≢0}) ⋆) ->
+                     (∀ k -> {k≢0 : k ≢0} -> ∃ λ Nₖ-1 -> ∀ m n -> m ℕ.> n -> n ℕ.≥ suc Nₖ-1 -> ∣ xs m - xs n ∣ ≤ ((+ 1 / k) {k≢0}) ⋆) ->
                      xs isConvergent
-cauchy-convergence {xs} hyp = cauchy⇒convergent (cauchy* main)
+cauchy-convergence {xs} hyp = fast-cauchy⇒convergent (cauchy* main)
   where
     main : ∀ k -> {k≢0 : k ≢0} -> ∃ λ Mₖ-1 -> ∀ m n -> m ℕ.≥ suc Mₖ-1 -> n ℕ.≥ suc Mₖ-1 ->
            ∣ xs m - xs n ∣ ≤ ((+ 1 / k) {k≢0}) ⋆
@@ -1218,13 +1223,13 @@ cauchy-convergence {xs} hyp = cauchy⇒convergent (cauchy* main)
         sub m n m≥Mₖ n≥Mₖ with ℕP.<-cmp m n
         ... | tri< m<n ¬b ¬c = begin
           ∣ xs m - xs n ∣ ≈⟨ ∣x-y∣≃∣y-x∣ (xs m) (xs n) ⟩
-          ∣ xs n - xs m ∣ ≤⟨ proj₂ (hyp k) n m m<n n≥Mₖ m≥Mₖ ⟩
+          ∣ xs n - xs m ∣ ≤⟨ proj₂ (hyp k) n m m<n m≥Mₖ ⟩
           (+ 1 / k) ⋆      ∎
         ... | tri≈ ¬a refl ¬c = begin
           ∣ xs m - xs m ∣ ≈⟨ ≃-trans (∣-∣-cong (+-inverseʳ (xs m))) (0≤x⇒∣x∣≃x ≤-refl) ⟩
           0ℝ              ≤⟨ p≤q⇒p⋆≤q⋆ 0ℚᵘ (+ 1 / k) (ℚP.nonNegative⁻¹ _) ⟩
           (+ 1 / k) ⋆      ∎
-        ... | tri> ¬a ¬b m>n = proj₂ (hyp k) m n m>n m≥Mₖ n≥Mₖ
+        ... | tri> ¬a ¬b m>n = proj₂ (hyp k) m n m>n n≥Mₖ
 
 {-
 This is a generalized version of Bishop's Proposition 3.5.
@@ -1250,8 +1255,9 @@ proposition-3-5 : ∀ {xs ys} -> SeriesOf ys isConvergent -> (∃ λ N-1 -> ∀ 
 proposition-3-5 {xs} {ys} ∑ysCon (N₁-1 , n≥N₁⇒∣xₙ∣≤yₙ) = cauchy-convergence (λ {(suc k-1) ->
                             let k = suc k-1; ∑ysCauchy = cauchyConvergenceTest-if ys ∑ysCon k
                                   ; N₁ = suc N₁-1; N₂ = suc (proj₁ ∑ysCauchy); N = N₁ ℕ.⊔ N₂ in ℕ.pred N ,
-                            λ {(suc m-1) (suc n-1) m>n m≥N n≥N ->
-                            let m = suc m-1; n = suc n-1; N₂≤N = ℕP.m≤n⊔m N₁ N₂ in begin
+                            λ {(suc m-1) (suc n-1) m>n n≥N ->
+                            let m = suc m-1; n = suc n-1; N₂≤N = ℕP.m≤n⊔m N₁ N₂
+                                  ; m≥N = ℕP.<⇒≤ (ℕP.<-transʳ n≥N m>n) in begin
   ∣ ∑ xs n m ∣            ≤⟨ ∑-triangle-inequality xs n m (ℕP.<⇒≤ m>n) ⟩
   ∑ (λ i -> ∣ xs i ∣) n m ≤⟨ ∑-mono-≤-weak (ℕP.<⇒≤ m>n) (λ k n≤k≤m -> n≥N₁⇒∣xₙ∣≤yₙ k
                              (ℕP.≤-trans (ℕP.≤-trans (ℕP.m≤m⊔n N₁ N₂) n≥N) (proj₁ n≤k≤m))) ⟩
@@ -1289,9 +1295,15 @@ cauchy-getter : ∀ {xs} -> xs isCauchy ->
                 ∣ xs m - xs n ∣ ≤ ((+ 1 / k) {k≢0}) ⋆
 cauchy-getter {xs} (cauchy* hyp) = hyp
 
+abstract
+  fast-cauchy-getter : ∀ {xs} -> xs isCauchy ->
+                       ∀ k -> {k≢0 : k ≢0} -> ∃ λ Mₖ-1 -> ∀ m n -> m ℕ.≥ suc Mₖ-1 -> n ℕ.≥ suc Mₖ-1 ->
+                       ∣ xs m - xs n ∣ ≤ ((+ 1 / k) {k≢0}) ⋆
+  fast-cauchy-getter = cauchy-getter
+  
 ¬[isConvergent∧isDivergent] : ∀ xs -> ¬ (xs isConvergent × xs isDivergent)
 ¬[isConvergent∧isDivergent] xs (hyp1 , ε , div* posε hyp2) = let fromdiv = archimedean-ℝ₂ posε; k = suc (proj₁ fromdiv)
-                                                                                    ; fromhyp1 = cauchy-getter (convergent⇒cauchy hyp1) k
+                                                                                    ; fromhyp1 = cauchy-getter (fast-convergent⇒cauchy hyp1) k
                                                                                     ; Nₖ = suc (proj₁ fromhyp1)
                                                                                     ; m = proj₁ (hyp2 Nₖ)
                                                                                     ; n = proj₁ (proj₂ (hyp2 Nₖ)) in
@@ -1453,10 +1465,31 @@ x≤y∧posx⇒y⁻¹≤x⁻¹ {x} {y} x≤y posx x≄0 y≄0 = let x⁻¹ = (x 
   where open ≤-Reasoning
 
 x<y⇒∃ε>0[x<x+ε<y] : ∀ {x y} -> x < y -> ∃ λ ε -> Positive ε × x < (x + ε) < y
-x<y⇒∃ε>0[x<x+ε<y] {x} {y} x<y = {!!}
+x<y⇒∃ε>0[x<x+ε<y] {x} {y} x<y = let r-get = fast-density-of-ℚ x y x<y; r = proj₁ r-get
+                                          ; r≃x+r-x = solve 2 (λ r x -> r ⊜ x ⊕ (r ⊖ x)) ≃-refl (r ⋆) x in
+                                r ⋆ - x , 0<x⇒posx (x<y⇒0<y-x x (r ⋆) (proj₁ (proj₂ r-get))) ,
+                                <-respʳ-≃ r≃x+r-x (proj₁ (proj₂ r-get)) , <-respˡ-≃ r≃x+r-x (proj₂ (proj₂ r-get))
+
+0≤x,y⇒0≤x*y : ∀ {x y} -> 0ℝ ≤ x -> 0ℝ ≤ y -> 0ℝ ≤ x * y
+0≤x,y⇒0≤x*y {x} {y} 0≤x 0≤y = nonNegx⇒0≤x (nonNegx,y⇒nonNegx*y (0≤x⇒nonNegx 0≤x) (0≤x⇒nonNegx 0≤y))
+
+private
+  p²≥0 : ∀ p -> p ℚ.* p ℚ.≥ 0ℚᵘ
+  p²≥0 (mkℚᵘ (+_ zero) d) = ℚP.nonNegative⁻¹ _
+  p²≥0 (mkℚᵘ +[1+ n ] d) = ℚP.nonNegative⁻¹ _
+  p²≥0 (mkℚᵘ (-[1+_] n) d) = ℚP.nonNegative⁻¹ _
 
 x²ⁿ≥0 : ∀ x -> ∀ n -> pow x (2 ℕ.* n) ≥ 0ℝ
-x²ⁿ≥0 x n = {!!}
+x²ⁿ≥0 x n = begin
+  0ℝ                ≤⟨ nonNegx⇒0≤x (nonNeg* (λ {(suc k-1) ->
+                       ℚP.≤-trans (ℚP.nonPositive⁻¹ _)
+                       (p²≥0 (seq (pow x n) _))})) ⟩
+  pow x n * pow x n ≈⟨ xⁿxᵐ≃xⁿ⁺ᵐ x n n ⟩
+  pow x (n ℕ.+ n)   ≡⟨ cong (λ k -> pow x k) (ℤP.+-injective (ℤsolve 1 (λ n ->
+                       n :+ n := (n :+ (n :+ ℤΚ (+ 0)))) refl (+ n))) ⟩
+  pow x (2 ℕ.* n)    ∎
+  where open ≤-Reasoning
+
 
 0≤x⇒y≤y+x : ∀ {x} y -> 0ℝ ≤ x -> y ≤ y + x
 0≤x⇒y≤y+x {x} y 0≤x = begin
@@ -1464,9 +1497,6 @@ x²ⁿ≥0 x n = {!!}
   y + 0ℝ ≤⟨ +-monoʳ-≤ y 0≤x ⟩
   y + x   ∎
   where open ≤-Reasoning
-
-0≤x,y⇒0≤x*y : ∀ {x y} -> 0ℝ ≤ x -> 0ℝ ≤ y -> 0ℝ ≤ x * y
-0≤x,y⇒0≤x*y {x} {y} 0≤x 0≤y = nonNegx⇒0≤x (nonNegx,y⇒nonNegx*y (0≤x⇒nonNegx 0≤x) (0≤x⇒nonNegx 0≤y))
 
 bernoullis-inequality : ∀ {x} -> x ≥ - 1ℝ -> ∀ (n : ℕ) -> pow (1ℝ + x) n ≥ 1ℝ + (+ n / 1) ⋆ * x
 bernoullis-inequality {x} x≥-1 0 = ≤-reflexive (solve 1 (λ x -> Κ 1ℚᵘ ⊕ Κ 0ℚᵘ ⊗ x ⊜ Κ 1ℚᵘ) ≃-refl x)
@@ -1611,18 +1641,6 @@ x<y∧nonNegx⇒xⁿ<yⁿ {x} {y} (suc (suc n)) x<y nonx = begin-strict
   where open ≃-Reasoning
 
 {-
-(1 + x)ⁿ ≥ 1 + nx
-x ≥ -1
-
-(1+x)⁰ = 1
-1 + 0x = 1
-
-
-(1 + x)ⁿ⁺¹ = (1 + x)ⁿ * (1 + x)
-           ≥ (1 + nx) * (1 + x)
-           = 1 + (n+1)x + nx²
-           ≥ 1 + (n+1)x
-
 [5]
 This proof is an altered and further constructivized version of the proof at 
 https://math.stackexchange.com/questions/1253129/as-the-limit-of-n-goes-to-infinity-prove-that-xn-0-if-operatornameabs  
@@ -1674,13 +1692,6 @@ private
 {-
 Using the new solver, we can delete pretty much half the proof!
 If the solver gets updated to a field solver, we can delete almost the entire thing.
-
-(1 - rⁿ) * (1 - r)⁻¹ + rⁿ * (1 - r) * (1 - r)⁻¹
-= ((1 - rⁿ) + rⁿ * (1 - r)) * (1 - r)⁻¹
-= (1 - rⁿ + rⁿ - rⁿ * r) * (1 - r)⁻¹
-= (1 - rⁿ⁺¹) * (1 - r)⁻¹
-
-∑ᵢ₌₀ⁿ rⁱ = (1 - rⁿ) / (1 - r)
 -}
 geometric-sum : ∀ {r} -> ∀ n -> (∣r∣<1 : ∣ r ∣ < 1ℝ) -> ∑ (λ i -> pow r i) 0 n ≃ (1ℝ - pow r n) * ((1ℝ - r) ⁻¹) (1-r≄0 r ∣r∣<1)
 geometric-sum {r} zero ∣r∣<1 = let [1-r]⁻¹ = ((1ℝ - r) ⁻¹) (1-r≄0 r ∣r∣<1) in
@@ -1853,27 +1864,48 @@ proposition-3-6-2 {xs} {c} 1<c (N-1 , hyp) = subsequence-divergence-test {xs} (�
       ∣ xs (suc n) ∣                          ∎
 
 ε-cauchy-convergence : ∀ {xs : ℕ -> ℝ} -> (∀ {ε} -> ε > 0ℝ -> ∃ λ N-1 -> ∀ m n -> m ℕ.> n -> n ℕ.≥ suc N-1 -> ∣ xs m - xs n ∣ ≤ ε) -> xs isConvergent
-ε-cauchy-convergence {xs} hyp = {!!} {-cauchy-convergence ((λ {(suc k-1) ->
-                                let k = suc k-1; res = hyp (p<q⇒p⋆<q⋆ 0ℚᵘ (+ 1 / k) (ℚP.positive⁻¹ _)) in
-                                proj₁ res , λ m n m>n m≥N n≥N -> <⇒≤ (proj₂ res m n m>n n≥N)}))-}
+ε-cauchy-convergence {xs} hyp = cauchy-convergence (λ {(suc k-1) -> let k = suc k-1 in
+                                hyp (p<q⇒p⋆<q⋆ 0ℚᵘ (+ 1 / k) (ℚP.positive⁻¹ _))})
 
-ε-cauchy : ∀ {xs : ℕ -> ℝ} -> (∀ {ε} -> ε > 0ℝ -> ∃ λ N-1 -> ∀ m n -> m ℕ.> n -> n ℕ.≥ suc N-1 -> ∣ xs m - xs n ∣ < ε) -> xs isCauchy
-ε-cauchy {xs} hyp = {!!} --convergent⇒cauchy (ε-cauchy-convergence hyp)
+ε-cauchy : ∀ {xs : ℕ -> ℝ} -> (∀ {ε} -> ε > 0ℝ -> ∃ λ N-1 -> ∀ m n -> m ℕ.> n -> n ℕ.≥ suc N-1 -> ∣ xs m - xs n ∣ ≤ ε) -> xs isCauchy
+ε-cauchy {xs} hyp = fast-convergent⇒cauchy (ε-cauchy-convergence hyp)
 
+abstract
+  fast-0<x⇒posx : ∀ {x} -> 0ℝ < x -> Positive x
+  fast-0<x⇒posx = 0<x⇒posx
+  
 ε-from-convergence-cauchy : ∀ {xs : ℕ -> ℝ} -> (xₙ→ℓ : xs isConvergent) ->
-                            ∀ {ε : ℝ} -> ε > 0ℝ -> ∃ λ N-1 -> ∀ m n -> m ℕ.> n -> n ℕ.≥ suc N-1 -> ∣ xs m - xs n ∣ < ε
-ε-from-convergence-cauchy {xs} xₙ→ℓ {ε} ε>0 = {!!}
+                            ∀ {ε : ℝ} -> ε > 0ℝ -> ∃ λ N-1 -> ∀ m n -> m ℕ.> n -> n ℕ.≥ suc N-1 -> ∣ xs m - xs n ∣ ≤ ε
+ε-from-convergence-cauchy {xs} xₙ→ℓ {ε} ε>0 = let xₙ-cauchy = fast-cauchy-getter (fast-convergent⇒cauchy xₙ→ℓ)
+                                                      ; arch = fast-archimedean-ℝ₂ (fast-0<x⇒posx ε>0); k = suc (proj₁ arch) in
+                                             proj₁ (xₙ-cauchy k) , λ m n m>n n≥N -> begin
+  ∣ xs m - xs n ∣ ≤⟨ proj₂ (xₙ-cauchy k) m n
+                     (ℕP.<⇒≤ (ℕP.<-transʳ n≥N m>n)) n≥N ⟩
+  (+ 1 / k) ⋆     <⟨ proj₂ arch ⟩
+  ε                ∎
+  where open ≤-Reasoning
 
 abstract
   fast-ε-from-convergence-cauchy : ∀ {xs : ℕ -> ℝ} -> (xₙ→ℓ : xs isConvergent) ->
-                                   ∀ {ε : ℝ} -> ε > 0ℝ -> ∃ λ N-1 -> ∀ m n -> m ℕ.> n -> n ℕ.≥ suc N-1 -> ∣ xs m - xs n ∣ < ε
+                                   ∀ {ε : ℝ} -> ε > 0ℝ -> ∃ λ N-1 -> ∀ m n -> m ℕ.> n -> n ℕ.≥ suc N-1 -> ∣ xs m - xs n ∣ ≤ ε
   fast-ε-from-convergence-cauchy = ε-from-convergence-cauchy
 
+∑ᵀ-mono-<-weak : ∀ {xs ys : ℕ -> ℝ} -> ∀ {m n} -> (m<n : m ℕ.< n) ->
+                 (∀ k -> m ℕ.≤ k × k ℕ.≤ n -> xs k < ys k) ->
+                 ∑ᵀ xs m n (ℕP.<⇒≤ m<n) < ∑ᵀ ys m n (ℕP.<⇒≤ m<n)
+∑ᵀ-mono-<-weak {xs} {ys} {zero} {n} m<n hyp = {!∑ᵀ xs (suc m) n y < ∑ᵀ ys (suc m) n y!}
+∑ᵀ-mono-<-weak {xs} {ys} {suc m} {suc zero} m<n hyp = {!!}
+∑ᵀ-mono-<-weak {xs} {ys} {suc m} {suc (suc n)} m<n hyp = {!!}
+
 ∑-mono-< : ∀ {xs ys : ℕ -> ℝ} -> ∀ (m n : ℕ) ->
+           (∀ k -> xs k < ys k) -> ∑ xs m n < ∑ ys m n
+∑-mono-< {xs} {ys} m n hyp = {!!}
+
+∑-mono-<-weak : ∀ {xs ys : ℕ -> ℝ} -> ∀ (m n : ℕ) ->
            (∀ k -> k ℕ.≥ m -> xs k < ys k) ->
            ∑ xs m n < ∑ ys m n
-∑-mono-< {xs} {ys} m n hyp = {!∑-mono-≤-weak!}
-
+∑-mono-<-weak {xs} {ys} m n hyp = {!!}
+{-
 {-
 Lemma:
   Let (aₙ) and (xₙ) be positive sequences of real numbers and let c>0. If (aₙxₙ)→0 and there is N₁∈ℕ such that
@@ -1995,80 +2027,4 @@ lemma-3-7-1 {as} {xs} {c} 0<c 0<aₙ,xₙ aₙxₙ→0 (N₁-1 , hyp) = ε-cauch
       as n-1 * xs n-1 * ((xs n ⁻¹) xₙ≄0 * xs n) - as n * xs n ≈⟨ +-congˡ (- (as n * xs n)) {as n-1 * xs n-1 * ((xs n ⁻¹) xₙ≄0 * xs n)} {as n-1 * xs n-1}
                                                                  (≃-trans (*-congˡ {as n-1 * xs n-1} (*-inverseˡ (xs n) xₙ≄0)) (*-identityʳ (as n-1 * xs n-1))) ⟩
       as n-1 * xs n-1 - as n * xs n                            ∎
-{-
-{-
-Need to figure out most efficient way to perform this limit shift.
-Hard to do it with natural numbers. 
-
-Ideas:
-·Implement subtraction function for ℕ (there is currently no such function on ℕ)
- Then make lemmas for:
-   · ∑ᵢ₌ₙᵐ xᵢ₊ₖ = ∑ᵢ₌ₙ₊ₖᵐ⁺ᵏ xᵢ
-   · ∑ᵢ₌ₙᵐ xᵢ₋ₖ = ∑ᵢ₌ₙ₋ₖᵐ⁻ᵏ xᵢ. Might need k ≤ n, m.
-·Make ∑ᵀ function that takes integer limits instead (this would probably be harder to transfer to ∑ though).
--}
-    part2 : ∀ m n -> {n ≢0} -> m ℕ.> n ->
-            ∑ (λ i -> as (ℕ.pred i) * xs (ℕ.pred i) - as i * xs i) n m ≃ as (ℕ.pred m) * xs (ℕ.pred m) - as n * xs n
-    part2 (suc zero) (suc zero) (ℕ.s≤s ())
-    part2 (suc (suc m-1)) (suc zero) m>n = {!limitShifting!}
-    part2 (suc zero) (suc (suc n-1)) (ℕ.s≤s ())
-    part2 (suc (suc m-1)) (suc (suc n-1)) m>n = {!!}
-
-_·_ : ℕ -> ℝ -> ℝ
-n · x = {!!}
-
-{-
-It's interesting that this typechecks with the (≃-reflexive (λ n -> ℚP.≃-refl)) proof, but
-not with the ≃-refl proof.
-
-The reason seems to be this: Each real number is represented as a sequence (xₙ) of rationals
-with a proof of its regularity. By calling ≃-refl to prove x ≃ y, we are also declaring that
-the regularity proofs of (xₙ) and (yₙ) are equivalent.
-
-We can't prove 0ℝ ≃ - 0ℝ by ≃-refl because of the regularity proof. We can, however, prove it
-simply by proving that their corresponding rational sequences are equal. This is exactly what
-is occurring here with ≃-reflexive. It checks only the rational sequences of the normal forms.
-
-This enables us to prove things about negatives and about the basic algebraic properties of 
-multiplication using the solver, as shown in test and test3. We cannot, however, use it to
-prove that x - x ≃ 0ℝ.
--}
-test : ∀ x y -> x + y ≃ - (- x - y)
-test x y = solve 2 (λ x y -> x :+ y := :- (:- x :- y)) (≃-reflexive (λ n -> ℚP.≃-refl)) x y
-  where open ℝ-+-*-Solver
-
-test2 : ∀ x -> x - x ≃ 0ℝ
-test2 x = solve 1 (λ x -> x :- x := (0 :× x)) {!!} {!!}
-  where open ℝ-+-*-Solver
-
-{-
-This test is very slow! It takes a long time to check that the sequences of each normal form
-are actually equivalent. Hence the test is commented out until it's needed.
--}
-{-
-test3 : ∀ x y -> x * y ≃ y * x
-test3 x y = solve 2 (λ x y -> x :* y := y :* x) (≃-reflexive (λ {n -> ℚP.≃-refl})) x y
-  where open ℝ-+-*-Solver
--}
-
-≃-reflexive-≡ : ∀ {x y} -> (∀ n -> {n ≢0} -> seq x n ≡ seq y n) -> x ≃ y
-≃-reflexive-≡ {x} {y} hyp = {!!}
-
-{-
-After 15 minutes, test4 would still not typecheck, despite its apparent simplicity. 
-
-This, along with the long time it takes to typecheck test3, indicates that a real number solver that
-is functional with multiplication might not be feasible due to the reals being so computationally intensive.
--}
-{-
-test4 : ∀ x y z -> x * y * z ≃ x * (y * z)
-test4 x y z = solve 3 (λ x y z -> x :* y :* z := x :* (y :* z)) (≃-reflexive (λ n -> ℚP.≃-refl)) {!!} {!!} {!!}
-  where open ℝ-+-*-Solver
--}
-
-{-
-test4-modified : ∀ x y z -> x * y * z ≃ x * (y * z)
-test4-modified x y z = solve 3 (λ x y z -> x :* y :* z := x :* (y :* z)) (≃-reflexive-≡ (λ n -> {!refl!})) x y z
-  where open ℝ-+-*-Solver
--}
 -}
