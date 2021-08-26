@@ -54,17 +54,6 @@ open import NonReflectiveQ as ℚ-Solver using ()
     ; Κ     to ℚΚ
     )
 
-{-
-test : ∀ m n -> m ℤ.+ n ≡ n ℤ.+ m
-test = solve-∀
-
-ℤring
-open ℤring
-_+_ -> _ℤ+_
-_-_ -> _ℤ-_
-
--}
-
 open ℚᵘ
 open ℝ
 --∀k∈ℕ ∃Nₖ∈ℕ ∀n≥Nₖ ∣ fₙ - x₀ ∣ ≤ k⁻¹
@@ -2068,77 +2057,70 @@ isDivergent-cong {xs} {ys} (ε , hyp) xₙ≃yₙ = ε , DivergesBy-cong hyp x�
 ∑xₙisDivergent∧c≄0⇒∑cxₙisDivergent {xs} {c} hyp c≄0 = isDivergent-cong ([xₙ]isDivergent∧c≄0⇒[cxₙ]isDivergent hyp c≄0)
                                                       λ n -> ≃-symm (∑cxₙ≃c∑xₙ xs c 0 n)
 
-{-
-Lemma:
-  Let (aₙ) and (xₙ) be positive sequences of real numbers. If ∑aᵢ⁻¹ diverges and if there is k∈ℕ such that
-                                      aₙxₙxₙ₊₁⁻¹ - aₙ₊₁ ≤ 0               (n ≥ k),
-then ∑xᵢ diverges.
-Proof:
-  xₙ ≥ aₖxₖaₙ⁻¹ (n ≥ k)
+x≤y⇒x-y≤0 : ∀ {x y} -> x ≤ y -> x - y ≤ 0ℝ
+x≤y⇒x-y≤0 {x} {y} x≤y = begin
+  x - y ≤⟨ +-monoˡ-≤ (- y) x≤y ⟩
+  y - y ≈⟨ +-inverseʳ y ⟩
+  0ℝ     ∎
+  where open ≤-Reasoning
 
-n = k: Easy
-n > k: aₖxₖxₙ⁻¹ ≤ xₙ?
+x-y≤0⇒x≤y : ∀ {x y} -> x - y ≤ 0ℝ -> x ≤ y
+x-y≤0⇒x≤y {x} {y} x-y≤0 = begin
+  x         ≈⟨ solve 2 (λ x y -> x ⊜ x ⊖ y ⊕ y) ≃-refl x y ⟩
+  x - y + y ≤⟨ +-monoˡ-≤ y x-y≤0 ⟩
+  0ℝ + y    ≈⟨ +-identityˡ y ⟩
+  y          ∎
+  where open ≤-Reasoning
 
-aₖxₖxₙ⁻¹ - aₙ₊₁
-xₙ⁻¹ - aₙ₊₁aₖxₖ ≤ 0 ≤ xₙ̭⁻¹
-
-
-aₙxₙxₙ₊₁⁻¹ - aₙ₊₁ ≤ 0
-aₖxₖxₙ⁻¹ - aₙ ≤ 0 for n ≥ k?
-n = k: aₖxₖxₖ⁻¹ - aₖ = 0
-n > k: aₖxₖxₙ⁻¹ - aₙ ≤ 0
-     ⇒ aₖxₖxₙ⁻¹ ≤ aₙ
-     ⇒ aₙ⁻¹ ≤ aₖ⁻¹xₖ⁻¹xₙ
-     ⇒ aₖxₖaₙ⁻¹ ≤ xₙ
-
-aₖxₖaₙ⁻¹ = 
--}
 lemma-3-7-2 : ∀ {as xs : ℕ -> ℝ} -> (0<aₙ,xₙ : ∀ n -> (0ℝ < as n) × (0ℝ < xs n)) ->
               SeriesOf (λ n -> (as n ⁻¹) (inj₂ (proj₁ (0<aₙ,xₙ n)))) isDivergent ->
               (∃ λ N-1 -> ∀ n -> n ℕ.≥ suc N-1 -> as n * xs n * (xs (suc n) ⁻¹) (inj₂ (proj₂ (0<aₙ,xₙ (suc n)))) - as (suc n) ≤ 0ℝ) ->
               SeriesOf xs isDivergent
-lemma-3-7-2 {as} {xs} 0<aₙ,xₙ div∑aₙ⁻¹ (N-1 , hyp) = comparison-test-divergence {xs} {λ n -> as N * xs N * (as n ⁻¹) (aₙ≄0 n)}
-                                                     (0 , (λ n n≥0 -> nonNeg-helper n))
-                                                     (∑xₙisDivergent∧c≄0⇒∑cxₙisDivergent {λ n -> (as n ⁻¹) (aₙ≄0 n)} {as N * xs N}
-                                                     div-converted (x≄0∧y≄0⇒x*y≄0 (aₙ≄0 N) (xₙ≄0 N)))
-                                                     (N , λ n n≥N -> part1 n (≤⇒≡∨< N n n≥N))
+lemma-3-7-2 {as} {xs} 0<aₙ,xₙ div∑aₙ⁻¹ (N-1 , hyp) = comparison-test-divergence {xs}
+                                                     {λ n → as N * xs N * (as n ⁻¹) (inj₂ (proj₁ (0<aₙ,xₙ n)))}
+                                                     (0 , (λ n n≥0 -> part1 n))
+                                                     (∑xₙisDivergent∧c≄0⇒∑cxₙisDivergent
+                                                     {λ n → (as n ⁻¹) (inj₂ (proj₁ (0<aₙ,xₙ n)))} div∑aₙ⁻¹
+                                                     (inj₂ (0<x,y⇒0<x*y (proj₁ (0<aₙ,xₙ N)) (proj₂ (0<aₙ,xₙ N)))))
+                                                     (N , part4)
   where
     open ≤-Reasoning
     N = suc N-1
     abstract
-      aₙ≄0 : ∀ n -> as n ≄0
-      aₙ≄0 n = inj₂ (proj₁ (0<aₙ,xₙ n))
-      aₙ⁻¹≄0 = λ n -> inj₂ (0<x⇒0<x⁻¹ {as n} (aₙ≄0 n) (proj₁ (0<aₙ,xₙ n)))
-      xₙ≄0 = λ n -> inj₂ (proj₂ (0<aₙ,xₙ n))
-      xₙ⁻¹≄0 = λ n -> inj₂ (0<x⇒0<x⁻¹ {xs n} (xₙ≄0 n) (proj₂ (0<aₙ,xₙ n)))
+      part1 : ∀ n -> NonNegative (as N * xs N * (as n ⁻¹) (inj₂ (proj₁ (0<aₙ,xₙ n))))
+      part1 n = let aₙ⁻¹ = (as n ⁻¹) (inj₂ (proj₁ (0<aₙ,xₙ n))) in
+                pos⇒nonNeg {as N * xs N * aₙ⁻¹} (posx,y⇒posx*y {as N * xs N} {aₙ⁻¹}
+                (posx,y⇒posx*y (0<x⇒posx (proj₁ (0<aₙ,xₙ N))) (0<x⇒posx (proj₂ (0<aₙ,xₙ N))))
+                (posx⇒posx⁻¹ {as n} (inj₂ (proj₁ (0<aₙ,xₙ n))) (0<x⇒posx (proj₁ (0<aₙ,xₙ n)))))
 
-      div-converted : SeriesOf (λ n -> (as n ⁻¹) (aₙ≄0 n)) isDivergent
-      div-converted = {!!}
+      part2 : ∀ n -> n ℕ.≥ N -> as n * xs n ≤ as (suc n) * xs (suc n)
+      part2 n n≥N = let aₙ = as n; xₙ = xs n; aₙ₊₁ = as (suc n); xₙ₊₁ = xs (suc n)
+                         ; xₙ₊₁>0 = proj₂ (0<aₙ,xₙ (suc n)); xₙ₊₁⁻¹ = (xₙ₊₁ ⁻¹) (inj₂ xₙ₊₁>0) in begin
+        aₙ * xₙ                   ≈⟨ ≃-symm (≃-trans
+                                     (*-congˡ {aₙ * xₙ} {xₙ₊₁ * xₙ₊₁⁻¹} {1ℝ} (*-inverseʳ xₙ₊₁ (inj₂ xₙ₊₁>0)))
+                                     (*-identityʳ (aₙ * xₙ))) ⟩
+        aₙ * xₙ * (xₙ₊₁ * xₙ₊₁⁻¹) ≤⟨ ≤-respˡ-≃
+                                     (solve 4 (λ aₙ xₙ xₙ₊₁ xₙ₊₁⁻¹ ->
+                                      aₙ ⊗ xₙ ⊗ xₙ₊₁⁻¹ ⊗ xₙ₊₁ ⊜ aₙ ⊗ xₙ ⊗ (xₙ₊₁ ⊗ xₙ₊₁⁻¹))
+                                      ≃-refl aₙ xₙ xₙ₊₁ xₙ₊₁⁻¹)
+                                      (*-monoʳ-≤-nonNeg {aₙ * xₙ * xₙ₊₁⁻¹} {xₙ₊₁} {aₙ₊₁}
+                                      (x-y≤0⇒x≤y {aₙ * xₙ * xₙ₊₁⁻¹} {aₙ₊₁} (hyp n n≥N))
+                                      (pos⇒nonNeg (0<x⇒posx xₙ₊₁>0))) ⟩
+        aₙ₊₁ * xₙ₊₁                ∎
 
-      nonNeg-helper : ∀ n -> NonNegative (as N * xs N * (as n ⁻¹) (aₙ≄0 n))
-      nonNeg-helper n = {!!}
+      part3 : ∀ n -> N ≡ n ⊎ N ℕ.< n -> as N * xs N ≤ as n * xs n
+      part3 n (inj₁ refl)              = ≤-refl
+      part3 (suc n) (inj₂ (ℕ.s≤s N≤n)) = ≤-trans (part3 n (≤⇒≡∨< N n N≤n)) (part2 n N≤n)
 
-    {-
-    aₖxₖaₙ⁻¹ ≤ xₙ
-    aₖxₖaₖ⁻¹ ≤ xₖ? Easy.
-    -}
-    lem : ∀ n -> n ℕ.≥ N -> as N * xs N * (as n ⁻¹) (aₙ≄0 n) ≤ xs n
-    lem n n≥N with ≤⇒≡∨< N n n≥N
-    ... | inj₁ refl = {!!} {-begin
-      as N * xs N * (as N ⁻¹) (aₙ≄0 N)   ≈⟨ solve 3 (λ a b c -> a ⊗ b ⊗ c ⊜ a ⊗ c ⊗ b)
-                                            ≃-refl (as N) (xs N) ((as N ⁻¹) (aₙ≄0 N))  ⟩
-      (as N * (as N ⁻¹) (aₙ≄0 N)) * xs N ≈⟨ *-congʳ {xs N} {as N * (as N ⁻¹) (aₙ≄0 N)} {1ℝ}
-                                            (*-inverseʳ (as N) (aₙ≄0 N)) ⟩
-      1ℝ * xs N                          ≈⟨ *-identityˡ (xs N) ⟩
-      xs N                              ∎-}
-    ... | inj₂ y = {!≤⇒≡∨<!}
-
-    part1 : ∀ n -> N ≡ n ⊎ N ℕ.< n -> as N * xs N * (as n ⁻¹) (aₙ≄0 n) ≤ xs n
-    part1 n (inj₁ refl) = begin
-      as N * xs N * (as N ⁻¹) (aₙ≄0 N) ≈⟨ solve 3 (λ a b c -> a ⊗ b ⊗ c ⊜ a ⊗ c ⊗ b)
-                                          ≃-refl (as N) (xs N) ((as N ⁻¹) (aₙ≄0 N)) ⟩
-      as N * (as N ⁻¹) (aₙ≄0 N) * xs N ≈⟨ *-congʳ {xs N} {as N * (as N ⁻¹) (aₙ≄0 N)} {1ℝ}
-                                          (*-inverseʳ (as N) (aₙ≄0 N)) ⟩
-      1ℝ * xs N                        ≈⟨ *-identityˡ (xs N) ⟩
-      xs N                              ∎
-    part1 n (inj₂ N<n)  = let aₙ⁻¹ = (as n ⁻¹) (aₙ≄0 n) in {!!}
+      part4 : ∀ n -> n ℕ.≥ N -> as N * xs N * (as n ⁻¹) (inj₂ (proj₁ (0<aₙ,xₙ n))) ≤ xs n
+      part4 n n≥N = let aₙ>0 = proj₁ (0<aₙ,xₙ n); aₙ≄0 = inj₂ aₙ>0; aₙ⁻¹ = (as n ⁻¹) aₙ≄0 in begin
+        as N * xs N * aₙ⁻¹ ≤⟨ *-monoʳ-≤-nonNeg {as N * xs N} {aₙ⁻¹} {as n * xs n}
+                              (part3 n (≤⇒≡∨< N n n≥N)) (nonNegx⇒nonNegx⁻¹ {as n}
+                              (pos⇒nonNeg (0<x⇒posx aₙ>0)) aₙ≄0) ⟩
+        as n * xs n * aₙ⁻¹ ≈⟨ solve 3 (λ aₙ xₙ aₙ⁻¹ -> aₙ ⊗ xₙ ⊗ aₙ⁻¹ ⊜ aₙ ⊗ aₙ⁻¹ ⊗ xₙ)
+                              ≃-refl (as n) (xs n) aₙ⁻¹ ⟩
+        as n * aₙ⁻¹ * xs n ≈⟨ *-congʳ {xs n} {as n * aₙ⁻¹} {1ℝ}
+                              (*-inverseʳ (as n) aₙ≄0) ⟩
+        1ℝ * xs n          ≈⟨ *-identityˡ (xs n) ⟩
+        xs n                ∎
+      
