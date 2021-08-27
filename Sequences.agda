@@ -2123,4 +2123,70 @@ lemma-3-7-2 {as} {xs} 0<aₙ,xₙ div∑aₙ⁻¹ (N-1 , hyp) = comparison-test-
                               (*-inverseʳ (as n) aₙ≄0) ⟩
         1ℝ * xs n          ≈⟨ *-identityˡ (xs n) ⟩
         xs n                ∎
-      
+        
+-- Π₀ needed for proof of Lemma 3.8. Should extend to Π in a clean manner like how ∑ was extended.
+Π₀ : (ℕ -> ℝ) -> ℕ -> ℝ
+Π₀ a 0 = 1ℝ
+Π₀ a (suc n) = Π₀ a n * a n
+
+Π : (ℕ -> ℝ) -> (i n : ℕ) -> (i≤n : i ℕ.≤ n) -> ℝ
+Π a i n i≤n with ≤⇒≡∨< i n i≤n
+... | inj₁ i≡n = 1ℝ
+... | inj₂ i<n = {!!}
+
+0≤x,y⇒0≤x+y : ∀ {x y} -> 0ℝ ≤ x -> 0ℝ ≤ y -> 0ℝ ≤ x + y
+0≤x,y⇒0≤x+y {x} {y} 0≤x 0≤y = nonNegx⇒0≤x (nonNegx,y⇒nonNegx+y (0≤x⇒nonNegx 0≤x) (0≤x⇒nonNegx 0≤y))
+
+lemma-3-8 : ∀ {xs} -> ∀ {c} -> (xₙ>0 : ∀ n -> xs n > 0ℝ) -> c > 0ℝ ->
+            (∃ λ N-1 -> ∀ n -> n ℕ.≥ suc N-1 -> (+ n / 1) ⋆ * (xs n * (xs n ⁻¹) (inj₂ (xₙ>0 n)) - 1ℝ) ≥ c) ->
+            xs ConvergesTo 0ℝ
+lemma-3-8 {xs} {c} xₙ>0 c>0 (N-1 , hyp) = {!!}
+  where
+    open ≤-Reasoning
+    N = suc N-1
+    part1 : ∀ n -> Π₀ (λ i -> 1ℝ + c * (+ (N ℕ.+ i) / 1) ⋆) n ≥ 1ℝ + c * ∑₀ (λ i -> (+ 1 / (N ℕ.+ i)) ⋆) n
+    part1 zero    = ≤-reflexive (solve 1 (λ c -> Κ 1ℚᵘ ⊕ c ⊗ Κ 0ℚᵘ ⊜ Κ 1ℚᵘ) ≃-refl c)
+    part1 (suc n) = let S = 1ℝ + c * (∑₀ [N+i]⁻¹ n + (+ (N ℕ.+ n) / 1) ⋆) in begin
+      1ℝ + c * (∑₀ [N+i]⁻¹ n + (+ 1 / (N ℕ.+ n)) ⋆)               ≤⟨ +-monoʳ-≤ 1ℝ (*-monoˡ-≤-nonNeg
+                                                                     (+-monoʳ-≤ (∑₀ [N+i]⁻¹ n) part1-1)
+                                                                     (pos⇒nonNeg (0<x⇒posx c>0))) ⟩
+      1ℝ + c * (∑₀ [N+i]⁻¹ n + (+ (N ℕ.+ n) / 1) ⋆)               ≤⟨ ≤-respˡ-≃ (+-identityʳ S)
+                                                                     (+-monoʳ-≤ S part1-2) ⟩
+      1ℝ + c * (∑₀ [N+i]⁻¹ n + (+ (N ℕ.+ n) / 1) ⋆) +
+      c * c * (+ (N ℕ.+ n) / 1) ⋆ * ∑₀ [N+i]⁻¹ n                  ≈⟨ solve 3 (λ c ∑₀[N+i]⁻¹ N+n →
+                                                                     Κ 1ℚᵘ ⊕ c ⊗ (∑₀[N+i]⁻¹ ⊕ N+n) ⊕ c ⊗ c ⊗ N+n ⊗ ∑₀[N+i]⁻¹ ⊜
+                                                                     Κ 1ℚᵘ ⊗ Κ 1ℚᵘ ⊕ Κ 1ℚᵘ ⊗ (c ⊗ N+n) ⊕ (c ⊗ ∑₀[N+i]⁻¹) ⊗ Κ 1ℚᵘ
+                                                                     ⊕ (c ⊗ ∑₀[N+i]⁻¹) ⊗ (c ⊗ N+n))
+                                                                     ≃-refl c (∑₀ [N+i]⁻¹ n) ((+ (N ℕ.+ n) / 1) ⋆) ⟩
+      1ℝ * 1ℝ + 1ℝ * (c * (+ (N ℕ.+ n) / 1) ⋆) +
+      c * ∑₀ [N+i]⁻¹ n * 1ℝ +
+      c * ∑₀ [N+i]⁻¹ n * (c * (+ (N ℕ.+ n) / 1) ⋆)                ≈⟨ solve 4 (λ a b c d →
+                                                                     a ⊗ c ⊕ a ⊗ d ⊕ b ⊗ c ⊕ b ⊗ d ⊜
+                                                                     (a ⊕ b) ⊗ (c ⊕ d))
+                                                                     ≃-refl 1ℝ (c * ∑₀ [N+i]⁻¹ n) 1ℝ (c * (+ (N ℕ.+ n) / 1) ⋆) ⟩
+      (1ℝ + c * ∑₀ [N+i]⁻¹ n) * (1ℝ + c * (+ (N ℕ.+ n) / 1) ⋆)    ≤⟨ *-monoʳ-≤-nonNeg {1ℝ + c * ∑₀ [N+i]⁻¹ n}
+                                                                     {1ℝ + c * (+ (N ℕ.+ n) / 1) ⋆}
+                                                                     {Π₀ (λ i → 1ℝ + c * (+ (N ℕ.+ i) / 1) ⋆) n}
+                                                                     (part1 n) part1-3 ⟩
+      Π₀ (λ i -> 1ℝ +
+      c * (+ (N ℕ.+ i) / 1) ⋆) n * (1ℝ + c * (+ (N ℕ.+ n) / 1) ⋆)  ∎
+      where
+        [N+i]⁻¹ = λ i -> (+ 1 / (N ℕ.+ i)) ⋆
+        part1-1 : (+ 1 / (N ℕ.+ n)) ⋆ ≤ (+ (N ℕ.+ n) / 1) ⋆
+        part1-1 = p≤q⇒p⋆≤q⋆ (+ 1 / (N ℕ.+ n)) (+ (N ℕ.+ n) / 1) (ℚ.*≤* (ℤ.+≤+ (ℕ.s≤s ℕ.z≤n)))
+
+        part1-2 : 0ℝ ≤ c * c * (+ (N ℕ.+ n) / 1) ⋆ * ∑₀ [N+i]⁻¹ n
+        part1-2 = 0≤x,y⇒0≤x*y {c * c * (+ (N ℕ.+ n) / 1) ⋆} {∑₀ [N+i]⁻¹ n} (0≤x,y⇒0≤x*y {c * c} {(+ (N ℕ.+ n) / 1) ⋆}
+              (<⇒≤ (0<x,y⇒0<x*y c>0 c>0))
+              (p≤q⇒p⋆≤q⋆ 0ℚᵘ (+ (N ℕ.+ n) / 1) (ℚP.nonNegative⁻¹ _)))
+              (≤-respˡ-≃ (∑0≃0 0 n) (∑-mono-≤ (λ n -> p≤q⇒p⋆≤q⋆ 0ℚᵘ (+ 1 / (N ℕ.+ n)) (ℚP.nonNegative⁻¹ _)) 0 n ℕ.z≤n))
+
+        part1-3 : NonNegative (1ℝ + c * (+ (N ℕ.+ n) / 1) ⋆)
+        part1-3 = 0≤x⇒nonNegx (0≤x,y⇒0≤x+y (p≤q⇒p⋆≤q⋆ 0ℚᵘ 1ℚᵘ (ℚP.nonNegative⁻¹ _))
+                  (0≤x,y⇒0≤x*y (<⇒≤ c>0) (p≤q⇒p⋆≤q⋆ 0ℚᵘ (+ (N ℕ.+ n) / 1) (ℚP.nonNegative⁻¹ _))))
+
+proposition-3-9-1 : ∀ {xs} -> (xₙ>0 : ∀ n -> xs n > 0ℝ) ->
+                              (hyp : (λ n -> (+ n / 1) ⋆ * (xs n * (xs (suc n) ⁻¹) (inj₂ (xₙ>0 (suc n))) - 1ℝ)) isConvergent) ->
+                              proj₁ hyp > 1ℝ ->
+                              SeriesOf xs isConvergent
+proposition-3-9-1 {xs} xₙ>0 (L , con* hyp) L>1 = {!!}
