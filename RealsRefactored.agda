@@ -2777,6 +2777,15 @@ lemma-2-14 x (suc k₁) = nonNeg* (λ {(suc k₂) -> let n = suc k₁; m = suc k
 _<_<_ : (x y z : ℝ) -> Set
 x < y < z = (x < y) × (y < z)
 
+_<_≤_ : (x y z : ℝ) -> Set
+x < y ≤ z = (x < y) × (y ≤ z)
+
+_≤_<_ : (x y z : ℝ) -> Set
+x ≤ y < z = (x ≤ y) × (y < z)
+
+_≤_≤_ : (x y z : ℝ) -> Set
+x ≤ y ≤ z = (x ≤ y) × (y ≤ z)
+
 0<y-x⇒x<y : ∀ x y -> 0ℝ < y - x -> x < y
 0<y-x⇒x<y x y 0<y-x = pos-cong (≃-trans (+-congʳ (y - x) (≃-symm 0≃-0)) (+-identityʳ (y - x))) 0<y-x
 
@@ -3237,9 +3246,6 @@ x - y = - (y - x)
                   ℚP.≤-respʳ-≃ (solve 2 (λ x y -> (⊝ (y ⊖ x)) ⊜ (x ⊖ y)) ℚP.≃-refl (seq x (2 ℕ.* n)) (seq y (2 ℕ.* n)))
                   (ℚP.neg-mono-≤ ([ (λ hyp -> hyp) , (λ hyp -> ⊥-elim (x≮y (pos* (k₁ , hyp)))) ]′ (≤∨> (seq (y - x) n) (+ 1 / n))))})
   where open ℚ-Solver
-
-_≤_≤_ : (x y z : ℝ) -> Set
-x ≤ y ≤ z = (x ≤ y) × (y ≤ z)
 
 m<1+n⇒m≤n : ∀ m n -> m ℕ.< suc n -> m ℕ.≤ n
 m<1+n⇒m≤n m n (ℕ.s≤s m≤n) = m≤n

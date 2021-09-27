@@ -1967,11 +1967,7 @@ lemma-3-7-1 {as} {xs} {c} 0<c 0<aₙ,xₙ aₙxₙ→0 (N₁-1 , hyp) = fast-ε-
                                                                       (part2 m n (ℕP.<⇒≤ m>n))) ⟩
   c⁻¹ * (as n-1 * xs n-1 - as m-1 * xs m-1)                        ≤⟨ *-monoˡ-≤-nonNeg {as n-1 * xs n-1 - as m-1 * xs m-1} {c⁻¹} {c * ε}
                                                                       (≤-trans x≤∣x∣ (≤-respˡ-≃ (∣x-y∣≃∣y-x∣ (as m-1 * xs m-1) (as n-1 * xs n-1))
-                                                                      (proj₂ (res ε ε>0) m-1 n-1 m-1>n-1 (ℕP.≤-trans (ℕP.m≤n⊔m N₁ N₂) n-1≥N-1)))) nonNegc⁻¹
-                                                                      {-*-monoˡ-≤-nonNeg {as n-1 * xs n-1 - as m-1 * xs m-1} {c⁻¹} {c * ε}
-                                                                      (<⇒≤ (≤-<-trans x≤∣x∣ (<-respˡ-≃ (∣x-y∣≃∣y-x∣ (as m-1 * xs m-1) (as n-1 * xs n-1))
-                                                                      (proj₂ (res ε ε>0) m-1 n-1 m-1>n-1
-                                                                      (ℕP.≤-trans (ℕP.m≤n⊔m N₁ N₂) n-1≥N-1))))) nonNegc⁻¹-} ⟩
+                                                                      (proj₂ (res ε ε>0) m-1 n-1 m-1>n-1 (ℕP.≤-trans (ℕP.m≤n⊔m N₁ N₂) n-1≥N-1)))) nonNegc⁻¹ ⟩
   c⁻¹ * (c * ε)                                                    ≈⟨ ≃-trans (≃-trans
                                                                       (≃-symm (*-assoc c⁻¹ c ε))
                                                                       (*-congʳ {ε} {c⁻¹ * c} {1ℝ} (*-inverseˡ c c≄0)))
@@ -2026,9 +2022,6 @@ lemma-3-7-1 {as} {xs} {c} 0<c 0<aₙ,xₙ aₙxₙ→0 (N₁-1 , hyp) = fast-ε-
                                                                  (≃-trans (*-congˡ {as n-1 * xs n-1} (*-inverseˡ (xs n) xₙ≄0)) (*-identityʳ (as n-1 * xs n-1))) ⟩
       as n-1 * xs n-1 - as n * xs n                            ∎
 
-{-
-∃ε>0 ∀k∈ℕ ∃m,n≥k ∣xₘ - xₙ∣ ≥ ε
--}
 [xₙ]isDivergent∧c≄0⇒[cxₙ]isDivergent : ∀ {xs} -> ∀ {c} -> xs isDivergent -> c ≄0 -> (λ n -> c * xs n) isDivergent
 [xₙ]isDivergent∧c≄0⇒[cxₙ]isDivergent {xs} {c} (ε , div* posε hyp) c≄0 = ∣ c ∣ * ε ,
                                      div* (posx,y⇒posx*y (x≄0⇒pos∣x∣ c≄0) posε) (λ {(suc k-1) ->
@@ -2072,6 +2065,11 @@ x-y≤0⇒x≤y {x} {y} x-y≤0 = begin
   y          ∎
   where open ≤-Reasoning
 
+{-
+x * x⁻¹ = 1
+solve 1 
+λ x x≄0 -> ????
+-}
 lemma-3-7-2 : ∀ {as xs : ℕ -> ℝ} -> (0<aₙ,xₙ : ∀ n -> (0ℝ < as n) × (0ℝ < xs n)) ->
               SeriesOf (λ n -> (as n ⁻¹) (inj₂ (proj₁ (0<aₙ,xₙ n)))) isDivergent ->
               (∃ λ N-1 -> ∀ n -> n ℕ.≥ suc N-1 -> as n * xs n * (xs (suc n) ⁻¹) (inj₂ (proj₂ (0<aₙ,xₙ (suc n)))) - as (suc n) ≤ 0ℝ) ->
@@ -2125,6 +2123,8 @@ lemma-3-7-2 {as} {xs} 0<aₙ,xₙ div∑aₙ⁻¹ (N-1 , hyp) = comparison-test-
         xs n                ∎
         
 -- Π₀ needed for proof of Lemma 3.8. Should extend to Π in a clean manner like how ∑ was extended.
+-- Πᵢ₌₀ⁿxᵢ
+--
 Π₀ : (ℕ -> ℝ) -> ℕ -> ℝ
 Π₀ a 0 = 1ℝ
 Π₀ a (suc n) = Π₀ a n * a n
@@ -2137,8 +2137,14 @@ lemma-3-7-2 {as} {xs} 0<aₙ,xₙ div∑aₙ⁻¹ (N-1 , hyp) = comparison-test-
 0≤x,y⇒0≤x+y : ∀ {x y} -> 0ℝ ≤ x -> 0ℝ ≤ y -> 0ℝ ≤ x + y
 0≤x,y⇒0≤x+y {x} {y} 0≤x 0≤y = nonNegx⇒0≤x (nonNegx,y⇒nonNegx+y (0≤x⇒nonNegx 0≤x) (0≤x⇒nonNegx 0≤y))
 
+{-
+{-
+Let (xₙ) be a sequence of positive numbers and let c > 0. If there is N∈ℕ such that
+                                 n(xₙxₙ₊₁⁻¹ - 1) ≥ c                   (n ≥ N)
+then (xₙ) converges to 0.
+-}
 lemma-3-8 : ∀ {xs} -> ∀ {c} -> (xₙ>0 : ∀ n -> xs n > 0ℝ) -> c > 0ℝ ->
-            (∃ λ N-1 -> ∀ n -> n ℕ.≥ suc N-1 -> (+ n / 1) ⋆ * (xs n * (xs n ⁻¹) (inj₂ (xₙ>0 n)) - 1ℝ) ≥ c) ->
+            (∃ λ N-1 -> ∀ n -> n ℕ.≥ suc N-1 -> (+ n / 1) ⋆ * (xs n * (xs (suc n) ⁻¹) (inj₂ (xₙ>0 (suc n))) - 1ℝ) ≥ c) ->
             xs ConvergesTo 0ℝ
 lemma-3-8 {xs} {c} xₙ>0 c>0 (N-1 , hyp) = {!!}
   where
@@ -2190,3 +2196,4 @@ proposition-3-9-1 : ∀ {xs} -> (xₙ>0 : ∀ n -> xs n > 0ℝ) ->
                               proj₁ hyp > 1ℝ ->
                               SeriesOf xs isConvergent
 proposition-3-9-1 {xs} xₙ>0 (L , con* hyp) L>1 = {!!}
+-}
