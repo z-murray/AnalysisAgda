@@ -1,7 +1,7 @@
 # AnalysisAgda
 
 # Update
-Hello! This was a working repository for much of the work I did on implementing constructive analysis in the Agda proof assistant. It's a bit messy, so I decided to move everything into a new repository when I submitted my project, then undergraduate thesis, to the arXiv. The new repository, corresponding to the version submitted for the thesis, can be found at https://github.com/z-murray/honours-project-constructive-analysis-in-agda, which includes a link to the thesis.
+Hello! This was a working repository for much of the work I did on implementing constructive analysis in the Agda proof assistant. It's a bit messy, so I decided to move everything into a new repository when I submitted my project, then undergraduate thesis, to the arXiv. The new repository, corresponding to the version submitted for the thesis, can be found at https://github.com/z-murray/honours-project-constructive-analysis-in-agda, which includes a link to the thesis. This version exists just to track my process at the time of development.
 
 # Old Blurb
 For my undergraduate summer project (under the supervision of Dr. Peter Selinger at Dalhousie University), I am implementing as much of Errett Bishop's constructive analysis in Agda as possible. This is a solo project. Others are not allowed to edit this repository, even if it becomes public. For the time being, it's listed here solely for version control and for anyone interested in seeing it.
